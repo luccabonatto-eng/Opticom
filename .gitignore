@@ -47,5 +47,5 @@ Thumbs.db
 tmp/
 temp/
 
-# Package lock files em subdiretórios não rastreados
-SIstema/frontend/package-lock.json
+# SIstema/ é um repositório git independente — gerenciado separadamente
+SIstema/
