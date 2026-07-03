@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+**/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -26,20 +27,25 @@ dist/
 build/
 .next/
 
-# Vercel
+# Vercel (dados sensíveis de projeto)
 .vercel/
+**/.vercel/
 
 # OS
 .DS_Store
+**/.DS_Store
 Thumbs.db
 
 # Project specific
 .env.test
-.vercel
 
-# Documentation (local only, commit to docs/)
+# Backups
+*.bak
 *.md.bak
 
 # Temporary
 tmp/
 temp/
+
+# Package lock files em subdiretórios não rastreados
+SIstema/frontend/package-lock.json
