@@ -1,0 +1,92 @@
+export const INCOME_CATS_INIT = ['Receita de Contratos','Receita de OS','Multas e Juros','Adiantamentos','Outros Recebimentos'];
+export const EXPENSE_CATS_INIT = ['Pessoal','Material','Combustível','Administrativo','Manutenção','Telecomunicações','Impostos','Outros'];
+
+export const BANK_ACCOUNTS_INIT = [
+  { id:1, bank:'Bradesco',  agency:'0001-9', account:'12345-6', type:'Corrente', balance:8500000, active:true  },
+  { id:2, bank:'Itaú',      agency:'0042-7', account:'98765-4', type:'Corrente', balance:4000000, active:true  },
+  { id:3, bank:'Caixa',     agency:'0071-3', account:'00123-0', type:'Poupança', balance:150000,  active:false },
+];
+
+export const PAYMENT_METHODS_INIT = [
+  { id:1, name:'PIX',               active:true  },
+  { id:2, name:'Boleto Bancário',    active:true  },
+  { id:3, name:'TED / DOC',         active:true  },
+  { id:4, name:'Cartão de Crédito', active:false },
+  { id:5, name:'Cheque',            active:false },
+  { id:6, name:'Dinheiro / Espécie',active:false },
+];
+
+export const TAX_REGIMES = {
+  REAL: {
+    label:'Lucro Real', short:'L. Real',
+    color:'bg-blue-100 text-blue-800', dot:'bg-blue-500',
+    iss:0.05, pis:0.0165, cofins:0.076,
+    irpjRate:0.15, adicIRPJ:0.10, csllRate:0.09,
+    method:'Lucro efetivo apurado contabilmente.',
+    obligation:'Obrigatório acima de R$ 78M/ano', obColor:'bg-red-50 text-red-700',
+    pisLabel:'PIS — 1,65% (não-cumulativo)',
+    cofinsLabel:'COFINS — 7,60% (não-cumulativo)',
+    irpjLabel:'IRPJ s/ Lucro Real (15% + Adic. 10%)',
+    csllLabel:'CSLL s/ Lucro Real (9%)',
+    dre26:{ pisv:-628600, cofinsv:-3158400, totalDed:-6740400, rl:41659600, ebit:10909600, ebitda:11709600, lair:10304600, irpj:-2570150, csll:-927414, totalImp:-3497564, ll:6807036 },
+    dre25:{ pisv:-534000, cofinsv:-2681200, totalDed:-5861200, rl:35438800, ebit:7858800, ebitda:8563800, lair:7383800, irpj:-2088000, csll:-664542, totalImp:-2752542, ll:4631258 },
+  },
+  PRESUMIDO: {
+    label:'Lucro Presumido', short:'L. Presumido',
+    color:'bg-amber-100 text-amber-800', dot:'bg-amber-500',
+    iss:0.05, pis:0.0065, cofins:0.03,
+    irpjRate:0.15, adicIRPJ:0.10, csllRate:0.09, presumBase:0.32,
+    method:'Base de cálculo presumida de 32% da receita bruta.',
+    obligation:'Permitido até R$ 78M/ano', obColor:'bg-amber-50 text-amber-700',
+    pisLabel:'PIS — 0,65% (cumulativo)',
+    cofinsLabel:'COFINS — 3,00% (cumulativo)',
+    irpjLabel:'IRPJ s/ Base Presumida 32% (15% + Adic. 10%)',
+    csllLabel:'CSLL s/ Base Presumida 32% (9%)',
+    dre26:{ pisv:-314600, cofinsv:-1452000, totalDed:-4720000, rl:43680000, ebit:12930000, ebitda:13730000, lair:12325000, irpj:-3866000, csll:-1393920, totalImp:-5259920, ll:7065080 },
+    dre25:{ pisv:-268450, cofinsv:-1239000, totalDed:-4010000, rl:37290000, ebit:10395000, ebitda:11100000, lair:9920000, irpj:-3317440, csll:-1193760, totalImp:-4511200, ll:5408800 },
+  },
+  SIMPLES: {
+    label:'Simples Nacional', short:'Simples',
+    color:'bg-green-100 text-green-800', dot:'bg-green-500',
+    iss:null, pis:null, cofins:null, dasRate:0.155,
+    method:'Tributação unificada via DAS (IRPJ, CSLL, PIS, COFINS, ISS, CPP).',
+    obligation:'Vedado — faturamento excede R$ 4,8M/ano', obColor:'bg-red-50 text-red-700',
+    pisLabel:null, cofinsLabel:null, irpjLabel:null, csllLabel:null,
+    dasLabel:'DAS — Simples Nacional, Anexo III (15,5%)',
+    dre26:{ dasv:-7502000, totalDed:-8035400, rl:40364600, ebit:9614600, ebitda:10414600, lair:9009600, irpj:0, csll:0, totalImp:0, ll:9009600 },
+    dre25:{ dasv:-6401500, totalDed:-6934900, rl:34365100, ebit:6785100, ebitda:7490100, lair:6310100, irpj:0, csll:0, totalImp:0, ll:6310100 },
+  },
+};
+
+export const PAYROLL_INIT = [
+  { id:1, name:'Carlos Souza',  role:'Técnico de Campo',     cpf:'123.456.789-01', admDate:'2022-03-15', ref:'2026-03', status:'PAID',
+    base:350000, horasExtras:35000, adicNoturno:0,      periculosidade:0,      insalubridade:22800, bonus:50000,
+    vt:15000, vr:22000, planoSaude:18000,
+    dINSS:43600, dIRRF:28000, dVT:9000, dPlano:4500,
+    inssPatronal:91600, fgts:36640, rat:9160, sistemaS:26528, prov13:38033, provFerias:50711, fgtsProv:7131 },
+  { id:2, name:'Paulo Mendes',  role:'Técnico Sênior',       cpf:'234.567.890-02', admDate:'2020-08-01', ref:'2026-03', status:'PAID',
+    base:350000, horasExtras:52500, adicNoturno:17500, periculosidade:0,      insalubridade:22800, bonus:30000,
+    vt:15000, vr:22000, planoSaude:18000,
+    dINSS:47200, dIRRF:35400, dVT:9000, dPlano:4500,
+    inssPatronal:96600, fgts:38640, rat:9660, sistemaS:27948, prov13:39292, provFerias:52389, fgtsProv:7343 },
+  { id:3, name:'Rafael Lima',   role:'Técnico de Manutenção',cpf:'345.678.901-03', admDate:'2023-01-10', ref:'2026-03', status:'PENDING',
+    base:320000, horasExtras:16000, adicNoturno:0,      periculosidade:0,      insalubridade:22800, bonus:20000,
+    vt:15000, vr:22000, planoSaude:18000,
+    dINSS:37800, dIRRF:18200, dVT:9000, dPlano:4500,
+    inssPatronal:79600, fgts:31840, rat:7960, sistemaS:23012, prov13:31533, provFerias:42044, fgtsProv:5890 },
+  { id:4, name:'Ana Oliveira',  role:'Gerente Operacional',  cpf:'456.789.012-04', admDate:'2019-05-20', ref:'2026-03', status:'PAID',
+    base:600000, horasExtras:0,     adicNoturno:0,      periculosidade:0,      insalubridade:0,     bonus:80000,
+    vt:15000, vr:22000, planoSaude:28000,
+    dINSS:84000, dIRRF:112400, dVT:9000, dPlano:7000,
+    inssPatronal:136000, fgts:54400, rat:13600, sistemaS:39344, prov13:56667, provFerias:75556, fgtsProv:10578 },
+  { id:5, name:'João Silva',    role:'Administrador/Diretor',cpf:'567.890.123-05', admDate:'2018-01-03', ref:'2026-03', status:'PAID',
+    base:800000, horasExtras:0,     adicNoturno:0,      periculosidade:0,      insalubridade:0,     bonus:0,
+    vt:0,    vr:0,    planoSaude:38000,
+    dINSS:112000, dIRRF:187400, dVT:0, dPlano:9500,
+    inssPatronal:160000, fgts:64000, rat:16000, sistemaS:46240, prov13:66667, provFerias:88889, fgtsProv:12444 },
+  { id:6, name:'Marcos Costa',  role:'Técnico (Afastado)',   cpf:'678.901.234-06', admDate:'2021-11-15', ref:'2026-03', status:'PENDING',
+    base:320000, horasExtras:0,     adicNoturno:0,      periculosidade:0,      insalubridade:0,     bonus:0,
+    vt:15000, vr:22000, planoSaude:18000,
+    dINSS:30400, dIRRF:0,      dVT:9000, dPlano:4500,
+    inssPatronal:64000, fgts:25600, rat:6400, sistemaS:18496, prov13:26667, provFerias:35556, fgtsProv:4978 },
+];

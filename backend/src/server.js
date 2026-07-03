@@ -58,16 +58,16 @@ app.use(cookieParser()); // Parse cookies (para HttpOnly tokens)
 // Rate Limiters
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // 100 requisições por IP
-  message: 'Muitas requisições, tente novamente mais tarde',
-  standardHeaders: true, // Retorna rate limit info no header RateLimit-*
-  legacyHeaders: false // Desativa o header X-RateLimit-*
+  max: 1000, // 1000 requisições por IP
+  message: JSON.stringify({ error: 'Muitas requisições, tente novamente mais tarde' }),
+  standardHeaders: true,
+  legacyHeaders: false
 });
 
 const authLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hora
   max: 5, // 5 tentativas por hora
-  message: 'Muitas tentativas de autenticação, tente novamente em 1 hora',
+  message: JSON.stringify({ error: 'Muitas tentativas de autenticação, tente novamente em 1 hora' }),
   skipSuccessfulRequests: true // Não conta requisições bem-sucedidas
 });
 

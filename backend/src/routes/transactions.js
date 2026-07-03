@@ -4,17 +4,23 @@ const checkRole = require('../middleware/rbac');
 
 const router = express.Router();
 
+const SERVICE_TYPES = ['Instalação', 'Manutenção', 'Revisão', 'Emergência', 'Contrato', 'Avulso'];
+
 router.get('/', async (req, res) => {
   try {
-    const { type, status, category_id } = req.query;
+    const { type, status, category_id, customer_id, service_type } = req.query;
     const limit = Math.min(parseInt(req.query.limit) || 50, 100);
     const offset = parseInt(req.query.offset) || 0;
 
-    let query = supabase.from('transactions').select('*', { count: 'exact' });
+    let query = supabase
+      .from('transactions')
+      .select('*, customers(id, name, type)', { count: 'exact' });
 
-    if (type) query = query.eq('type', type);
-    if (status) query = query.eq('status', status);
+    if (type)        query = query.eq('type', type);
+    if (status)      query = query.eq('status', status);
     if (category_id) query = query.eq('category_id', category_id);
+    if (customer_id) query = query.eq('customer_id', customer_id);
+    if (service_type) query = query.eq('service_type', service_type);
 
     const { data, error, count } = await query
       .order('due_date', { ascending: false })
@@ -30,11 +36,66 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/dre-gerencial', async (req, res) => {
+  try {
+    const { period, year } = req.query;
+
+    let query = supabase
+      .from('transactions')
+      .select('*, customers(id, name, type)')
+      .in('status', ['PAID', 'PENDING']);
+
+    if (period) {
+      query = query.gte('due_date', `${period}-01`).lte('due_date', `${period}-31`);
+    } else if (year) {
+      query = query.gte('due_date', `${year}-01-01`).lte('due_date', `${year}-12-31`);
+    }
+
+    const { data, error } = await query.order('due_date', { ascending: false });
+    if (error) throw error;
+
+    // Agrega por cliente
+    const byCustomer = {};
+    const byServiceType = {};
+
+    data.forEach(tx => {
+      const amount = tx.amount || 0;
+      const isIncome = tx.type === 'INCOME';
+
+      // Por cliente
+      const custId = tx.customer_id || '__sem_cliente__';
+      const custName = tx.customers?.name || 'Sem cliente';
+      if (!byCustomer[custId]) byCustomer[custId] = { id: custId, name: custName, income: 0, expense: 0 };
+      if (isIncome) byCustomer[custId].income += amount;
+      else byCustomer[custId].expense += amount;
+
+      // Por tipo de serviço
+      const svcKey = tx.service_type || '__sem_tipo__';
+      const svcLabel = tx.service_type || 'Sem tipo';
+      if (!byServiceType[svcKey]) byServiceType[svcKey] = { type: svcLabel, income: 0, expense: 0 };
+      if (isIncome) byServiceType[svcKey].income += amount;
+      else byServiceType[svcKey].expense += amount;
+    });
+
+    const totalIncome  = data.filter(t => t.type === 'INCOME').reduce((s, t) => s + t.amount, 0);
+    const totalExpense = data.filter(t => t.type === 'EXPENSE').reduce((s, t) => s + t.amount, 0);
+
+    res.json({
+      period: period || year || 'all',
+      totals: { income: totalIncome, expense: totalExpense, result: totalIncome - totalExpense },
+      byCustomer: Object.values(byCustomer).sort((a, b) => b.income - a.income),
+      byServiceType: Object.values(byServiceType).sort((a, b) => b.income - a.income)
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('transactions')
-      .select('*')
+      .select('*, customers(id, name, type)')
       .eq('id', req.params.id)
       .single();
 
@@ -51,25 +112,33 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { type, status, description, amount, due_date, category_id, bank_account_id, payment_method_id } = req.body;
+    const {
+      type, status, description, amount, due_date,
+      category_id, bank_account_id, payment_method_id,
+      customer_id, service_type
+    } = req.body;
 
     if (!type || !description || !amount || !due_date) {
       return res.status(400).json({ error: 'Campos obrigatórios faltando' });
     }
 
+    const record = {
+      type,
+      status: status || 'PENDING',
+      description,
+      amount,
+      due_date,
+      category_id:        category_id        || null,
+      bank_account_id:    bank_account_id    || null,
+      payment_method_id:  payment_method_id  || null,
+      customer_id:        customer_id        || null,
+      service_type:       service_type       || null
+    };
+
     const { data, error } = await supabase
       .from('transactions')
-      .insert([{
-        type,
-        status: status || 'PENDING',
-        description,
-        amount,
-        due_date,
-        category_id,
-        bank_account_id,
-        payment_method_id
-      }])
-      .select();
+      .insert([record])
+      .select('*, customers(id, name, type)');
 
     if (error) throw error;
     res.status(201).json(data[0]);
@@ -80,9 +149,13 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    // Whitelist explícito - apenas estes campos podem ser atualizados
     const allowedFields = {};
-    const fieldMap = ['type', 'status', 'description', 'amount', 'due_date', 'paid_date', 'category_id', 'bank_account_id', 'payment_method_id', 'related_order_id', 'related_contract_id'];
+    const fieldMap = [
+      'type', 'status', 'description', 'amount', 'due_date', 'paid_date',
+      'category_id', 'bank_account_id', 'payment_method_id',
+      'related_order_id', 'related_contract_id',
+      'customer_id', 'service_type'
+    ];
 
     fieldMap.forEach(field => {
       if (req.body.hasOwnProperty(field)) {
@@ -94,7 +167,7 @@ router.put('/:id', async (req, res) => {
       .from('transactions')
       .update({ ...allowedFields, updated_at: new Date().toISOString() })
       .eq('id', req.params.id)
-      .select();
+      .select('*, customers(id, name, type)');
 
     if (error) throw error;
     if (!data?.length) return res.status(404).json({ error: 'Transação não encontrada' });

@@ -72,6 +72,8 @@ router.post('/', async (req, res) => {
       number = seqData;
     }
 
+    const { difficulty, additional_technicians } = req.body;
+
     const { data, error } = await supabase
       .from('orders')
       .insert([{
@@ -79,8 +81,10 @@ router.post('/', async (req, res) => {
         customer_id,
         type,
         priority: priority || 'MEDIUM',
+        difficulty: difficulty || 'MEDIUM',
         status: status || 'OPEN',
         assigned_technician_id: assigned_technician_id || null,
+        additional_technicians: additional_technicians || [],
         scheduled_date: scheduled_date || null,
         substation: substation || null,
         city: city || null,
@@ -104,7 +108,7 @@ router.put('/:id', async (req, res) => {
 
     // Whitelist explícito - apenas estes campos podem ser atualizados
     const allowedFields = {};
-    const fieldMap = ['number', 'type', 'priority', 'status', 'assigned_technician_id', 'scheduled_date', 'completed_date', 'substation', 'city', 'description'];
+    const fieldMap = ['number', 'type', 'priority', 'difficulty', 'status', 'assigned_technician_id', 'additional_technicians', 'scheduled_date', 'completed_date', 'substation', 'city', 'description'];
 
     fieldMap.forEach(field => {
       if (req.body.hasOwnProperty(field)) {
