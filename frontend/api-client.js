@@ -3,11 +3,15 @@
 
 const API_BASE_URL = window.location.origin.includes('localhost')
   ? 'http://localhost:3001/api'
-  : 'https://opticom-backend-production.up.railway.app/api';
+  : 'https://opticom-backend.vercel.app/api';
+
+// Tela de login está desativada — sem token real, usa o token de demonstração
+// do backend para evitar 401 em loop (que causava refresh contínuo da página).
+const DEMO_TOKEN = 'demo-preview-opticom-2026';
 
 class OpticomAPI {
   constructor() {
-    this.token = sessionStorage.getItem('opticom_token') || null;
+    this.token = sessionStorage.getItem('opticom_token') || DEMO_TOKEN;
     try {
       this.user = JSON.parse(sessionStorage.getItem('opticom_user') || 'null');
     } catch {
@@ -230,6 +234,30 @@ class OpticomAPI {
   async getTransactions(filters = {}) {
     const params = new URLSearchParams(filters);
     return this._fetch(`/transactions?${params}`);
+  }
+
+  // Busca TODAS as transações percorrendo as páginas. Telas que somam valores
+  // (A Receber/A Pagar, DRE, Fluxo de Caixa) precisam do conjunto completo —
+  // com uma página só os totais ficam silenciosamente errados.
+  async getAllTransactions(filters = {}) {
+    const PAGE = 1000;
+    const all = [];
+    let offset = 0;
+    let total = Infinity;
+
+    while (all.length < total) {
+      const res = await this.getTransactions({ ...filters, limit: PAGE, offset });
+      if (!res.success) return all.length ? { success: true, data: { data: all } } : res;
+
+      const page = res.data?.data || [];
+      all.push(...page);
+      total = res.data?.pagination?.total ?? all.length;
+
+      if (page.length === 0) break; // proteção contra laço infinito
+      offset += PAGE;
+    }
+
+    return { success: true, data: { data: all, pagination: { total: all.length } } };
   }
 
   async getTransaction(id) {

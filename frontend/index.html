@@ -3,61 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Opticom ERP — Protótipo</title>
-  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <title>Opticom ERP</title>
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="api-client.js"></script>
   <script src="validators.js"></script>
   <script src="notifications.js"></script>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-
-    /* ── Scrollbars finas em toda a página ──────────────────────── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: #f1f5f9; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-
-    /* ── Todo container que envolve uma <table> rola na horizontal ─ */
-    /* Usa :has() — suportado em Chrome 105+, Safari 15.4+, Firefox 121+ */
-    .overflow-hidden:has(> table),
-    .overflow-hidden:has(> div > table),
-    .overflow-hidden:has(> .overflow-x-auto) {
-      overflow-x: auto !important;
-    }
-
-    /* ── Garante que tabelas nunca quebrem o layout ─────────────── */
-    table {
-      min-width: max-content;
-    }
-
-    /* ── Grids multi-coluna responsivos ─────────────────────────── */
-    /* Containers diretos de página com padding p-5/p-6 têm scroll */
-    .p-5.space-y-4,
-    .p-5.space-y-5,
-    .p-6.space-y-4,
-    .p-6.space-y-5 {
-      min-width: 0;
-    }
-
-    /* ── Conteúdo principal de cada página ──────────────────────── */
-    /* O flex-1 overflow-y-auto recebe também overflow-x */
-    .flex-1.overflow-y-auto {
-      overflow-x: auto;
-    }
-
-    /* ── Grids que podem ser largos demais ──────────────────────── */
-    /* Permite scroll horizontal nos grid containers sem quebrar o layout */
-    .grid {
-      min-width: 0;
-    }
-    .grid > * {
-      min-width: 0;
-    }
-  </style>
+  <link rel="stylesheet" href="app.css">
 </head>
 <body class="bg-gray-50">
 <div id="root"></div>
@@ -465,7 +423,6 @@ const MENU = [
   { id:'inventory',   label:'Estoque',           icon:'inventory',   group:null       },
   { id:'fleet',       label:'Frota',             icon:'fleet',       group:null       },
   { id:'customers',   label:'Clientes',          icon:'customers',   group:'Cadastro' },
-  { id:'contracts',   label:'Contratos',         icon:'contracts',   group:'Cadastro' },
   { id:'technicians', label:'Técnicos',          icon:'technicians', group:'Cadastro' },
   { id:'settings',    label:'Configurações',     icon:'settings',    group:'Sistema'  },
 ];
@@ -474,7 +431,7 @@ const ALL_PAGE_IDS = MENU.map(m=>m.id);
 const FINANCIAL_SUBMENU_IDS = ['receivable','payable','cashflow','dre','payroll','approval','statement'];
 const DEFAULT_PERMISSIONS = {
   ADMIN:          [...ALL_PAGE_IDS],
-  MANAGER:        ['dashboard','orders','financial','inventory','fleet','customers','contracts','technicians'],
+  MANAGER:        ['dashboard','orders','financial','inventory','fleet','customers','technicians'],
   TECHNICIAN:     ['dashboard','orders'],
   MANAGER_fin:    [...FINANCIAL_SUBMENU_IDS],
   TECHNICIAN_fin: ['receivable','payable'],
@@ -499,7 +456,9 @@ const Sidebar = ({ page, setPage, collapsed, setCollapsed, user, permissions }) 
       <div className={`flex items-center gap-2 px-3 py-3 border-b border-gray-800 ${collapsed?'justify-center':''}`}>
         {!collapsed ? (
           <>
-            <img src="https://opticomservice.com.br/wp-content/uploads/2025/01/Logo-opticom-700.png" alt="Opticom" className="h-8 object-contain" style={{filter:'brightness(0) invert(1)'}}/>
+            <div className="bg-white rounded-md px-2 py-1.5">
+              <img src="/logo-opticom-grande-color.png" alt="Opticom Service" className="h-6 object-contain"/>
+            </div>
             <button onClick={()=>setCollapsed(true)} className="ml-auto text-gray-500 hover:text-white p-1 shrink-0">
               <Icon name="chevLeft" className="w-4 h-4"/>
             </button>
@@ -542,7 +501,7 @@ const Header = ({ page, onLogout, setPage, regime, user }) => {
   const [notifOpen, setNotifOpen] = useState(false);
   const [dismissed, setDismissed] = useState([]);
   const visible = MOCK_ALERTS.filter(a=>!dismissed.includes(a.id));
-  const navMap = { OVERDUE_RECEIVABLE:'financial', BATTERY_END_OF_LIFE:'inventory', LOW_STOCK:'inventory', OVERDUE_ORDER:'orders', CONTRACT_EXPIRING:'contracts' };
+  const navMap = { OVERDUE_RECEIVABLE:'financial', BATTERY_END_OF_LIFE:'inventory', LOW_STOCK:'inventory', OVERDUE_ORDER:'orders' };
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-3.5 flex items-center justify-between sticky top-0 z-20 shadow-sm">
       <div className="flex items-center gap-3">
@@ -782,7 +741,7 @@ const DashboardPage = ({ setPage, taxRegime='REAL' }) => {
       api.getOrders({ limit:200 }),
       api.getCustomers(),
       api.getContracts(),
-      api.getTransactions({ limit:500 }),
+      api.getAllTransactions(),
       api.getProducts(),
     ]);
     const orders   = ordRes.success  ? (ordRes.data?.data  || ordRes.data  || []) : [];
@@ -1061,7 +1020,7 @@ const DashboardPage = ({ setPage, taxRegime='REAL' }) => {
           ? <p className="px-5 py-6 text-sm text-gray-400 text-center">Nenhum alerta pendente</p>
           : alerts.map(a=>{
               const sev={HIGH:['border-l-red-500','bg-red-50','🔴'],MEDIUM:['border-l-amber-400','bg-amber-50','🟡'],LOW:['border-l-blue-400','bg-blue-50','🔵']}[a.severity]||['border-l-gray-300','bg-gray-50','⚪'];
-              const navMap2={OVERDUE_RECEIVABLE:'financial',OVERDUE_PAYABLE:'financial',LOW_STOCK:'inventory',OVERDUE_ORDER:'orders',CONTRACT_EXPIRING:'contracts'};
+              const navMap2={OVERDUE_RECEIVABLE:'financial',OVERDUE_PAYABLE:'financial',LOW_STOCK:'inventory',OVERDUE_ORDER:'orders'};
               return (
                 <div key={a.id} className={`flex items-start gap-3 px-5 py-3 border-l-4 ${sev[0]} ${sev[1]} border-b border-gray-50 last:border-b-0`}>
                   <span className="text-sm mt-0.5">{sev[2]}</span>
@@ -1157,7 +1116,7 @@ const OrdersPage = ({ taxRegime='REAL' }) => {
     const o = orders.find(o=>o.id===id);
     const flow = STATUS_FLOW[o?.status];
     if (!flow) return;
-    const result = await api.updateOrder(id, { status: flow.next });
+    const result = await api.updateOrder(id, { status: flow.next, ...(nf?{nf}:{}) });
     if (result.success) {
       setOrders(prev=>prev.map(x=>x.id===id?{...x, status:flow.next, ...(nf?{nf}:{})}:x));
       setSelected(prev=>prev?{...prev, status:flow.next, ...(nf?{nf}:{})}:null);
@@ -1634,7 +1593,6 @@ const CustomersPage = ({ setPage }) => {
             </div>
             <div className="flex gap-2 pt-2 border-t border-gray-100">
               <button onClick={()=>{setSelected(null);setPage('orders');}} className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Nova OS para este cliente</button>
-              <button onClick={()=>{setSelected(null);setPage('contracts');}} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Ver Contratos</button>
               <button onClick={()=>toggleActive(sel.id)} className={`px-4 py-2.5 border rounded-lg text-sm ${sel.active?'border-red-200 text-red-600 hover:bg-red-50':'border-green-200 text-green-600 hover:bg-green-50'}`}>
                 {sel.active?'Inativar':'Ativar'}
               </button>
@@ -1880,7 +1838,7 @@ const ContractsPage = ({ taxRegime='REAL' }) => {
 // ─── FINANCIAL ────────────────────────────────────────────────────────────────
 
 const INCOME_CATS_INIT  = ['Receita de Contratos','Receita de OS','Multas e Juros','Adiantamentos','Outros Recebimentos'];
-const EXPENSE_CATS_INIT = ['Pessoal','Material','Combustível','Administrativo','Manutenção','Telecomunicações','Impostos','Outros'];
+const EXPENSE_CATS_INIT = ['Pessoal','Material','Combustível','Administrativo','Manutenção','Telecomunicações','Impostos','Outros','Veículo','Hospedagem','Alimentação','Material Operacional','Ferramentas','Material Escritório','Documentação','Outros Gastos','Folha de Pagamento','Imposto','Conta de Luz','Conta de Água','Conta de Internet','Barracão'];
 
 const BANK_ACCOUNTS_INIT = [
   { id:1, bank:'Bradesco',  agency:'0001-9', account:'12345-6', type:'Corrente', balance:8500000, active:true  },
@@ -1991,19 +1949,23 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
   const [infoOpen,  setInfoOpen]  = useState(null);
   const [budPeriod, setBudPeriod] = useState('2026-03');
   const [approvalSel, setApprovalSel] = useState(new Set());
+  const [selR, setSelR] = useState(new Set());
+  const [selP, setSelP] = useState(new Set());
   const [transactions, setTx]   = useState([]);
   const [incomeCats,   setIncomeCats]   = useState(INCOME_CATS_INIT.map(n=>({id:n,name:n})));
   const [expenseCats,  setExpenseCats]  = useState(EXPENSE_CATS_INIT.map(n=>({id:n,name:n})));
   const [bankAccounts, setBankAccounts] = useState(BANK_ACCOUNTS_INIT);
   const [payMethods,   setPayMethods]   = useState(PAYMENT_METHODS_INIT);
+  const [customers,    setCustomers]    = useState([]);
   const [toast, setToast]       = useState(null);
   const [newTxModal, setNewTxModal] = useState(false);
-  const [newTx, setNewTx]       = useState({ type:'INCOME', description:'', amount:'', due_date:'', category_id:'', bank_account_id:'', payment_method_id:'' });
+  const [editTxId, setEditTxId] = useState(null);
+  const [newTx, setNewTx]       = useState({ type:'INCOME', description:'', amount:'', due_date:'', status:'PENDING', category_id:'', bank_account_id:'', payment_method_id:'', customer_id:'', invoice_number:'' });
 
   useEffect(() => { loadFinancialData(); }, []);
   const loadFinancialData = async () => {
-    const [txRes, catRes, baRes, pmRes, techRes] = await Promise.all([
-      api.getTransactions(), api.getCategories(), api.getBankAccounts(), api.getPaymentMethods(), api.getTechnicians()
+    const [txRes, catRes, baRes, pmRes, techRes, custRes] = await Promise.all([
+      api.getAllTransactions(), api.getCategories(), api.getBankAccounts(), api.getPaymentMethods(), api.getTechnicians(), api.getCustomers()
     ]);
     if (txRes.success)  setTx(txRes.data?.data || txRes.data || []);
     if (catRes.success) {
@@ -2013,6 +1975,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
     if (baRes.success)  setBankAccounts(baRes.data?.data || baRes.data || BANK_ACCOUNTS_INIT);
     if (pmRes.success)  setPayMethods(pmRes.data?.data || pmRes.data || PAYMENT_METHODS_INIT);
     if (techRes.success) setPayTechs(techRes.data?.data || techRes.data || []);
+    if (custRes.success) setCustomers(custRes.data?.data || custRes.data || []);
   };
   const [importModal, setImportModal] = useState(null);
   const [importText, setImportText]   = useState('');
@@ -2032,6 +1995,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
   const [stmtCats,     setStmtCats]     = useState({});
   const [stmtFileName, setStmtFileName] = useState('');
   const [stmtDragging, setStmtDragging] = useState(false);
+  const [stmtBankAccountId, setStmtBankAccountId] = useState('');
 
   // abre o modal de edição pré-preenchido com os dados atuais do funcionário
   const openEditPay = emp => {
@@ -2149,6 +2113,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
       paid_date:   line.date,
       status:      line.type==='CREDIT' ? 'RECEIVED' : 'PAID',
       category_id: catId,
+      bank_account_id: stmtBankAccountId || null,
     };
     const r = await api.createTransaction(txData);
     if (r.success) {
@@ -2260,7 +2225,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
     if (!newTx.description) { setToast('Descrição é obrigatória'); return; }
     if (!newTx.amount || parseFloat(newTx.amount) <= 0) { setToast('Informe um valor válido'); return; }
     if (!newTx.due_date) { setToast('Data de vencimento é obrigatória'); return; }
-    const result = await api.createTransaction({
+    const payload = {
       type: newTx.type,
       description: newTx.description,
       amount: Math.round(parseFloat(newTx.amount)*100),
@@ -2268,33 +2233,94 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
       category_id: newTx.category_id || null,
       bank_account_id: newTx.bank_account_id || null,
       payment_method_id: newTx.payment_method_id || null,
-      status: 'PENDING'
-    });
-    if (result.success) {
-      setTx(prev=>[result.data,...prev]);
-      setNewTxModal(false);
-      setNewTx({ type:'EXPENSE', description:'', amount:'', due_date:'', category_id:'', bank_account_id:'', payment_method_id:'' });
-      setToast('Lançamento criado!');
+      customer_id: newTx.customer_id || null,
+      invoice_number: newTx.type==='INCOME' ? (newTx.invoice_number || null) : null,
+    };
+    const resetForm = () => setNewTx({ type:'EXPENSE', description:'', amount:'', due_date:'', status:'PENDING', category_id:'', bank_account_id:'', payment_method_id:'', customer_id:'', invoice_number:'' });
+    if (editTxId) {
+      payload.status = newTx.status;
+      const result = await api.updateTransaction(editTxId, payload);
+      if (result.success) {
+        setTx(prev=>prev.map(t=>t.id===editTxId?result.data:t));
+        setNewTxModal(false);
+        setEditTxId(null);
+        resetForm();
+        setToast('Lançamento atualizado!');
+      } else {
+        setToast(`Erro ao atualizar lançamento: ${result.error}`);
+      }
     } else {
-      setToast(`Erro ao criar lançamento: ${result.error}`);
+      payload.status = 'PENDING';
+      const result = await api.createTransaction(payload);
+      if (result.success) {
+        setTx(prev=>[result.data,...prev]);
+        setNewTxModal(false);
+        resetForm();
+        setToast('Lançamento criado!');
+      } else {
+        setToast(`Erro ao criar lançamento: ${result.error}`);
+      }
     }
   };
+  const openEditTx = tx => {
+    setEditTxId(tx.id);
+    setNewTx({
+      type: tx.type,
+      description: tx.description || '',
+      amount: tx.amount != null ? (tx.amount/100).toFixed(2) : '',
+      due_date: tx.due_date || '',
+      status: tx.status || 'PENDING',
+      category_id: tx.category_id || '',
+      bank_account_id: tx.bank_account_id || '',
+      payment_method_id: tx.payment_method_id || '',
+      customer_id: tx.customer_id || '',
+      invoice_number: tx.invoice_number || ''
+    });
+    setNewTxModal(true);
+  };
+  const deleteTx = async id => {
+    if (!window.confirm('Excluir este lançamento permanentemente? Essa ação não pode ser desfeita.')) return;
+    const result = await api.deleteTransaction(id);
+    if (result.success) {
+      setTx(prev=>prev.filter(t=>t.id!==id));
+      setToast('Lançamento excluído.');
+    } else {
+      setToast(`Erro ao excluir: ${result.error}`);
+    }
+  };
+  const bulkDeleteTx = async (ids, setSel) => {
+    if (!ids.length) return;
+    if (!window.confirm(`Excluir ${ids.length} lançamento(s) permanentemente? Essa ação não pode ser desfeita.`)) return;
+    const results = await Promise.all(ids.map(id=>api.deleteTransaction(id)));
+    const okIds = ids.filter((id,i)=>results[i].success);
+    const failCount = ids.length - okIds.length;
+    setTx(prev=>prev.filter(t=>!okIds.includes(t.id)));
+    setSel(new Set());
+    setToast(failCount===0 ? `${okIds.length} lançamento(s) excluído(s).` : `${okIds.length} excluído(s), ${failCount} falharam.`);
+  };
 
-  const parseImport = () => {
+  const parseImport = async () => {
     const lines = importText.trim().split('\n').filter(l=>l.trim());
     const type = importModal;
-    const parsed = lines.map((l,idx) => {
+    const cats = type==='INCOME' ? incomeCats : expenseCats;
+    const today = new Date().toISOString().split('T')[0];
+    const rows = lines.map((l,idx) => {
       const cols = l.split(/[;\t,]/).map(c=>c.trim().replace(/"/g,''));
-      const desc    = cols[0]||`Importado ${idx+1}`;
-      const amount  = Math.round(parseFloat((cols[1]||'0').replace(',','.'))*100);
-      const due     = cols[2]||'2026-04-30';
-      const cat     = cols[3]||(type==='INCOME'?'Receita de OS':'Administrativo');
-      return { id:Date.now()+idx, type, status:'PENDING', desc, amount, due, cat, account:'Bradesco', payMethod:'PIX' };
+      const description = cols[0]||`Importado ${idx+1}`;
+      const amount    = Math.round(parseFloat((cols[1]||'0').replace(',','.'))*100);
+      const due_date  = cols[2]||today;
+      const catName   = cols[3]||'';
+      const match     = cats.find(c=>(c.name||c).toLowerCase()===catName.toLowerCase());
+      return { description, amount, due_date, category_id: match?.id||null };
     });
-    setTx(prev=>[...prev,...parsed]);
+    let created = 0;
+    for (const row of rows) {
+      const result = await api.createTransaction({ type, status:'PENDING', ...row });
+      if (result.success) { setTx(prev=>[result.data,...prev]); created++; }
+    }
     setImportModal(null);
     setImportText('');
-    setToast(`${parsed.length} lançamento(s) importado(s)!`);
+    setToast(created===rows.length ? `${created} lançamento(s) importado(s)!` : `${created} de ${rows.length} importado(s) — ${rows.length-created} falharam`);
   };
 
   const projectedFlow = () => {
@@ -2318,27 +2344,45 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
     return days.map(d=>{ running+=d.diff; return {...d, balance:running}; });
   };
 
-  const TxTable = ({ txList, btnLabel, onSettle }) => (
+  const TxTable = ({ txList, btnLabel, onSettle, showNF, selected, onToggle, onToggleAll }) => (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <table className="w-full text-sm">
         <thead className="bg-gray-50 border-b border-gray-200">
-          <tr>{['Descrição','Categoria','Banco','F. Pagamento','Vencimento','Valor','Status',''].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>)}</tr>
+          <tr>
+            <th className="px-4 py-3 w-8">
+              <input type="checkbox" className="w-4 h-4 accent-blue-600"
+                aria-label="Selecionar todos os lançamentos"
+                checked={txList.length>0 && txList.every(t=>selected.has(t.id))}
+                onChange={e=>onToggleAll(txList.map(t=>t.id), e.target.checked)}/>
+            </th>
+            {['Descrição','Categoria','Cliente',...(showNF?['NF']:[]),'Banco','F. Pagamento','Vencimento','Valor','Status',''].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>)}
+          </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
-          {txList.length===0&&<tr><td colSpan="8" className="px-4 py-8 text-center text-sm text-gray-400">Nenhum lançamento encontrado</td></tr>}
+          {txList.length===0&&<tr><td colSpan={showNF?11:10} className="px-4 py-8 text-center text-sm text-gray-400">Nenhum lançamento encontrado</td></tr>}
           {txList.map(t=>(
-            <tr key={t.id} className={`hover:bg-gray-50 ${t.status==='OVERDUE'?'bg-red-50':t.status==='PAID'||t.status==='RECEIVED'?'bg-green-50/30':''}`}>
+            <tr key={t.id} className={`hover:bg-gray-50 ${selected.has(t.id)?'bg-blue-50':t.status==='OVERDUE'?'bg-red-50':t.status==='PAID'||t.status==='RECEIVED'?'bg-green-50/30':''}`}>
+              <td className="px-4 py-3">
+                <input type="checkbox" className="w-4 h-4 accent-blue-600"
+                  aria-label={`Selecionar lançamento ${t.description||''}`}
+                  checked={selected.has(t.id)} onChange={()=>onToggle(t.id)}/>
+              </td>
               <td className="px-4 py-3 max-w-xs"><p className="text-gray-800 truncate">{t.description||t.desc}</p></td>
               <td className="px-4 py-3 text-xs text-gray-500">{txCatName(t)}</td>
+              <td className="px-4 py-3 text-xs text-gray-500">{t.customers?.name||customers.find(c=>c.id===t.customer_id)?.name||<span className="text-gray-300">—</span>}</td>
+              {showNF && <td className="px-4 py-3 text-xs text-gray-500">{t.invoice_number||<span className="text-gray-300">—</span>}</td>}
               <td className="px-4 py-3 text-xs text-gray-500">{bankAccounts.find(b=>b.id===t.bank_account_id)?.name||t.account||<span className="text-gray-300">—</span>}</td>
               <td className="px-4 py-3 text-xs text-gray-500">{payMethods.find(m=>m.id===t.payment_method_id)?.name||t.payMethod||<span className="text-gray-300">—</span>}</td>
               <td className="px-4 py-3 text-gray-600">{fmtDate(txDue(t))}</td>
               <td className="px-4 py-3 font-semibold text-gray-800">{fmt(t.amount)}</td>
               <td className="px-4 py-3"><Badge status={t.status}/></td>
               <td className="px-4 py-3">
-                {(t.status==='PENDING'||t.status==='OVERDUE')
-                  ?<button onClick={()=>onSettle(t.id)} className="text-xs bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 font-medium">{btnLabel}</button>
-                  :<span className="text-xs text-gray-300">—</span>}
+                <div className="flex items-center justify-end gap-1.5">
+                  {(t.status==='PENDING'||t.status==='OVERDUE')&&
+                    <button onClick={()=>onSettle(t.id)} className="text-xs bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 font-medium whitespace-nowrap">{btnLabel}</button>}
+                  <button onClick={()=>openEditTx(t)} title="Editar lançamento" aria-label={`Editar lançamento ${t.description||''}`} className="text-xs text-gray-500 hover:text-blue-600 border border-gray-200 rounded-lg px-2 py-1 hover:bg-blue-50">✎</button>
+                  <button onClick={()=>deleteTx(t.id)} title="Excluir lançamento" aria-label={`Excluir lançamento ${t.description||''}`} className="text-xs text-gray-500 hover:text-red-600 border border-gray-200 rounded-lg px-2 py-1 hover:bg-red-50">🗑</button>
+                </div>
               </td>
             </tr>
           ))}
@@ -2453,9 +2497,18 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                   <button onClick={()=>{setDateFromR('');setDateToR('');setStatusR('all');setCatR('all');}}
                     className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 border border-gray-200 rounded-lg">Limpar filtros</button>}
                 <button onClick={()=>setImportModal('INCOME')} className="flex items-center gap-1.5 text-sm border border-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-50">↑ Importar planilha</button>
-                <button onClick={()=>{setNewTx({type:'INCOME',description:'',amount:'',due_date:'',category_id:'',bank_account_id:'',payment_method_id:''});setNewTxModal(true);}} className="ml-auto flex items-center gap-1.5 bg-green-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-green-700"><Icon name="plus" className="w-4 h-4"/> Novo Recebimento</button>
+                <button onClick={()=>{setEditTxId(null);setNewTx({type:'INCOME',description:'',amount:'',due_date:'',status:'PENDING',category_id:'',bank_account_id:'',payment_method_id:'',customer_id:'',invoice_number:''});setNewTxModal(true);}} className="ml-auto flex items-center gap-1.5 bg-green-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-green-700"><Icon name="plus" className="w-4 h-4"/> Novo Recebimento</button>
               </div>
-              <TxTable txList={receivable} btnLabel="Baixar" onSettle={settle}/>
+              {selR.size>0&&
+                <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5">
+                  <span className="text-sm font-medium text-blue-700">{selR.size} selecionado(s)</span>
+                  <button onClick={()=>bulkDeleteTx([...selR], setSelR)} className="flex items-center gap-1.5 bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-red-700">🗑 Excluir selecionados</button>
+                  <button onClick={()=>setSelR(new Set())} className="text-xs text-blue-600 hover:underline ml-auto">Limpar seleção</button>
+                </div>}
+              <TxTable txList={receivable} btnLabel="Baixar" onSettle={settle} showNF
+                selected={selR}
+                onToggle={id=>setSelR(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;})}
+                onToggleAll={(ids,checked)=>setSelR(prev=>{const n=new Set(prev);ids.forEach(id=>checked?n.add(id):n.delete(id));return n;})}/>
             </div>
           );
         })()}
@@ -2500,9 +2553,18 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                   <button onClick={()=>{setDateFromP('');setDateToP('');setStatusP('all');setCatP('all');}}
                     className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 border border-gray-200 rounded-lg">Limpar filtros</button>}
                 <button onClick={()=>setImportModal('EXPENSE')} className="flex items-center gap-1.5 text-sm border border-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-50">↑ Importar planilha</button>
-                <button onClick={()=>{setNewTx({type:'EXPENSE',description:'',amount:'',due_date:'',category_id:'',bank_account_id:'',payment_method_id:''});setNewTxModal(true);}} className="ml-auto flex items-center gap-1.5 bg-red-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-red-700"><Icon name="plus" className="w-4 h-4"/> Nova Despesa</button>
+                <button onClick={()=>{setEditTxId(null);setNewTx({type:'EXPENSE',description:'',amount:'',due_date:'',status:'PENDING',category_id:'',bank_account_id:'',payment_method_id:'',customer_id:'',invoice_number:''});setNewTxModal(true);}} className="ml-auto flex items-center gap-1.5 bg-red-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-red-700"><Icon name="plus" className="w-4 h-4"/> Nova Despesa</button>
               </div>
-              <TxTable txList={payable} btnLabel="Pagar" onSettle={settle}/>
+              {selP.size>0&&
+                <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5">
+                  <span className="text-sm font-medium text-blue-700">{selP.size} selecionado(s)</span>
+                  <button onClick={()=>bulkDeleteTx([...selP], setSelP)} className="flex items-center gap-1.5 bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-red-700">🗑 Excluir selecionados</button>
+                  <button onClick={()=>setSelP(new Set())} className="text-xs text-blue-600 hover:underline ml-auto">Limpar seleção</button>
+                </div>}
+              <TxTable txList={payable} btnLabel="Pagar" onSettle={settle}
+                selected={selP}
+                onToggle={id=>setSelP(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;})}
+                onToggleAll={(ids,checked)=>setSelP(prev=>{const n=new Set(prev);ids.forEach(id=>checked?n.add(id):n.delete(id));return n;})}/>
             </div>
           );
         })()}
@@ -3374,12 +3436,20 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
           const toggleSel = id => setApprovalSel(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;});
           const selAll  = () => setApprovalSel(new Set(approvalQueue.map(t=>t.id)));
           const selNone = () => setApprovalSel(new Set());
-          const approveSelected = () => {
+          const approveSelected = async () => {
             if(approvalSel.size===0) return;
-            const cnt=approvalSel.size;
-            setTx(prev=>prev.map(t=>approvalSel.has(t.id)?{...t,status:t.type==='INCOME'?'RECEIVED':'PAID'}:t));
+            const ids = [...approvalSel];
+            const today = new Date().toISOString().split('T')[0];
+            const results = await Promise.all(ids.map(id => {
+              const t = transactions.find(x=>x.id===id);
+              const newStatus = t?.type==='INCOME' ? 'RECEIVED' : 'PAID';
+              return api.updateTransaction(id, { status: newStatus, paid_date: today }).then(r=>({id, ok:r.success}));
+            }));
+            const okIds = new Set(results.filter(r=>r.ok).map(r=>r.id));
+            setTx(prev=>prev.map(t=>okIds.has(t.id)?{...t,status:t.type==='INCOME'?'RECEIVED':'PAID',paid_date:today}:t));
             setApprovalSel(new Set());
-            setToast(`${cnt} lançamento(s) aprovado(s) com sucesso!`);
+            const failCount = ids.length - okIds.size;
+            setToast(failCount===0 ? `${okIds.size} lançamento(s) aprovado(s) com sucesso!` : `${okIds.size} aprovado(s), ${failCount} falharam`);
           };
           return (
             <div className="space-y-4">
@@ -3597,11 +3667,16 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                   <p className="text-xs text-gray-400">{stmtLines.length} linhas · {done} importadas · {pending} pendentes</p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <select value={stmtBankAccountId} onChange={e=>setStmtBankAccountId(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white">
+                    <option value="">Conta bancária deste extrato...</option>
+                    {bankAccounts.map(b=><option key={b.id} value={b.id}>{b.name||b.bank_name||b.bank} — {b.account_number||b.account||''}</option>)}
+                  </select>
                   <button onClick={importAllStmt}
                     className="px-4 py-1.5 bg-teal-600 text-white rounded-lg text-xs font-medium hover:bg-teal-700">
                     Importar todas com categoria
                   </button>
-                  <button onClick={()=>{setStmtLines([]);setStmtResults({});setStmtCats({});setStmtFileName('');}}
+                  <button onClick={()=>{setStmtLines([]);setStmtResults({});setStmtCats({});setStmtFileName('');setStmtBankAccountId('');}}
                     className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-500 hover:bg-gray-50">Novo arquivo</button>
                 </div>
               </div>
@@ -3729,13 +3804,21 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
           </div>
         </Modal>
         {/* New Transaction Modal */}
-        <Modal open={newTxModal} onClose={()=>setNewTxModal(false)} title={newTx.type==='INCOME'?'Novo Recebimento':'Nova Despesa'} size="md">
+        <Modal open={newTxModal} onClose={()=>{setNewTxModal(false);setEditTxId(null);}} title={editTxId ? 'Editar Lançamento' : (newTx.type==='INCOME'?'Novo Recebimento':'Nova Despesa')} size="md">
           <div className="space-y-4">
             <div className="flex gap-2">
               {[['INCOME','↑ Recebimento'],['EXPENSE','↓ Despesa']].map(([v,l])=>(
                 <button key={v} onClick={()=>setNewTx(p=>({...p,type:v,category_id:''}))} className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${newTx.type===v?(v==='INCOME'?'bg-green-600 text-white border-green-600':'bg-red-600 text-white border-red-600'):'border-gray-200 text-gray-600 hover:bg-gray-50'}`}>{l}</button>
               ))}
             </div>
+            {editTxId && (
+              <div><label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select value={newTx.status} onChange={e=>setNewTx(p=>({...p,status:e.target.value}))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="PENDING">Pendente</option>
+                  <option value={newTx.type==='INCOME'?'RECEIVED':'PAID'}>{newTx.type==='INCOME'?'Recebido':'Pago'}</option>
+                  <option value="OVERDUE">Vencido</option>
+                </select></div>
+            )}
             {[{label:'Descrição *',key:'description',type:'text',placeholder:'Ex: Fatura Hospital Regional'},{label:'Valor (R$) *',key:'amount',type:'number',placeholder:'0,00'},{label:'Vencimento *',key:'due_date',type:'date',placeholder:''}].map(f=>(
               <div key={f.key}><label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
                 <input type={f.type} value={newTx[f.key]} onChange={e=>setNewTx(p=>({...p,[f.key]:e.target.value}))} placeholder={f.placeholder}
@@ -3746,6 +3829,18 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                 <option value="">Sem categoria</option>
                 {(newTx.type==='INCOME'?incomeCats:expenseCats).map(c=><option key={c.id||c} value={c.id||c}>{c.name||c}</option>)}
               </select></div>
+            <div><label className="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
+              <select value={newTx.customer_id} onChange={e=>setNewTx(p=>({...p,customer_id:e.target.value}))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Sem cliente vinculado</option>
+                {customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              <p className="text-xs text-gray-400 mt-1">Vincule a um cliente para acompanhar quanto está sendo gasto para atendê-lo.</p>
+            </div>
+            {newTx.type==='INCOME' && (
+              <div><label className="block text-sm font-medium text-gray-700 mb-1">Nº da Nota Fiscal</label>
+                <input type="text" value={newTx.invoice_number} onChange={e=>setNewTx(p=>({...p,invoice_number:e.target.value}))} placeholder="Ex: 12345"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/></div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div><label className="block text-sm font-medium text-gray-700 mb-1">Conta Bancária</label>
                 <select value={newTx.bank_account_id} onChange={e=>setNewTx(p=>({...p,bank_account_id:e.target.value}))} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -3759,8 +3854,8 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                 </select></div>
             </div>
             <div className="flex gap-2 pt-2">
-              <button onClick={()=>setNewTxModal(false)} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Cancelar</button>
-              <button onClick={addTx} className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Salvar Lançamento</button>
+              <button onClick={()=>{setNewTxModal(false);setEditTxId(null);}} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Cancelar</button>
+              <button onClick={addTx} className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">{editTxId ? 'Salvar Alterações' : 'Salvar Lançamento'}</button>
             </div>
           </div>
         </Modal>
@@ -4463,7 +4558,7 @@ const SettingsPage = ({ taxRegime, setTaxRegime, incomeCats=[], setIncomeCats, e
   useEffect(() => {
     if (tab !== 'accounts') return;
     setInvestLoading(true);
-    api.getTransactions().then(r => {
+    api.getAllTransactions().then(r => {
       if (r.success) {
         const txs = r.data?.data || r.data || [];
         const investCatIds = new Set(expenseCats.filter(c=>c.accounting_class==='INVESTIMENTO').map(c=>c.id));
@@ -5299,7 +5394,8 @@ function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [page, setPage]         = useState('dashboard');
-  const [user, setUser]         = useState(() => api.user);
+  // TEMPORÁRIO: sem login ativo, assume perfil ADMIN para visão completa do sistema
+  const [user, setUser]         = useState(() => api.user || { role: 'ADMIN', name: 'Administrador' });
   const [collapsed, setCollapsed] = useState(false);
   // Regime tributário global — propagado por toda a aplicação
   const [taxRegime, setTaxRegime] = useState(() => localStorage.getItem('opticom_taxRegime') || 'REAL');
@@ -5310,8 +5406,8 @@ function App() {
   });
   const savePermissions = p => { setPermissions(p); localStorage.setItem('opticom_permissions', JSON.stringify(p)); };
   // Configurações financeiras globais
-  const [incomeCats,  setIncomeCats]  = useState(INCOME_CATS_INIT);
-  const [expenseCats, setExpenseCats] = useState(EXPENSE_CATS_INIT);
+  const [incomeCats,  setIncomeCats]  = useState(INCOME_CATS_INIT.map(n=>({id:n,name:n})));
+  const [expenseCats, setExpenseCats] = useState(EXPENSE_CATS_INIT.map(n=>({id:n,name:n})));
   const [bankAccounts,setBankAccounts]= useState(BANK_ACCOUNTS_INIT);
   const [payMethods,  setPayMethods]  = useState(PAYMENT_METHODS_INIT);
 
@@ -5361,7 +5457,8 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!loggedIn) return <LoginPage onLogin={()=>{ setUser(api.user); setLoggedIn(true); }}/>;
+  // TEMPORÁRIO: tela de login desativada a pedido do usuário — reativar removendo este comentário
+  // if (!loggedIn) return <LoginPage onLogin={()=>{ setUser(api.user); setLoggedIn(true); }}/>;
 
   const renderPage = () => {
     const role = user?.role || 'TECHNICIAN';
