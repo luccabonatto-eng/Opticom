@@ -1,0 +1,45 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+/* ── Scrollbars finas em toda a página ──────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* ── Todo container que envolve uma <table> rola na horizontal ─ */
+/* Usa :has() — suportado em Chrome 105+, Safari 15.4+, Firefox 121+ */
+.overflow-hidden:has(> table),
+.overflow-hidden:has(> div > table),
+.overflow-hidden:has(> .overflow-x-auto) {
+  overflow-x: auto !important;
+}
+
+/* ── Garante que tabelas nunca quebrem o layout ─────────────── */
+table {
+  min-width: max-content;
+}
+
+/* ── Grids multi-coluna responsivos ─────────────────────────── */
+/* Containers diretos de página com padding p-5/p-6 têm scroll */
+.p-5.space-y-4,
+.p-5.space-y-5,
+.p-6.space-y-4,
+.p-6.space-y-5 {
+  min-width: 0;
+}
+
+/* ── Conteúdo principal de cada página ──────────────────────── */
+/* O flex-1 overflow-y-auto recebe também overflow-x */
+.flex-1.overflow-y-auto {
+  overflow-x: auto;
+}
+
+/* ── Grids que podem ser largos demais ──────────────────────── */
+/* Permite scroll horizontal nos grid containers sem quebrar o layout */
+.grid {
+  min-width: 0;
+}
+.grid > * {
+  min-width: 0;
+}
