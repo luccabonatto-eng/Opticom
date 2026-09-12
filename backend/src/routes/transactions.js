@@ -5,11 +5,43 @@ const checkRole = require('../middleware/rbac');
 const router = express.Router();
 
 const SERVICE_TYPES = ['Instalação', 'Manutenção', 'Revisão', 'Emergência', 'Contrato', 'Avulso'];
+const TYPES = ['INCOME', 'EXPENSE'];
+const STATUSES = ['PENDING', 'PAID', 'RECEIVED', 'OVERDUE', 'CANCELLED'];
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+// Valida os campos presentes em `body`. Campos ausentes são ignorados, o que
+// permite reusar a mesma função no POST (criação) e no PUT (atualização parcial).
+const validateTransaction = body => {
+  const { type, status, description, amount, due_date, paid_date, service_type } = body;
+
+  if (type !== undefined && !TYPES.includes(type)) {
+    return `type inválido. Use: ${TYPES.join(' ou ')}`;
+  }
+  if (status !== undefined && !STATUSES.includes(status)) {
+    return `status inválido. Use: ${STATUSES.join(', ')}`;
+  }
+  if (description !== undefined) {
+    if (typeof description !== 'string' || !description.trim()) return 'description não pode ser vazia';
+    if (description.length > 500) return 'description excede 500 caracteres';
+  }
+  if (amount !== undefined) {
+    if (!Number.isInteger(amount)) return 'amount deve ser inteiro em centavos';
+    if (amount <= 0) return 'amount deve ser maior que zero';
+  }
+  if (due_date !== undefined && !ISO_DATE.test(due_date)) return 'due_date deve estar no formato AAAA-MM-DD';
+  if (paid_date !== undefined && paid_date !== null && !ISO_DATE.test(paid_date)) {
+    return 'paid_date deve estar no formato AAAA-MM-DD';
+  }
+  if (service_type !== undefined && service_type !== null && !SERVICE_TYPES.includes(service_type)) {
+    return `service_type inválido. Use: ${SERVICE_TYPES.join(', ')}`;
+  }
+  return null;
+};
 
 router.get('/', async (req, res) => {
   try {
     const { type, status, category_id, customer_id, service_type } = req.query;
-    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+    const limit = Math.min(parseInt(req.query.limit) || 50, 1000);
     const offset = parseInt(req.query.offset) || 0;
 
     let query = supabase
@@ -77,8 +109,8 @@ router.get('/dre-gerencial', async (req, res) => {
       else byServiceType[svcKey].expense += amount;
     });
 
-    const totalIncome  = data.filter(t => t.type === 'INCOME').reduce((s, t) => s + t.amount, 0);
-    const totalExpense = data.filter(t => t.type === 'EXPENSE').reduce((s, t) => s + t.amount, 0);
+    const totalIncome  = data.filter(t => t.type === 'INCOME').reduce((s, t) => s + (t.amount || 0), 0);
+    const totalExpense = data.filter(t => t.type === 'EXPENSE').reduce((s, t) => s + (t.amount || 0), 0);
 
     res.json({
       period: period || year || 'all',
@@ -110,17 +142,20 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   try {
     const {
-      type, status, description, amount, due_date,
+      type, status, description, amount, due_date, paid_date,
       category_id, bank_account_id, payment_method_id,
-      customer_id, service_type
+      customer_id, service_type, invoice_number
     } = req.body;
 
     if (!type || !description || !amount || !due_date) {
       return res.status(400).json({ error: 'Campos obrigatórios faltando' });
     }
+
+    const invalid = validateTransaction(req.body);
+    if (invalid) return res.status(400).json({ error: invalid });
 
     const record = {
       type,
@@ -128,11 +163,13 @@ router.post('/', async (req, res) => {
       description,
       amount,
       due_date,
+      paid_date:           paid_date          || null,
       category_id:        category_id        || null,
       bank_account_id:    bank_account_id    || null,
       payment_method_id:  payment_method_id  || null,
       customer_id:        customer_id        || null,
-      service_type:       service_type       || null
+      service_type:       service_type       || null,
+      invoice_number:     invoice_number     || null
     };
 
     const { data, error } = await supabase
@@ -147,14 +184,17 @@ router.post('/', async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   try {
+    const invalid = validateTransaction(req.body);
+    if (invalid) return res.status(400).json({ error: invalid });
+
     const allowedFields = {};
     const fieldMap = [
       'type', 'status', 'description', 'amount', 'due_date', 'paid_date',
       'category_id', 'bank_account_id', 'payment_method_id',
       'related_order_id', 'related_contract_id',
-      'customer_id', 'service_type'
+      'customer_id', 'service_type', 'invoice_number'
     ];
 
     fieldMap.forEach(field => {

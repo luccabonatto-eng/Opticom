@@ -7,7 +7,7 @@ const router = express.Router();
 // GET all contracts com paginação
 router.get('/', async (req, res) => {
   try {
-    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+    const limit = Math.min(parseInt(req.query.limit) || 50, 1000);
     const offset = parseInt(req.query.offset) || 0;
 
     const { data, error, count } = await supabase
@@ -53,7 +53,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // CREATE contract
-router.post('/', async (req, res) => {
+router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   try {
     const { customer_id, type, value, start_date, end_date, status, sla_hours } = req.body;
     let { number } = req.body;
@@ -93,7 +93,7 @@ router.post('/', async (req, res) => {
 });
 
 // UPDATE contract
-router.put('/:id', async (req, res) => {
+router.put('/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   try {
     const { id } = req.params;
 

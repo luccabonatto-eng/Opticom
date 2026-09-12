@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const { status, customer_id } = req.query;
-    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+    const limit = Math.min(parseInt(req.query.limit) || 50, 1000);
     const offset = parseInt(req.query.offset) || 0;
 
     let query = supabase.from('orders').select('*, customers(*), technicians(*)', { count: 'exact' });
@@ -56,7 +56,9 @@ router.get('/:id', async (req, res) => {
 });
 
 // CREATE order
-router.post('/', async (req, res) => {
+// Abrir OS é tarefa de escritório. O PUT segue liberado para qualquer autenticado
+// porque o técnico atualiza status/conclusão da própria OS em campo.
+router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   try {
     const { customer_id, type, priority, status, assigned_technician_id, scheduled_date, substation, city, description } = req.body;
     let { number } = req.body;
@@ -108,7 +110,7 @@ router.put('/:id', async (req, res) => {
 
     // Whitelist explícito - apenas estes campos podem ser atualizados
     const allowedFields = {};
-    const fieldMap = ['number', 'type', 'priority', 'difficulty', 'status', 'assigned_technician_id', 'additional_technicians', 'scheduled_date', 'completed_date', 'substation', 'city', 'description'];
+    const fieldMap = ['number', 'type', 'priority', 'difficulty', 'status', 'assigned_technician_id', 'additional_technicians', 'scheduled_date', 'completed_date', 'substation', 'city', 'description', 'nf'];
 
     fieldMap.forEach(field => {
       if (req.body.hasOwnProperty(field)) {

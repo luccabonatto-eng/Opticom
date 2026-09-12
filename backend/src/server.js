@@ -27,7 +27,9 @@ const audit = require('./middleware/audit');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// CORS: aceita origens explícitas + qualquer subdomínio *.vercel.app + localhost
+// CORS: apenas origens explícitas (CORS_ORIGIN) + localhost de desenvolvimento.
+// Curingas como *.vercel.app não são aceitos: qualquer pessoa pode registrar um
+// subdomínio nesses provedores e faria requisições autenticadas contra esta API.
 const corsOrigins = process.env.CORS_ORIGIN?.split(',').map(s => s.trim()).filter(Boolean) || [];
 
 const corsOriginFn = (origin, callback) => {
@@ -38,7 +40,7 @@ const corsOriginFn = (origin, callback) => {
     'http://localhost:5173',
     'http://127.0.0.1:3000',
   ];
-  if (allowed.includes(origin) || /\.vercel\.app$/.test(origin) || /\.railway\.app$/.test(origin)) {
+  if (allowed.includes(origin)) {
     return callback(null, true);
   }
   return callback(new Error(`CORS: origem não permitida — ${origin}`));

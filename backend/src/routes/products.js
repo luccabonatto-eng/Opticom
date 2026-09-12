@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+    const limit = Math.min(parseInt(req.query.limit) || 50, 1000);
     const offset = parseInt(req.query.offset) || 0;
 
     const { data, error, count } = await supabase
@@ -44,7 +44,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', async (req, res) => {
+router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   try {
     const { name, sku, category, quantity, min_quantity, unit_cost, unit_price, description } = req.body;
 
