@@ -3,11 +3,15 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const validator = require('validator');
 const supabase = require('../../config/supabase');
+const authMiddleware = require('../middleware/auth');
+const checkRole = require('../middleware/rbac');
 
 const router = express.Router();
 
-// Registrar novo usuário
-router.post('/register', async (req, res) => {
+// Criar usuário — exclusivo de ADMIN autenticado.
+// Antes esta rota era pública e aceitava role no corpo, permitindo que
+// qualquer pessoa criasse a própria conta de administrador.
+router.post('/register', authMiddleware, checkRole('ADMIN'), async (req, res) => {
   try {
     const { name, email, password, role = 'TECHNICIAN' } = req.body;
 
@@ -137,7 +141,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Refresh token
-router.post('/refresh', (req, res) => {
+router.post('/refresh', async (req, res) => {
   try {
     // Tentar ler token do cookie (HttpOnly) - preferência
     let token = req.cookies && req.cookies.opticom_token;
@@ -162,13 +166,28 @@ router.post('/refresh', (req, res) => {
       throw error;
     }
 
-    // Gerar novo token
+    // Reconsultar o usuário: sem isto, desativar, excluir ou rebaixar uma conta
+    // não encerra a sessão — o titular renova indefinidamente com o perfil antigo.
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, name, email, role, status')
+      .eq('id', decoded.id)
+      .single();
+
+    if (userError || !user) {
+      return res.status(401).json({ error: 'Usuário não encontrado. Faça login novamente.' });
+    }
+    if (user.status !== 'ACTIVE') {
+      return res.status(403).json({ error: 'Usuário inativo' });
+    }
+
+    // Perfil vem do banco, não do token: rebaixamento passa a valer na renovação
     const newToken = jwt.sign(
       {
-        id: decoded.id,
-        name: decoded.name,
-        email: decoded.email,
-        role: decoded.role
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
       },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }

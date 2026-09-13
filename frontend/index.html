@@ -738,11 +738,11 @@ const DashboardPage = ({ setPage, taxRegime='REAL' }) => {
 
   const loadDashboard = async (month) => {
     const [ordRes, custRes, ctRes, txRes, prodRes] = await Promise.all([
-      api.getOrders({ limit:200 }),
-      api.getCustomers(),
-      api.getContracts(),
+      api.getAllOrders(),
+      api.getAllCustomers(),
+      api.getAllContracts(),
       api.getAllTransactions(),
-      api.getProducts(),
+      api.getAllProducts(),
     ]);
     const orders   = ordRes.success  ? (ordRes.data?.data  || ordRes.data  || []) : [];
     const customers= custRes.success ? (custRes.data?.data || custRes.data || []) : [];
@@ -1093,13 +1093,13 @@ const OrdersPage = ({ taxRegime='REAL' }) => {
 
   useEffect(() => {
     loadOrders();
-    api.getTechnicians().then(r => { if (r.success) setTechnicians(r.data?.data || r.data || []); });
-    api.getCustomers().then(r => { if (r.success) setCustomers(r.data?.data || r.data || []); });
+    api.getAllTechnicians().then(r => { if (r.success) setTechnicians(r.data?.data || r.data || []); });
+    api.getAllCustomers().then(r => { if (r.success) setCustomers(r.data?.data || r.data || []); });
   }, []);
 
   const loadOrders = async () => {
     setLoading(true);
-    const result = await api.getOrders();
+    const result = await api.getAllOrders();
     if (result.success) {
       setOrders(result.data?.data || result.data || []);
     } else {
@@ -1483,7 +1483,7 @@ const CustomersPage = ({ setPage }) => {
 
   const loadCustomers = async () => {
     setLoading(true);
-    const result = await api.getCustomers();
+    const result = await api.getAllCustomers();
     if (result.success) {
       setCustomers(result.data?.data || result.data || []);
     } else {
@@ -1646,7 +1646,7 @@ const ContractsPage = ({ taxRegime='REAL' }) => {
 
   const loadContracts = async () => {
     setLoading(true);
-    const [cRes, custRes] = await Promise.all([api.getContracts(), api.getCustomers()]);
+    const [cRes, custRes] = await Promise.all([api.getAllContracts(), api.getAllCustomers()]);
     if (cRes.success) setContracts(cRes.data?.data || cRes.data || []);
     if (custRes.success) setCustomers(custRes.data?.data || custRes.data || []);
     setLoading(false);
@@ -1965,7 +1965,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
   useEffect(() => { loadFinancialData(); }, []);
   const loadFinancialData = async () => {
     const [txRes, catRes, baRes, pmRes, techRes, custRes] = await Promise.all([
-      api.getAllTransactions(), api.getCategories(), api.getBankAccounts(), api.getPaymentMethods(), api.getTechnicians(), api.getCustomers()
+      api.getAllTransactions(), api.getCategories(), api.getBankAccounts(), api.getPaymentMethods(), api.getAllTechnicians(), api.getAllCustomers()
     ]);
     if (txRes.success)  setTx(txRes.data?.data || txRes.data || []);
     if (catRes.success) {
@@ -3900,7 +3900,7 @@ const InventoryPage = () => {
   });
 
   useEffect(() => {
-    api.getProducts().then(r => {
+    api.getAllProducts().then(r => {
       if (r.success) {
         const normalized = (r.data?.data || r.data || []).map(normalizeProduct);
         setInventory(normalized);
@@ -4126,7 +4126,7 @@ const TechniciansPage = () => {
 
   useEffect(() => { loadTechnicians(); }, []);
   const loadTechnicians = async () => {
-    const r = await api.getTechnicians();
+    const r = await api.getAllTechnicians();
     if (r.success) setTechnicians(r.data?.data || r.data || []);
     else setTechnicians([]);
   };
@@ -4295,8 +4295,8 @@ const FleetPage = () => {
   const [maintForm, setMaintForm]   = useState({date:'',type:'Preventiva',desc:'',km:'',cost:'',tech:''});
 
   useEffect(() => {
-    api.getVehicles().then(r => setVehicles(r.data?.data || r.data || []));
-    api.getTechnicians().then(r => setTechs(r.data?.data || r.data || []));
+    api.getAllVehicles().then(r => setVehicles(r.data?.data || r.data || []));
+    api.getAllTechnicians().then(r => setTechs(r.data?.data || r.data || []));
   }, []);
 
   useEffect(() => {

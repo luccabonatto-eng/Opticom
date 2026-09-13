@@ -29,6 +29,9 @@ router.put('/:id', checkRole('ADMIN'), async (req, res) => {
     });
     if (req.body.password) {
       allowed.password_hash = await bcrypt.hash(req.body.password, 10);
+      // Remove o valor em texto puro: o middleware de auditoria serializa
+      // req.body e a senha acabaria gravada em audit_logs.detail
+      delete req.body.password;
     }
 
     const { data, error } = await supabase

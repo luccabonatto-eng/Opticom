@@ -103,6 +103,32 @@ class OpticomAPI {
     }
   }
 
+  // Percorre todas as páginas de uma listagem. Telas que somam ou contam
+  // (dashboard, DRE, Fluxo de Caixa, A Receber/A Pagar) precisam do conjunto
+  // completo — lendo só a primeira página os totais ficam errados em silêncio
+  // assim que o cadastro passa do limite por página.
+  async _fetchAllPages(path, filters = {}) {
+    const PAGE = 1000;
+    const all = [];
+    let offset = 0;
+    let total = Infinity;
+
+    while (all.length < total) {
+      const params = new URLSearchParams({ ...filters, limit: PAGE, offset });
+      const res = await this._fetch(`${path}?${params}`);
+      if (!res.success) return all.length ? { success: true, data: { data: all } } : res;
+
+      const page = res.data?.data || (Array.isArray(res.data) ? res.data : []);
+      all.push(...page);
+      total = res.data?.pagination?.total ?? all.length;
+
+      if (page.length === 0) break; // proteção contra laço infinito
+      offset += PAGE;
+    }
+
+    return { success: true, data: { data: all, pagination: { total: all.length } } };
+  }
+
   // === Clientes ===
   async getCustomers() {
     return this._fetch('/customers');
@@ -236,29 +262,16 @@ class OpticomAPI {
     return this._fetch(`/transactions?${params}`);
   }
 
-  // Busca TODAS as transações percorrendo as páginas. Telas que somam valores
-  // (A Receber/A Pagar, DRE, Fluxo de Caixa) precisam do conjunto completo —
-  // com uma página só os totais ficam silenciosamente errados.
   async getAllTransactions(filters = {}) {
-    const PAGE = 1000;
-    const all = [];
-    let offset = 0;
-    let total = Infinity;
-
-    while (all.length < total) {
-      const res = await this.getTransactions({ ...filters, limit: PAGE, offset });
-      if (!res.success) return all.length ? { success: true, data: { data: all } } : res;
-
-      const page = res.data?.data || [];
-      all.push(...page);
-      total = res.data?.pagination?.total ?? all.length;
-
-      if (page.length === 0) break; // proteção contra laço infinito
-      offset += PAGE;
-    }
-
-    return { success: true, data: { data: all, pagination: { total: all.length } } };
+    return this._fetchAllPages('/transactions', filters);
   }
+
+  async getAllOrders(filters = {})      { return this._fetchAllPages('/orders', filters); }
+  async getAllCustomers(filters = {})   { return this._fetchAllPages('/customers', filters); }
+  async getAllContracts(filters = {})   { return this._fetchAllPages('/contracts', filters); }
+  async getAllProducts(filters = {})    { return this._fetchAllPages('/products', filters); }
+  async getAllTechnicians(filters = {}) { return this._fetchAllPages('/technicians', filters); }
+  async getAllVehicles(filters = {})    { return this._fetchAllPages('/vehicles', filters); }
 
   async getTransaction(id) {
     return this._fetch(`/transactions/${id}`);
