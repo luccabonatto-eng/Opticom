@@ -13,8 +13,6 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="api-client.js"></script>
-  <script src="validators.js"></script>
-  <script src="notifications.js"></script>
   <link rel="stylesheet" href="app.css">
 </head>
 <body class="bg-gray-50">
@@ -183,7 +181,7 @@ const SYSTEM_USERS_INIT = [
 
 // ─── UTILS ────────────────────────────────────────────────────────────────────
 
-const fmt = c => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(c/100);
+const fmt = c => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format((Number(c)||0)/100);
 const fmtDate = d => d ? new Date(d+'T12:00:00').toLocaleDateString('pt-BR') : '—';
 
 // ─── ICONS ────────────────────────────────────────────────────────────────────
@@ -1980,10 +1978,39 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
   const [importModal, setImportModal] = useState(null);
   const [importText, setImportText]   = useState('');
   // Folha Salarial — estados no topo (hooks não podem ficar dentro de IIFE)
-  const [payroll,      setPayroll]      = useState(()=>{ try{const s=localStorage.getItem('opticom_payroll');return s?JSON.parse(s):PAYROLL_INIT;}catch{return PAYROLL_INIT;} });
+  // Folha fica no banco (system_settings), não no navegador: salário e CPF não
+  // podem sumir ao limpar o cache nem ficar presos a uma máquina.
+  // shortcut: a folha inteira é um único registro, então duas pessoas editando
+  // ao mesmo tempo — a última salva vence. Virar tabela própria quando mais de
+  // uma pessoa mexer na folha.
+  const [payroll,      setPayroll]      = useState(PAYROLL_INIT);
+  const [payrollLoaded,setPayrollLoaded]= useState(false);
   const [payrollRef,   setPayrollRef]   = useState(()=>new Date().toISOString().slice(0,7));
   const [payTechs,     setPayTechs]     = useState([]);
-  useEffect(()=>{ localStorage.setItem('opticom_payroll', JSON.stringify(payroll)); }, [payroll]);
+  useEffect(()=>{
+    api.getSetting('payroll').then(r=>{
+      let doBanco = null;
+      if (r.success && r.data?.value) { try { doBanco = JSON.parse(r.data.value); } catch {} }
+      if (doBanco) {
+        setPayroll(doBanco);
+      } else {
+        // Banco vazio: aproveita a folha que ficou no navegador desta máquina.
+        // O efeito de gravação abaixo a envia, migrando sem perder nada.
+        try {
+          const local = localStorage.getItem('opticom_payroll');
+          if (local) setPayroll(JSON.parse(local));
+        } catch {}
+      }
+      setPayrollLoaded(true);
+    });
+  }, []);
+  // Só grava depois de carregar, senão o estado inicial sobrescreve o banco
+  useEffect(()=>{
+    if (!payrollLoaded) return;
+    api.setSetting('payroll', JSON.stringify(payroll)).then(r=>{
+      if (!r.success) setToast(`Erro ao salvar a folha: ${r.error}`);
+    });
+  }, [payroll, payrollLoaded]);
   const [payEmpModal,  setPayEmpModal]  = useState(null); // funcionário selecionado para ver detalhes
   const [newPayModal,  setNewPayModal]  = useState(false);
   const [editPayModal, setEditPayModal] = useState(null); // funcionário em edição
@@ -2305,9 +2332,11 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
     const cats = type==='INCOME' ? incomeCats : expenseCats;
     const today = new Date().toISOString().split('T')[0];
     const rows = lines.map((l,idx) => {
-      const cols = l.split(/[;\t,]/).map(c=>c.trim().replace(/"/g,''));
+      // Vírgula não separa colunas: é o separador decimal brasileiro. Usá-la
+      // quebrava "1.234,56" em duas colunas e deslocava data e categoria.
+      const cols = l.split(/[;\t]/).map(c=>c.trim().replace(/"/g,''));
       const description = cols[0]||`Importado ${idx+1}`;
-      const amount    = Math.round(parseFloat((cols[1]||'0').replace(',','.'))*100);
+      const amount    = parseMoney(cols[1]);
       const due_date  = cols[2]||today;
       const catName   = cols[3]||'';
       const match     = cats.find(c=>(c.name||c).toLowerCase()===catName.toLowerCase());
@@ -3788,7 +3817,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
             <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-700">
               <p className="font-semibold mb-1">Formato esperado (CSV, separado por ; ou tab):</p>
               <p className="font-mono">Descrição; Valor; Vencimento (AAAA-MM-DD); Categoria</p>
-              <p className="mt-1 text-blue-500">Exemplo: Fatura Cliente X; 1500.00; 2026-05-10; Receita de OS</p>
+              <p className="mt-1 text-blue-500">Exemplo: Fatura Cliente X; 1.500,00; 2026-05-10; Receita de OS</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Cole os dados da planilha aqui:</label>

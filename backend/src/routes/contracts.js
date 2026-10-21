@@ -56,14 +56,13 @@ router.get('/:id', async (req, res) => {
 router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   try {
     const { customer_id, type, value, start_date, end_date, status, sla_hours } = req.body;
-    let { number } = req.body;
-
     if (!customer_id || !type || !value) {
       return res.status(400).json({ error: 'customer_id, type e value são obrigatórios' });
     }
 
-    // Auto-gerar número via sequence PostgreSQL (sem race condition em uso concorrente)
-    if (!number) {
+    // Número sempre pela sequence: aceitar do cliente permitia dois contratos iguais
+    let number;
+    {
       const { data: seqData, error: seqErr } = await supabase.rpc('next_contract_number');
       if (seqErr) throw seqErr;
       number = seqData;
@@ -99,7 +98,7 @@ router.put('/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
 
     // Whitelist explícito - apenas estes campos podem ser atualizados
     const allowedFields = {};
-    const fieldMap = ['number', 'type', 'value', 'start_date', 'end_date', 'status', 'sla_hours'];
+    const fieldMap = ['type', 'value', 'start_date', 'end_date', 'status', 'sla_hours'];
 
     fieldMap.forEach(field => {
       if (req.body.hasOwnProperty(field)) {

@@ -22,6 +22,7 @@ const usersRoutes = require('./routes/users');
 const settingsRoutes = require('./routes/settings');
 
 const authMiddleware = require('./middleware/auth');
+const checkRole = require('./middleware/rbac');
 const audit = require('./middleware/audit');
 
 const app = express();
@@ -40,10 +41,9 @@ const corsOriginFn = (origin, callback) => {
     'http://localhost:5173',
     'http://127.0.0.1:3000',
   ];
-  if (allowed.includes(origin)) {
-    return callback(null, true);
-  }
-  return callback(new Error(`CORS: origem não permitida — ${origin}`));
+  // false (e não Error) para a origem só ficar sem o header de permissão:
+  // lançar virava 500 e enchia o log de erro a cada bloqueio
+  return callback(null, allowed.includes(origin));
 };
 
 // Middleware
@@ -76,8 +76,8 @@ const authLimiter = rateLimit({
 // Aplicar rate limiting global
 app.use('/api/', generalLimiter);
 
-// Swagger Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+// Swagger Documentation — ADMIN: expõe o mapa completo da API
+app.use('/api-docs', authMiddleware, checkRole('ADMIN'), swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   swaggerOptions: { persistAuthorization: true }
 }));
 

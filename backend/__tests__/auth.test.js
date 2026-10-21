@@ -2,6 +2,18 @@ const request = require('supertest');
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const supabase = require('../config/supabase'); // mockado em jest.setup.js
+
+const USUARIO = {
+  id: '11111111-1111-1111-1111-111111111111',
+  name: 'Teste', email: 'joao@opticom.com.br', role: 'ADMIN', status: 'ACTIVE',
+};
+const tokenAdmin = () => jwt.sign(
+  { id: USUARIO.id, name: USUARIO.name, email: USUARIO.email, role: 'ADMIN' },
+  process.env.JWT_SECRET, { expiresIn: '1h' }
+);
+
+afterEach(() => supabase.__reset());
 
 // Mock da API
 const app = express();
@@ -34,6 +46,7 @@ describe('Authentication API', () => {
     });
 
     test('should return 200 and token for valid credentials', async () => {
+      supabase.__set({ single: { ...USUARIO, password_hash: bcrypt.hashSync('senha123', 10) } });
       const res = await request(app)
         .post('/api/auth/login')
         .send({
@@ -50,6 +63,7 @@ describe('Authentication API', () => {
     });
 
     test('should return valid JWT token', async () => {
+      supabase.__set({ single: { ...USUARIO, password_hash: bcrypt.hashSync('senha123', 10) } });
       const res = await request(app)
         .post('/api/auth/login')
         .send({
@@ -70,6 +84,7 @@ describe('Authentication API', () => {
     test('should return 400 if required fields are missing', async () => {
       const res = await request(app)
         .post('/api/auth/register')
+        .set('Authorization', `Bearer ${tokenAdmin()}`)
         .send({ email: 'test@example.com' });
 
       expect(res.statusCode).toBe(400);
@@ -77,8 +92,10 @@ describe('Authentication API', () => {
     });
 
     test('should register new user successfully', async () => {
+      supabase.__set({ rows: [{ id: 'novo-id', name: 'Novo Usuário', email: 'n@o.com', role: 'TECHNICIAN' }] });
       const res = await request(app)
         .post('/api/auth/register')
+        .set('Authorization', `Bearer ${tokenAdmin()}`)
         .send({
           name: 'Novo Usuário',
           email: `newuser${Date.now()}@opticom.com.br`,
@@ -96,14 +113,13 @@ describe('Authentication API', () => {
     let validToken;
 
     beforeAll(async () => {
-      const loginRes = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'joao@opticom.com.br',
-          password: 'senha123'
-        });
-
-      validToken = loginRes.body.token;
+      // Token assinado aqui: depender de um login real exigia usuário semeado
+      // no banco e fazia a suíte inteira falhar sem rede.
+      validToken = jwt.sign(
+        { id: '11111111-1111-1111-1111-111111111111', name: 'Teste', email: 'teste@opticom.com.br', role: 'ADMIN' },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
     });
 
     test('should return 401 if no token provided', async () => {
@@ -119,7 +135,7 @@ describe('Authentication API', () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.body).toHaveProperty('user');
-      expect(res.body.user.email).toBe('joao@opticom.com.br');
+      expect(res.body.user.email).toBe('teste@opticom.com.br');
     });
   });
 
@@ -127,17 +143,17 @@ describe('Authentication API', () => {
     let validToken;
 
     beforeAll(async () => {
-      const loginRes = await request(app)
-        .post('/api/auth/login')
-        .send({
-          email: 'joao@opticom.com.br',
-          password: 'senha123'
-        });
-
-      validToken = loginRes.body.token;
+      // Token assinado aqui: depender de um login real exigia usuário semeado
+      // no banco e fazia a suíte inteira falhar sem rede.
+      validToken = jwt.sign(
+        { id: '11111111-1111-1111-1111-111111111111', name: 'Teste', email: 'teste@opticom.com.br', role: 'ADMIN' },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+      );
     });
 
     test('should return new token', async () => {
+      supabase.__set({ single: USUARIO });
       const res = await request(app)
         .post('/api/auth/refresh')
         .set('Authorization', `Bearer ${validToken}`);

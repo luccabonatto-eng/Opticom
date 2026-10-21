@@ -1,5 +1,7 @@
 const request = require('supertest');
 const express = require('express');
+const jwt = require('jsonwebtoken');
+const supabase = require('../config/supabase'); // mockado em jest.setup.js
 
 // Mock da API
 const app = express();
@@ -12,6 +14,8 @@ app.use('/api/customers', authMiddleware, customersRoutes);
 
 let validToken;
 
+afterEach(() => supabase.__reset());
+
 // Setup: Fazer login antes de rodar testes
 beforeAll(async () => {
   const authApp = express();
@@ -19,14 +23,13 @@ beforeAll(async () => {
   const authRoutes = require('../src/routes/auth');
   authApp.use('/api/auth', authRoutes);
 
-  const loginRes = await request(authApp)
-    .post('/api/auth/login')
-    .send({
-      email: 'joao@opticom.com.br',
-      password: 'senha123'
-    });
-
-  validToken = loginRes.body.token;
+  // Token assinado aqui: depender de um login real exigia usuário semeado
+  // no banco e fazia a suíte inteira falhar sem rede.
+  validToken = jwt.sign(
+    { id: '11111111-1111-1111-1111-111111111111', name: 'Teste', email: 'teste@opticom.com.br', role: 'ADMIN' },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' }
+  );
 });
 
 describe('Customers API', () => {
@@ -76,6 +79,7 @@ describe('Customers API', () => {
     };
 
     test('should create new customer', async () => {
+      supabase.__set({ rows: [{ id: 'c-1', ...newCustomer }] });
       const res = await request(app)
         .post('/api/customers')
         .set('Authorization', `Bearer ${validToken}`)

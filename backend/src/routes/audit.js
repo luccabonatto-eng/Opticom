@@ -7,7 +7,11 @@ const router = express.Router();
 // GET audit logs - RBAC: apenas ADMIN
 router.get('/', checkRole('ADMIN'), async (req, res) => {
   try {
-    const { module, user_id, limit = 50, offset = 0 } = req.query;
+    const { module, user_id } = req.query;
+    // parseInt obrigatório: vindos da querystring são texto, e "10" + "50"
+    // concatenava em "1050", devolvendo 1040 linhas em vez de 50
+    const limit = Math.min(parseInt(req.query.limit) || 50, 1000);
+    const offset = parseInt(req.query.offset) || 0;
     let query = supabase.from('audit_logs').select('*, users(name, email)');
 
     if (module) query = query.eq('module', module);
