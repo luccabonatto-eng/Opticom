@@ -2090,6 +2090,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
   const [newTxModal, setNewTxModal] = useState(false);
   const [editTxId, setEditTxId] = useState(null);
   const [settleModal, setSettleModal] = useState(null); // { tx, valor } da baixa em andamento
+  const [faturaModal, setFaturaModal] = useState(null); // { pmId, nome, mes, compras, total, valorFatura, vencimento }
   const [newTx, setNewTx]       = useState({ type:'INCOME', description:'', amount:'', due_date:'', status:'PENDING', category_id:'', bank_account_id:'', payment_method_id:'', customer_id:'', invoice_number:'' });
 
   useEffect(() => { loadFinancialData(); }, []);
@@ -2377,6 +2378,46 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
     const tx = transactions.find(t=>t.id===id);
     if (!tx) return;
     setSettleModal({ tx, valor: (txAberto(tx)/100).toFixed(2) });
+  };
+
+  // Paga a fatura: um único lançamento de saída (classe PAGAMENTO_CARTAO, que o
+  // DRE ignora porque a despesa já veio nas compras) e baixa das compras.
+  const pagarFatura = async () => {
+    const { pmId, nome, mes, compras, aberto, valorFatura, vencimento } = faturaModal;
+    const valorCents = Math.round(parseFloat(String(valorFatura).replace(',','.'))*100);
+    if (!Number.isFinite(valorCents) || valorCents <= 0) { setToast('Informe o valor da fatura'); return; }
+    if (!vencimento) { setToast('Informe a data de pagamento'); return; }
+
+    // A tela de Configurações não permite escolher classe contábil, então a
+    // categoria de quitação é criada na primeira vez, já com a classe certa.
+    let catPag = expenseCats.find(c=>c.accounting_class==='PAGAMENTO_CARTAO');
+    if (!catPag) {
+      const nova = await api.createCategory('expense', { name:'Pagamento de Cartão', accounting_class:'PAGAMENTO_CARTAO' });
+      if (!nova.success) { setToast(`Erro ao criar a categoria de quitação: ${nova.error}`); return; }
+      catPag = nova.data?.data || nova.data;
+      setExpenseCats(p=>[...p, catPag]);
+    }
+
+    const r = await api.createTransaction({
+      type:'EXPENSE', status:'PAID', amount:valorCents, amount_paid:valorCents,
+      description:`Fatura ${nome} — ${monthLabel(mes)}`,
+      due_date:vencimento, paid_date:vencimento,
+      category_id:catPag.id, payment_method_id:null,
+    });
+    if (!r.success) { setToast(`Erro ao lançar a fatura: ${r.error}`); return; }
+
+    // As compras saem do "em aberto"; quem representa o caixa é o lançamento acima
+    const baixas = await Promise.all(compras.filter(t=>txAberto(t)>0).map(t=>
+      api.updateTransaction(t.id, { amount_paid:t.amount, status:'PAID', paid_date:vencimento })
+        .then(res=>({id:t.id, ok:res.success}))
+    ));
+    const okIds = new Set(baixas.filter(b=>b.ok).map(b=>b.id));
+    setTx(prev=>[r.data, ...prev.map(t=>okIds.has(t.id)?{...t,amount_paid:t.amount,status:'PAID',paid_date:vencimento}:t)]);
+    setFaturaModal(null);
+    const dif = valorCents - aberto;
+    setToast(dif===0
+      ? `Fatura ${nome} paga: ${fmt(valorCents)}`
+      : `Fatura paga: ${fmt(valorCents)} · divergência de ${fmt(Math.abs(dif))} ${dif>0?'a mais que o lançado':'a menos que o lançado'}`);
   };
 
   const confirmSettle = async () => {
@@ -2683,6 +2724,19 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
   const pendingIn  = transactions.filter(t=>t.type==='INCOME' ).reduce((s,t)=>s+txAberto(t),0);
   const pendingOut = transactions.filter(t=>t.type==='EXPENSE').reduce((s,t)=>s+txAberto(t),0);
 
+  // ── Cartão de crédito ───────────────────────────────────────────────────
+  // A compra no cartão é despesa no ato (vai pro DRE, com cliente e categoria),
+  // mas não é saída de caixa: o dinheiro só sai quando a fatura é paga. Por
+  // isso compras de cartão ficam fora de A Pagar, das Aprovações e do fluxo de
+  // caixa — quem entra no caixa é o pagamento da fatura.
+  const ehCartao = pmId => {
+    const nome = payMethods.find(m=>m.id===pmId)?.name || '';
+    return /cart[aã]o/i.test(nome);
+  };
+  const ehCompraCartao = t => t.type==='EXPENSE' && ehCartao(t.payment_method_id);
+  // Fatura a que a compra pertence: competência pelo mês da compra
+  const faturaDe = t => (t.due_date||'').slice(0,7);
+
   const txCatName = t => (incomeCats.concat(expenseCats).find(c=>c.id===t.category_id)?.name) || t.cat || '—';
   const txDue = t => t.due_date || t.due || '';
 
@@ -2696,7 +2750,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
     (!dateToR  ||txDue(t)<=dateToR)
   );
   const payable = transactions.filter(t=>
-    t.type==='EXPENSE' &&
+    t.type==='EXPENSE' && !ehCompraCartao(t) &&
     (statusP==='all'||t.status===statusP) &&
     (catP==='all'||txCatName(t)===catP) &&
     (custP==='all'||(custP==='__sem_cliente__'?(!t.customer_id):(String(t.customer_id)===String(custP)))) &&
@@ -2706,6 +2760,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
 
   const TODAY = new Date().toISOString().split('T')[0];
   const approvalQueue = transactions.filter(t=>
+    !ehCompraCartao(t) &&
     (t.status==='PENDING'||t.status==='PARTIAL'||t.status==='OVERDUE') && txDue(t)<=TODAY
   );
 
@@ -2716,6 +2771,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
     { id:'dre',        label:'DRE Gerencial',       icon:'≡', color:'text-purple-600', bg:'bg-purple-50' },
     { id:'payroll',    label:'Folha Salarial',      icon:'$', color:'text-cyan-600',   bg:'bg-cyan-50'   },
     { id:'approval',   label:'Aprovações do Dia',  icon:'✓', color:'text-violet-600', bg:'bg-violet-50', badge: approvalQueue.length },
+    { id:'card',       label:'Cartão de Crédito',   icon:'▭', color:'text-fuchsia-600',bg:'bg-fuchsia-50'},
     { id:'statement',  label:'Extrato Bancário',   icon:'⇅', color:'text-teal-600',   bg:'bg-teal-50'   },
   ];
   const allowedFinSet = finPerms ? new Set(finPerms) : null;
@@ -2880,7 +2936,8 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
           const defaultFrom=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
           const defaultTo=new Date(now.getFullYear(),now.getMonth()+1,0).toISOString().split('T')[0];
           const from=dateFromCF||defaultFrom; const to=dateToCF||defaultTo;
-          const txP=transactions.filter(t=>{const d=t.due_date||''; return d>=from&&d<=to;});
+          // compras no cartão não movimentam caixa; o pagamento da fatura sim
+          const txP=transactions.filter(t=>{const d=t.due_date||''; return d>=from&&d<=to && !ehCompraCartao(t);});
 
           // Mesmo cálculo rodado duas vezes: previsto usa o valor da conta,
           // efetivo usa só o que foi baixado de fato.
@@ -2892,7 +2949,8 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
             const pagAdmin    = sumCls('EXPENSE','DESPESA_ADMINISTRATIVA','DESPESA_COMERCIAL');
             const pagImpostos = sumCls('EXPENSE','IMPOSTO_RECEITA','IMPOSTO_RENDA');
             const pagOutOp    = sumCls('EXPENSE','OUTRAS_DESPESAS','DEPRECIACAO');
-            const caixaOper   = recClientes-pagCSP-pagPessoal-pagAdmin-pagImpostos-pagOutOp;
+            const pagCartao   = sumCls('EXPENSE','PAGAMENTO_CARTAO');
+            const caixaOper   = recClientes-pagCSP-pagPessoal-pagAdmin-pagImpostos-pagOutOp-pagCartao;
             const recAtivos   = sumCls('INCOME','RECEITA_INVESTIMENTO');
             const pagAtivos   = sumCls('EXPENSE','INVESTIMENTO');
             const caixaInv    = recAtivos-pagAtivos;
@@ -2901,7 +2959,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
             const caixaFin    = recFin-pagFin;
             const varLiq      = caixaOper+caixaInv+caixaFin;
             const saldoInicial= bankAccounts.reduce((s,b)=>s+(b.initial_balance||0),0);
-            return { recClientes,pagCSP,pagPessoal,pagAdmin,pagImpostos,pagOutOp,caixaOper,
+            return { recClientes,pagCSP,pagPessoal,pagAdmin,pagImpostos,pagOutOp,pagCartao,caixaOper,
                      recAtivos,pagAtivos,caixaInv,recFin,pagFin,caixaFin,varLiq,
                      saldoInicial, saldoFinal: saldoInicial+varLiq };
           };
@@ -2990,6 +3048,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                   {pagAdmin>0   &&<DR l="(-) Despesas Administrativas e Comerciais" k="pagAdmin" neg ind={1}/>}
                   {pagImpostos>0&&<DR l="(-) Impostos Pagos (ISS, PIS, COFINS, IR/CSLL)" k="pagImpostos" neg ind={1}/>}
                   {pagOutOp>0   &&<DR l="(-) Outros Pagamentos Operacionais" k="pagOutOp" neg ind={1}/>}
+                  {PV.pagCartao>0&&<DR l="(-) Pagamento de Faturas de Cartão" k="pagCartao" neg ind={1}/>}
                   {recClientes===0&&pagCSP===0&&pagPessoal===0&&pagAdmin===0&&pagImpostos===0&&pagOutOp===0&&(
                     <tr className="border-t border-gray-100"><td colSpan="3" className="px-4 py-3 text-xs text-gray-400 text-center">Nenhum lançamento operacional — adicione receitas e despesas com as categorias corretas</td></tr>
                   )}
@@ -3076,12 +3135,15 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
 
           // Scope filtering for by_customer mode or consolidated mode
           const getScopedTxs = (period, scope) => {
-            if (scope === 'all') return transactions;
+            // Pagamento de fatura é quitação de passivo: a despesa já foi
+            // reconhecida em cada compra, contar aqui dobraria o gasto.
+            const base = transactions.filter(t => getCls(t) !== 'PAGAMENTO_CARTAO');
+            if (scope === 'all') return base;
             if (scope === 'year') {
               const yr = (period || '').slice(0, 4);
-              return transactions.filter(t => (t.due_date || t.due || '').startsWith(yr));
+              return base.filter(t => (t.due_date || t.due || '').startsWith(yr));
             }
-            return transactions.filter(t => (t.due_date || t.due || '').startsWith(period));
+            return base.filter(t => (t.due_date || t.due || '').startsWith(period));
           };
 
           // Month-based filtering for consolidated CPC 26 DRE
@@ -4830,6 +4892,96 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
           );
         })()}
 
+        {tab==='card'&&(()=>{
+          // Agrupa as compras por cartão + mês de competência. A fatura não é um
+          // registro: é esse conjunto.
+          const compras = transactions.filter(ehCompraCartao);
+          const faturas = {};
+          for (const t of compras) {
+            const chave = `${t.payment_method_id}|${faturaDe(t)}`;
+            if (!faturas[chave]) faturas[chave] = {
+              pmId: t.payment_method_id,
+              nome: payMethods.find(m=>m.id===t.payment_method_id)?.name || 'Cartão',
+              mes: faturaDe(t), compras: [], total: 0, aberto: 0,
+            };
+            faturas[chave].compras.push(t);
+            faturas[chave].total  += t.amount || 0;
+            faturas[chave].aberto += txAberto(t);
+          }
+          const lista = Object.values(faturas).sort((a,b)=> b.mes.localeCompare(a.mes) || a.nome.localeCompare(b.nome));
+          const emAberto = lista.filter(f=>f.aberto>0);
+
+          return (
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 bg-fuchsia-50 border border-fuchsia-200 rounded-xl p-3.5">
+                <span className="w-8 h-8 rounded-lg bg-fuchsia-600 text-white flex items-center justify-center font-bold text-sm shrink-0">▭</span>
+                <div>
+                  <p className="text-xs font-bold text-fuchsia-900 uppercase tracking-wide">Compras no Cartão</p>
+                  <p className="text-xs text-gray-600 mt-0.5">A compra já conta como despesa no DRE (com cliente e categoria), mas não sai do caixa. O caixa só é afetado quando a fatura é paga — por isso elas não aparecem em A Pagar.</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-white border border-gray-200 rounded-xl p-4">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Faturas em aberto</p>
+                  <p className="text-2xl font-bold text-fuchsia-700 mt-1">{emAberto.length}</p>
+                </div>
+                <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
+                  <p className="text-xs font-medium text-amber-600 uppercase tracking-wide">Total a pagar</p>
+                  <p className="text-2xl font-bold text-amber-700 mt-1">{fmt(soma(emAberto, f=>f.aberto))}</p>
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Compras lançadas</p>
+                  <p className="text-2xl font-bold text-gray-700 mt-1">{compras.length}</p>
+                </div>
+              </div>
+
+              {lista.length===0 && (
+                <div className="bg-white border border-gray-200 rounded-xl py-12 text-center">
+                  <p className="text-sm text-gray-500">Nenhuma compra no cartão ainda.</p>
+                  <p className="text-xs text-gray-400 mt-1">Lance a despesa normalmente escolhendo uma forma de pagamento com "cartão" no nome.</p>
+                </div>
+              )}
+
+              {lista.map(f=>(
+                <div key={f.pmId+f.mes} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-gray-50 flex-wrap">
+                    <div className="flex-1 min-w-[180px]">
+                      <p className="text-sm font-bold text-gray-800">{f.nome}</p>
+                      <p className="text-xs text-gray-500">Fatura de {monthLabel(f.mes)} · {f.compras.length} compra(s)</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-400">Acumulado</p>
+                      <p className="text-lg font-bold text-gray-800">{fmt(f.total)}</p>
+                    </div>
+                    {f.aberto>0
+                      ? <button onClick={()=>setFaturaModal({...f, valorFatura:(f.aberto/100).toFixed(2), vencimento:new Date().toISOString().split('T')[0]})}
+                          className="px-4 py-2 bg-fuchsia-600 text-white rounded-lg text-xs font-semibold hover:bg-fuchsia-700">Pagar fatura</button>
+                      : <span className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-semibold">✓ Paga</span>}
+                  </div>
+                  <table className="w-full text-sm">
+                    <tbody className="divide-y divide-gray-100">
+                      {f.compras.map(t=>(
+                        <tr key={t.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-2 text-xs text-gray-500 w-24">{fmtDate(txDue(t))}</td>
+                          <td className="px-4 py-2 text-gray-800">{t.description}</td>
+                          <td className="px-4 py-2 text-xs text-gray-500">{txCatName(t)}</td>
+                          <td className="px-4 py-2 text-xs text-gray-500">{t.customers?.name||customers.find(c=>c.id===t.customer_id)?.name||<span className="text-gray-300">sem cliente</span>}</td>
+                          <td className="px-4 py-2 text-right font-semibold text-gray-800 whitespace-nowrap">{fmt(t.amount)}</td>
+                          <td className="px-4 py-2 w-28"><Badge status={t.status}/></td>
+                          <td className="px-4 py-2 w-10 text-right">
+                            <button onClick={()=>openEditTx(t)} title="Editar compra" className="text-xs text-gray-400 hover:text-blue-600">✎</button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+
         {tab==='statement'&&(()=>{
           const done      = stmtLines.filter(l=>stmtResults[l.id]?.action==='imported').length;
           const ignored   = stmtLines.filter(l=>stmtResults[l.id]?.action==='ignore').length;
@@ -5147,6 +5299,42 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                 <div className="flex gap-2 pt-1">
                   <button onClick={()=>setSettleModal(null)} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Cancelar</button>
                   <button onClick={confirmSettle} className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Confirmar</button>
+                </div>
+              </div>
+            );
+          })()}
+        </Modal>
+        <Modal open={!!faturaModal} onClose={()=>setFaturaModal(null)} title="Pagar Fatura do Cartão" size="sm">
+          {faturaModal&&(()=>{
+            const { nome, mes, compras, aberto, valorFatura } = faturaModal;
+            const valorCents = Math.round(parseFloat(String(valorFatura||'0').replace(',','.'))*100) || 0;
+            const dif = valorCents - aberto;
+            return (
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-lg p-3 space-y-1">
+                  <p className="text-sm font-medium text-gray-800">{nome} · {monthLabel(mes)}</p>
+                  <div className="flex justify-between text-xs text-gray-500"><span>{compras.length} compra(s) lançada(s)</span><span className="font-bold text-gray-700">{fmt(aberto)}</span></div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Valor da fatura (R$)</label>
+                  <input type="number" step="0.01" autoFocus value={valorFatura}
+                    onChange={e=>setFaturaModal(p=>({...p,valorFatura:e.target.value}))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500"/>
+                  <p className={`text-xs mt-1.5 ${dif===0?'text-green-600':'text-amber-600'}`}>
+                    {dif===0 ? '✓ Bate com o que foi lançado'
+                      : `Divergência de ${fmt(Math.abs(dif))} — ${dif>0?'há compras não lançadas':'foi lançado a mais que a fatura'}`}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Data do pagamento</label>
+                  <input type="date" value={faturaModal.vencimento}
+                    onChange={e=>setFaturaModal(p=>({...p,vencimento:e.target.value}))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500"/>
+                </div>
+                <p className="text-xs text-gray-400">Cria uma saída de caixa no valor da fatura e dá baixa nas compras. As despesas já estão no DRE desde a compra, então não serão contadas de novo.</p>
+                <div className="flex gap-2 pt-1">
+                  <button onClick={()=>setFaturaModal(null)} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Cancelar</button>
+                  <button onClick={pagarFatura} className="flex-1 py-2.5 bg-fuchsia-600 text-white rounded-lg text-sm font-medium hover:bg-fuchsia-700">Confirmar pagamento</button>
                 </div>
               </div>
             );
