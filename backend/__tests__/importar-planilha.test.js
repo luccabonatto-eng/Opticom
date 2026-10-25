@@ -29,13 +29,48 @@ const detectSep = texto => {
   return melhor[1] > 0 ? melhor[0] : ';';
 };
 
+const semAcento = t => (t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+
+const mapearColunas = (cabecalho, sep) => {
+  const h = splitCSV(cabecalho, sep).map(semAcento);
+  const achar = (...termos) => h.findIndex(c => termos.some(t => c.includes(t)));
+  const mapa = {
+    descricao: achar('descri','histor','memo'),
+    valor:     achar('valor','amount','value'),
+    data:      achar('data','vencim','due'),
+    categoria: achar('categ'),
+    tipo:      achar('tipo','type'),
+  };
+  return (mapa.descricao >= 0 && mapa.valor >= 0) ? mapa : null;
+};
+
+const paraISO = d => {
+  const m = (d||'').trim().match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (!m) return (d||'').trim();
+  const ano = m[3].length===2 ? '20'+m[3] : m[3];
+  return `${ano}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+};
+
 const lerPlanilha = texto => {
   let linhas = texto.trim().split('\n').filter(l => l.trim());
+  if (!linhas.length) return [];
   const sep = detectSep(texto);
-  if (linhas.length && parseMoney(splitCSV(linhas[0], sep)[1]) === 0) linhas = linhas.slice(1);
-  return linhas.map(l => {
-    const c = splitCSV(l, sep);
-    return { description: c[0], amount: parseMoney(c[1]), due_date: c[2] || null };
+  const mapa = mapearColunas(linhas[0], sep);
+  if (mapa) linhas = linhas.slice(1);
+  else if (parseMoney(splitCSV(linhas[0], sep)[1]) === 0) linhas = linhas.slice(1);
+  const col = (cols, chave, posicao) => mapa ? (mapa[chave] >= 0 ? cols[mapa[chave]] : '') : cols[posicao];
+  const hoje = '2026-10-25';
+
+  return linhas.map((l, idx) => {
+    const cols = splitCSV(l, sep);
+    const tipoTxt = semAcento(col(cols,'tipo',-1));
+    return {
+      description: col(cols,'descricao',0) || `Importado ${idx+1}`,
+      amount:      Math.abs(parseMoney(col(cols,'valor',1))),
+      due_date:    paraISO(col(cols,'data',2)) || hoje,
+      catName:     col(cols,'categoria',3) || '',
+      tipo:        tipoTxt.startsWith('entrada') ? 'INCOME' : tipoTxt.startsWith('saida') ? 'EXPENSE' : null,
+    };
   });
 };
 
@@ -104,5 +139,48 @@ describe('importar planilha', () => {
 
   test('ponto-e-vírgula continua funcionando após a mudança', () => {
     expect(lerPlanilha('Aluguel;1.500,00;2026-05-10')[0].amount).toBe(150000);
+  });
+
+  // ── formato real exportado do sistema antigo do cliente ──
+  describe('arquivo do sistema antigo', () => {
+    const CAB = 'tipo;descricao;valor;data de realizacao;categoria;conta;cliente;status;parcelas restantes;obs';
+
+    test('lê pelas colunas do cabeçalho, não pela posição', () => {
+      const r = lerPlanilha(CAB + '\nsaida;despesas paulo = hoppecke;-352,31;02/10/2026;infraestrutura;banco itau;;pago;;')[0];
+      expect(r.description).toBe('despesas paulo = hoppecke');
+      expect(r.amount).toBe(35231);
+      expect(r.due_date).toBe('2026-10-02');
+      expect(r.catName).toBe('infraestrutura');
+      expect(r.tipo).toBe('EXPENSE');
+    });
+
+    test('valor negativo vira positivo (o sinal está no tipo)', () => {
+      expect(lerPlanilha(CAB + '\nsaida;netto;-11.000,00;06/10/2026;folha de pagamento;banco itau;;pago;;')[0].amount).toBe(1100000);
+    });
+
+    test('valor alto com milhar e centavos', () => {
+      expect(lerPlanilha(CAB + '\nsaida;simples nacional;-135.667,77;20/10/2026;despesas tributarias;banco itau;;pago;;')[0].amount).toBe(13566777);
+    });
+
+    test('campos entre aspas com espaço sobrando', () => {
+      const r = lerPlanilha(CAB + '\nsaida;"detran ";-152,00;07/10/2026;"veiculo ";banco itau;;pago;;')[0];
+      expect(r.description).toBe('detran');
+      expect(r.catName).toBe('veiculo');
+    });
+
+    test('entrada vira INCOME', () => {
+      expect(lerPlanilha(CAB + '\nentrada;fatura cliente;1.500,00;10/10/2026;receita;banco itau;;recebido;;')[0].tipo).toBe('INCOME');
+    });
+
+    test('data dd/mm/aaaa convertida para o formato do backend', () => {
+      expect(lerPlanilha(CAB + '\nsaida;x;-10,00;02/10/2026;y;z;;pago;;')[0].due_date).toBe('2026-10-02');
+    });
+
+    test('formato antigo sem cabeçalho nomeado continua funcionando', () => {
+      const r = lerPlanilha('Aluguel;1.500,00;2026-05-10;Administrativo')[0];
+      expect(r.description).toBe('Aluguel');
+      expect(r.amount).toBe(150000);
+      expect(r.due_date).toBe('2026-05-10');
+    });
   });
 });

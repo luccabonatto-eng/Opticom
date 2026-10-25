@@ -2474,26 +2474,75 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
     ler('utf-8');
   };
 
-  const parseImport = async () => {
-    let lines = importText.trim().split('\n').filter(l=>l.trim());
-    const sep = detectSep(importText);
-    // Descarta cabeçalho: primeira linha sem valor reconhecível não é lançamento
-    if (lines.length && parseMoney(splitCSV(lines[0], sep)[1]) === 0) lines = lines.slice(1);
-    const type = importModal;
-    const cats = type==='INCOME' ? incomeCats : expenseCats;
-    const today = new Date().toISOString().split('T')[0];
-    const rows = lines.map((l,idx) => {
+  const semAcento = t => (t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+
+  // Localiza as colunas pelo nome do cabeçalho. Sistemas diferentes exportam em
+  // ordens diferentes, então posição fixa só funcionaria para um formato.
+  const mapearColunas = (cabecalho, sep) => {
+    const h = splitCSV(cabecalho, sep).map(semAcento);
+    const achar = (...termos) => h.findIndex(c => termos.some(t => c.includes(t)));
+    const mapa = {
+      descricao: achar('descri','histor','memo'),
+      valor:     achar('valor','amount','value'),
+      data:      achar('data','vencim','due'),
+      categoria: achar('categ'),
+      tipo:      achar('tipo','type'),
+    };
+    // Sem descrição e valor reconhecíveis não é cabeçalho: usa ordem posicional
+    return (mapa.descricao >= 0 && mapa.valor >= 0) ? mapa : null;
+  };
+
+  // dd/mm/aaaa (ou dd-mm-aa) para o formato que o backend exige
+  const paraISO = d => {
+    const m = (d||'').trim().match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if (!m) return (d||'').trim();
+    const ano = m[3].length===2 ? '20'+m[3] : m[3];
+    return `${ano}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  };
+
+  // Uma única leitura, usada pela prévia e pela importação, para as duas não
+  // divergirem. Status do arquivo é ignorado: tudo entra pendente, para passar
+  // pela fila de Aprovações.
+  const lerPlanilha = texto => {
+    let linhas = texto.trim().split('\n').filter(l=>l.trim());
+    if (!linhas.length) return [];
+    const sep = detectSep(texto);
+    const mapa = mapearColunas(linhas[0], sep);
+    if (mapa) linhas = linhas.slice(1);                       // cabeçalho nomeado
+    else if (parseMoney(splitCSV(linhas[0], sep)[1]) === 0) linhas = linhas.slice(1); // cabeçalho sem nomes
+    const col = (cols, chave, posicao) => mapa ? (mapa[chave] >= 0 ? cols[mapa[chave]] : '') : cols[posicao];
+    const hoje = new Date().toISOString().split('T')[0];
+
+    return linhas.map((l,idx) => {
       const cols = splitCSV(l, sep);
-      const description = cols[0]||`Importado ${idx+1}`;
-      const amount    = parseMoney(cols[1]);
-      const due_date  = cols[2]||today;
-      const catName   = cols[3]||'';
-      const match     = cats.find(c=>(c.name||c).toLowerCase()===catName.toLowerCase());
-      return { description, amount, due_date, category_id: match?.id||null };
+      const tipoTxt = semAcento(col(cols,'tipo',-1));
+      return {
+        description: col(cols,'descricao',0) || `Importado ${idx+1}`,
+        // valor vem negativo nas saídas: o sinal já está no tipo do lançamento
+        amount:      Math.abs(parseMoney(col(cols,'valor',1))),
+        due_date:    paraISO(col(cols,'data',2)) || hoje,
+        catName:     col(cols,'categoria',3) || '',
+        tipo:        tipoTxt.startsWith('entrada') ? 'INCOME' : tipoTxt.startsWith('saida') ? 'EXPENSE' : null,
+      };
     });
+  };
+
+  const parseImport = async () => {
+    const cats = importModal==='INCOME' ? incomeCats : expenseCats;
+    const rows = lerPlanilha(importText).filter(r=>r.amount>0);
     let created = 0;
-    for (const row of rows) {
-      const result = await api.createTransaction({ type, status:'PENDING', ...row });
+    for (const r of rows) {
+      // Categoria só é vinculada quando já existe com esse nome; as demais
+      // ficam em branco para classificação posterior.
+      const match = cats.find(c => semAcento(c.name||c) === semAcento(r.catName));
+      const result = await api.createTransaction({
+        type: r.tipo || importModal,
+        status: 'PENDING',
+        description: r.description,
+        amount: r.amount,
+        due_date: r.due_date,
+        category_id: match?.id || null,
+      });
       if (result.success) { setTx(prev=>[result.data,...prev]); created++; }
     }
     setImportModal(null);
@@ -4889,10 +4938,10 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
 
         <Modal open={!!importModal} onClose={()=>{setImportModal(null);setImportText('');setImportFileName('');}} title={importModal==='INCOME'?'Importar Recebimentos':'Importar Despesas'} size="md">
           {(()=>{
-            const linhas = importText.trim().split('\n').filter(l=>l.trim());
-            const sep = detectSep(importText);
-            const temCabecalho = linhas.length>0 && parseMoney(splitCSV(linhas[0], sep)[1])===0;
-            const qtd = Math.max(0, linhas.length - (temCabecalho?1:0));
+            const lidas = lerPlanilha(importText);
+            const validas = lidas.filter(r=>r.amount>0);
+            const qtd = validas.length;
+            const invalidas = lidas.length - qtd;
             const fechar = ()=>{setImportModal(null);setImportText('');setImportFileName('');};
             return (
           <div className="space-y-4">
@@ -4920,7 +4969,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                 {importFileName
                   ? <div className="text-center">
                       <p className="text-sm font-semibold text-gray-800">{importFileName}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{qtd} lançamento(s) detectado(s){temCabecalho?' · cabeçalho ignorado':''}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{qtd} lançamento(s) detectado(s){invalidas>0?` · ${invalidas} sem valor válido`:''}</p>
                     </div>
                   : <p className="text-sm text-gray-500">Arraste o arquivo CSV aqui</p>}
                 <label className="cursor-pointer bg-blue-600 text-white text-xs font-medium px-4 py-2 rounded-lg hover:bg-blue-700">
@@ -4935,7 +4984,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                 <textarea value={importText} onChange={e=>{setImportText(e.target.value);setImportFileName('');}} rows={8}
                   placeholder={"Fatura ABC; 2.500,00; 2026-05-15; Receita de Contratos\nFatura XYZ; 800,00; 2026-05-20; Receita de OS"}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-                <p className="text-xs text-gray-400 mt-1">{qtd} lançamento(s) detectado(s){temCabecalho?' · cabeçalho ignorado':''}</p>
+                <p className="text-xs text-gray-400 mt-1">{qtd} lançamento(s) detectado(s){invalidas>0?` · ${invalidas} sem valor válido`:''}</p>
               </div>
             )}
 
@@ -4943,14 +4992,14 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
               <div className="border border-gray-200 rounded-lg overflow-hidden">
                 <p className="bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-500 border-b border-gray-200">Prévia</p>
                 <div className="divide-y divide-gray-100 max-h-36 overflow-y-auto">
-                  {linhas.slice(temCabecalho?1:0, temCabecalho?4:3).map((l,i)=>{
-                    const c = splitCSV(l, sep);
-                    return (<div key={i} className="flex items-center justify-between gap-2 px-3 py-1.5 text-xs">
-                      <span className="text-gray-700 truncate flex-1">{c[0]||'—'}</span>
-                      <span className="text-gray-400 whitespace-nowrap">{c[2]||'hoje'}</span>
-                      <span className={`font-semibold whitespace-nowrap ${parseMoney(c[1])>0?'text-gray-800':'text-red-500'}`}>{parseMoney(c[1])>0?fmt(parseMoney(c[1])):'valor inválido'}</span>
-                    </div>);
-                  })}
+                  {validas.slice(0,3).map((r,i)=>(
+                    <div key={i} className="flex items-center justify-between gap-2 px-3 py-1.5 text-xs">
+                      <span className="text-gray-700 truncate flex-1">{r.description}</span>
+                      <span className="text-gray-400 whitespace-nowrap">{fmtDate(r.due_date)}</span>
+                      <span className={`whitespace-nowrap ${r.tipo==='INCOME'?'text-green-600':'text-red-500'}`}>{r.tipo==='INCOME'?'entrada':r.tipo==='EXPENSE'?'saída':''}</span>
+                      <span className="font-semibold whitespace-nowrap text-gray-800">{fmt(r.amount)}</span>
+                    </div>
+                  ))}
                   {qtd>3 && <p className="px-3 py-1.5 text-xs text-gray-400">+ {qtd-3} linha(s)</p>}
                 </div>
               </div>
