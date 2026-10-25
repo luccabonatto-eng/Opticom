@@ -1504,6 +1504,7 @@ const CustomersPage = ({ setPage }) => {
   const [typeF, setTypeF]         = useState('all');
   const [selected, setSelected]   = useState(null);
   const [newModal, setNewModal]   = useState(false);
+  const [editId, setEditId]       = useState(null); // null = cadastrando
   const [toast, setToast]         = useState(null);
   const [form, setForm]           = useState({ name:'', type:'PJ', doc:'', city:'', phone:'', email:'', active:true });
 
@@ -1528,18 +1529,59 @@ const CustomersPage = ({ setPage }) => {
     (typeF==='all'||c.type===typeF)
   );
 
-  const create = async () => {
+  const limparForm = () => { setEditId(null); setForm({name:'',type:'PJ',doc:'',city:'',phone:'',email:'',active:true}); };
+
+  const salvar = async () => {
     if (!form.name) { setToast('Nome é obrigatório'); return; }
     if (!form.doc) { setToast('CPF/CNPJ é obrigatório'); return; }
 
-    const result = await api.createCustomer(form);
-    if (result.success) {
-      setCustomers(p=>[result.data, ...p]);
-      setNewModal(false);
-      setForm({name:'',type:'PJ',doc:'',city:'',phone:'',email:'',active:true});
-      setToast(`Cliente ${form.name} cadastrado com sucesso!`);
+    const result = editId ? await api.updateCustomer(editId, form) : await api.createCustomer(form);
+    if (!result.success) {
+      setToast(`Erro ao ${editId?'salvar':'criar'} cliente: ${result.error}`);
+      return;
+    }
+    if (editId) {
+      setCustomers(p=>p.map(c=>c.id===editId?{...c,...result.data}:c));
+      setSelected(p=>p?.id===editId?{...p,...result.data}:p);
+      setToast(`Cliente ${form.name} atualizado!`);
     } else {
-      setToast(`Erro ao criar cliente: ${result.error}`);
+      setCustomers(p=>[result.data, ...p]);
+      setToast(`Cliente ${form.name} cadastrado com sucesso!`);
+    }
+    setNewModal(false);
+    limparForm();
+  };
+
+  const abrirEdicao = c => {
+    setEditId(c.id);
+    setForm({ name:c.name||'', type:c.type||'PJ', doc:c.doc||'', city:c.city||'',
+              phone:c.phone||'', email:c.email||'', active:c.active!==false });
+    setSelected(null);
+    setNewModal(true);
+  };
+
+  const excluir = async c => {
+    // transactions.customer_id é SET NULL: excluir o cliente não falha, apenas
+    // arranca o vínculo do histórico financeiro em silêncio. Avisa antes.
+    const r = await api.getTransactions({ customer_id: c.id, limit: 1 });
+    const qtdLanc = r.success ? (r.data?.pagination?.total || 0) : 0;
+
+    const aviso = qtdLanc > 0
+      ? `O cliente ${c.name} tem ${qtdLanc} lançamento(s) financeiro(s). Eles NÃO serão excluídos, mas perderão o vínculo com o cliente e passarão a aparecer como "Sem cliente" no DRE. Isso não pode ser desfeito.\n\nExcluir mesmo assim?`
+      : `Excluir o cliente ${c.name} permanentemente? Essa ação não pode ser desfeita.`;
+    if (!window.confirm(aviso)) return;
+
+    const result = await api.deleteCustomer(c.id);
+    if (result.success) {
+      setCustomers(p=>p.filter(x=>x.id!==c.id));
+      setSelected(null);
+      setToast(qtdLanc>0 ? `Cliente excluído. ${qtdLanc} lançamento(s) ficaram sem cliente.` : 'Cliente excluído.');
+    } else {
+      // contracts e orders bloqueiam a exclusão no banco (NO ACTION)
+      const vinculado = /foreign key|violates|constraint/i.test(result.error||'');
+      setToast(vinculado
+        ? 'Cliente tem OS ou contratos vinculados e não pode ser excluído. Use Inativar.'
+        : `Erro ao excluir: ${result.error}`);
     }
   };
 
@@ -1567,7 +1609,7 @@ const CustomersPage = ({ setPage }) => {
         <select value={typeF} onChange={e=>setTypeF(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none">
           <option value="all">Todos</option><option value="PJ">Pessoa Jurídica</option><option value="PF">Pessoa Física</option>
         </select>
-        <button onClick={()=>setNewModal(true)} className="ml-auto flex items-center gap-1.5 bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700">
+        <button onClick={()=>{limparForm();setNewModal(true);}} className="ml-auto flex items-center gap-1.5 bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700">
           <Icon name="plus" className="w-4 h-4"/> Novo Cliente
         </button>
       </div>
@@ -1627,16 +1669,20 @@ const CustomersPage = ({ setPage }) => {
               <button onClick={()=>{setSelected(null);setPage('financial');}} className="px-4 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-sm font-semibold flex items-center gap-1.5" title="Ver DRE e rentabilidade financeira deste cliente">
                 <span>📊</span> Ver DRE & Lucro
               </button>
-              <button onClick={()=>toggleActive(sel.id)} className={`px-4 py-2.5 border rounded-lg text-sm ${sel.active?'border-red-200 text-red-600 hover:bg-red-50':'border-green-200 text-green-600 hover:bg-green-50'}`}>
+              <button onClick={()=>toggleActive(sel.id)} className={`px-4 py-2.5 border rounded-lg text-sm ${sel.active?'border-amber-200 text-amber-700 hover:bg-amber-50':'border-green-200 text-green-600 hover:bg-green-50'}`}>
                 {sel.active?'Inativar':'Ativar'}
               </button>
+              <button onClick={()=>abrirEdicao(sel)} title="Editar dados do cliente"
+                className="px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50">✎ Editar</button>
+              <button onClick={()=>excluir(sel)} title="Excluir cliente permanentemente"
+                className="px-4 py-2.5 border border-red-200 text-red-600 rounded-lg text-sm hover:bg-red-50">🗑 Excluir</button>
             </div>
           </div>
         )}
       </Modal>
 
       {/* Novo Cliente Modal */}
-      <Modal open={newModal} onClose={()=>setNewModal(false)} title="Novo Cliente" size="md">
+      <Modal open={newModal} onClose={()=>{setNewModal(false);limparForm();}} title={editId?"Editar Cliente":"Novo Cliente"} size="md">
         <div className="space-y-4">
           <div className="flex gap-2">
             {[['PJ','Pessoa Jurídica'],['PF','Pessoa Física']].map(([v,l])=>(
@@ -1655,8 +1701,8 @@ const CustomersPage = ({ setPage }) => {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/></div>
           ))}
           <div className="flex gap-2 pt-2">
-            <button onClick={()=>setNewModal(false)} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Cancelar</button>
-            <button onClick={create} className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Cadastrar Cliente</button>
+            <button onClick={()=>{setNewModal(false);limparForm();}} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Cancelar</button>
+            <button onClick={salvar} className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">{editId?'Salvar Alterações':'Cadastrar Cliente'}</button>
           </div>
         </div>
       </Modal>
