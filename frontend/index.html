@@ -66,14 +66,44 @@ const CONTRACTS_INIT = [
 ];
 
 const TRANSACTIONS_INIT = [
-  { id:1, type:'INCOME',  status:'RECEIVED', desc:'Fatura CTR-2026-001 — Empresa ABC — Abr/2026',        amount:500000,  due:'2026-04-10', cat:'Receita de Contratos', account:'Bradesco',  payMethod:'PIX'             },
-  { id:2, type:'INCOME',  status:'PENDING',  desc:'Fatura CTR-2026-002 — Hospital Regional — Abr/2026', amount:850000,  due:'2026-04-15', cat:'Receita de Contratos', account:'Bradesco',  payMethod:'Boleto Bancário'  },
-  { id:3, type:'EXPENSE', status:'PAID',     desc:'Compra de baterias — Fornecedor Heliar',              amount:1250000, due:'2026-04-05', cat:'Material',             account:'Itaú',      payMethod:'TED / DOC'        },
-  { id:4, type:'EXPENSE', status:'PENDING',  desc:'Aluguel escritório — Abril/2026',                    amount:350000,  due:'2026-04-05', cat:'Administrativo',       account:'Bradesco',  payMethod:'TED / DOC'        },
-  { id:5, type:'EXPENSE', status:'OVERDUE',  desc:'Combustível — Frota — Mar/2026',                     amount:185400,  due:'2026-03-30', cat:'Combustível',          account:'Itaú',      payMethod:'Cartão de Crédito'},
-  { id:6, type:'INCOME',  status:'PENDING',  desc:'OS-2026-00141 — Data Center Norte',                  amount:320000,  due:'2026-04-20', cat:'Receita de OS',        account:'Bradesco',  payMethod:'PIX'             },
-  { id:7, type:'EXPENSE', status:'PAID',     desc:'Folha de pagamento — Março/2026',                    amount:3200000, due:'2026-04-05', cat:'Pessoal',              account:'Bradesco',  payMethod:'TED / DOC'        },
-  { id:8, type:'INCOME',  status:'OVERDUE',  desc:'Fatura CTR-2025-032 — Banco Meridional — Mar/2026',  amount:900000,  due:'2026-03-15', cat:'Receita de Contratos', account:'Itaú',      payMethod:'Boleto Bancário'  },
+  // ── Empresa ABC Ltda (id: 1)
+  { id:1,  type:'INCOME',  status:'RECEIVED', desc:'Fatura CTR-2026-001 — Empresa ABC — Abr/2026',        amount:500000,  due:'2026-04-10', cat:'Receita de Contratos', customer_id:1, account:'Bradesco',  payMethod:'PIX' },
+  { id:2,  type:'EXPENSE', status:'PAID',     desc:'Peças e cabos de rede — Obra Empresa ABC',            amount:85000,   due:'2026-04-08', cat:'Material',             customer_id:1, account:'Itaú',      payMethod:'TED / DOC' },
+  { id:3,  type:'EXPENSE', status:'PAID',     desc:'Combustível atendimento técnico — Empresa ABC',        amount:35000,   due:'2026-04-12', cat:'Combustível',          customer_id:1, account:'Bradesco',  payMethod:'Cartão de Crédito' },
+  { id:4,  type:'INCOME',  status:'RECEIVED', desc:'Fatura CTR-2026-001 — Empresa ABC — Mar/2026',        amount:500000,  due:'2026-03-10', cat:'Receita de Contratos', customer_id:1, account:'Bradesco',  payMethod:'PIX' },
+  { id:5,  type:'EXPENSE', status:'PAID',     desc:'Conectores e patch cords — Empresa ABC',              amount:42000,   due:'2026-03-12', cat:'Material',             customer_id:1, account:'Itaú',      payMethod:'PIX' },
+
+  // ── Hospital Regional (id: 3)
+  { id:6,  type:'INCOME',  status:'PENDING',  desc:'Fatura CTR-2026-002 — Hospital Regional — Abr/2026', amount:850000,  due:'2026-04-15', cat:'Receita de Contratos', customer_id:3, account:'Bradesco',  payMethod:'Boleto Bancário' },
+  { id:7,  type:'EXPENSE', status:'PAID',     desc:'Banco de Baterias VRLA 200Ah — Hospital Regional',    amount:245000,  due:'2026-04-05', cat:'Material',             customer_id:3, account:'Itaú',      payMethod:'TED / DOC' },
+  { id:8,  type:'EXPENSE', status:'PENDING',  desc:'Diárias técnica e hospedagem — Equipe Hospital',      amount:65000,   due:'2026-04-14', cat:'Hospedagem',           customer_id:3, account:'Bradesco',  payMethod:'PIX' },
+  { id:9,  type:'INCOME',  status:'RECEIVED', desc:'Fatura CTR-2026-002 — Hospital Regional — Mar/2026', amount:850000,  due:'2026-03-15', cat:'Receita de Contratos', customer_id:3, account:'Bradesco',  payMethod:'Boleto Bancário' },
+  { id:10, type:'EXPENSE', status:'PAID',     desc:'Manutenção preventiva nobreak 30KVA — Hospital',      amount:120000,  due:'2026-03-20', cat:'Manutenção',           customer_id:3, account:'Itaú',      payMethod:'TED / DOC' },
+
+  // ── Data Center Norte (id: 7)
+  { id:11, type:'INCOME',  status:'PENDING',  desc:'OS-2026-00141 — Data Center Norte — Instalação',      amount:320000,  due:'2026-04-20', cat:'Receita de OS',        customer_id:7, account:'Bradesco',  payMethod:'PIX' },
+  { id:12, type:'EXPENSE', status:'PAID',     desc:'Fusíveis e cabeamento óptico — Data Center Norte',    amount:58000,   due:'2026-04-09', cat:'Material',             customer_id:7, account:'Itaú',      payMethod:'TED / DOC' },
+  { id:13, type:'INCOME',  status:'RECEIVED', desc:'Fatura CTR-2025-042 — Data Center Norte — Mar/2026',  amount:1200000, due:'2026-03-05', cat:'Receita de Contratos', customer_id:7, account:'Bradesco',  payMethod:'TED / DOC' },
+  { id:14, type:'EXPENSE', status:'PAID',     desc:'Plantão técnico 24x7 datacenter — Mar/2026',          amount:180000,  due:'2026-03-18', cat:'Material Operacional', customer_id:7, account:'Itaú',      payMethod:'TED / DOC' },
+
+  // ── Banco Meridional (id: 5)
+  { id:15, type:'INCOME',  status:'OVERDUE',  desc:'Fatura CTR-2025-032 — Banco Meridional — Mar/2026',  amount:900000,  due:'2026-03-15', cat:'Receita de Contratos', customer_id:5, account:'Itaú',      payMethod:'Boleto Bancário' },
+  { id:16, type:'INCOME',  status:'PENDING',  desc:'Fatura CTR-2026-003 — Banco Meridional — Abr/2026',  amount:900000,  due:'2026-04-18', cat:'Receita de Contratos', customer_id:5, account:'Itaú',      payMethod:'Boleto Bancário' },
+  { id:17, type:'EXPENSE', status:'PAID',     desc:'Revisão periódica de infraestrutura elétrica — Banco',amount:115000,  due:'2026-04-07', cat:'Manutenção',           customer_id:5, account:'Itaú',      payMethod:'TED / DOC' },
+
+  // ── TeleVoz S.A. (id: 4)
+  { id:18, type:'INCOME',  status:'RECEIVED', desc:'Fatura Trimestral CTR-2026-004 — TeleVoz S.A.',       amount:400000,  due:'2026-04-05', cat:'Receita de Contratos', customer_id:4, account:'Bradesco',  payMethod:'TED / DOC' },
+  { id:19, type:'EXPENSE', status:'PAID',     desc:'Conectores e ferramentas ópticas — TeleVoz',          amount:78000,   due:'2026-04-06', cat:'Material Operacional', customer_id:4, account:'Bradesco',  payMethod:'PIX' },
+
+  // ── Prefeitura Municipal (id: 2) — Exemplo com custo pontual alto no mês (alerta gerencial de margem)
+  { id:20, type:'INCOME',  status:'PENDING',  desc:'Fatura Manutenção Semafórica — Prefeitura',           amount:150000,  due:'2026-04-28', cat:'Receita de OS',        customer_id:2, account:'Bradesco',  payMethod:'Boleto Bancário' },
+  { id:21, type:'EXPENSE', status:'PAID',     desc:'Reparo emergencial cabos e inversor — Prefeitura',     amount:195000,  due:'2026-04-11', cat:'Material',             customer_id:2, account:'Itaú',      payMethod:'TED / DOC' },
+
+  // ── Custos Estruturais da Sede / Sem cliente vinculado (customer_id: null)
+  { id:22, type:'EXPENSE', status:'PENDING',  desc:'Aluguel escritório sede — Abril/2026',                amount:350000,  due:'2026-04-05', cat:'Administrativo',       customer_id:null, account:'Bradesco', payMethod:'TED / DOC' },
+  { id:23, type:'EXPENSE', status:'PAID',     desc:'Folha de pagamento administração — Março/2026',       amount:3200000, due:'2026-04-05', cat:'Pessoal',              customer_id:null, account:'Bradesco', payMethod:'TED / DOC' },
+  { id:24, type:'EXPENSE', status:'PAID',     desc:'Energia elétrica do barracão — Abril/2026',           amount:89000,   due:'2026-04-10', cat:'Conta de Luz',         customer_id:null, account:'Bradesco', payMethod:'Débito Automático' },
+  { id:25, type:'EXPENSE', status:'PAID',     desc:'Internet e links dedicados sede — Abr/2026',          amount:45000,   due:'2026-04-10', cat:'Conta de Internet',    customer_id:null, account:'Bradesco', payMethod:'Boleto Bancário' },
 ];
 
 const PRODUCTS_INIT = [
@@ -232,6 +262,7 @@ const STATUS_MAP = {
   INVOICED:      ['bg-purple-100 text-purple-700','Faturada'],
   CANCELLED:     ['bg-red-100 text-red-700',      'Cancelada'],
   PENDING:       ['bg-amber-100 text-amber-700',  'Pendente'],
+  PARTIAL:       ['bg-sky-100 text-sky-700',      'Parcial'],
   PAID:          ['bg-green-100 text-green-700',  'Pago'],
   RECEIVED:      ['bg-green-100 text-green-700',  'Recebido'],
   OVERDUE:       ['bg-red-100 text-red-700',      'Vencido'],
@@ -752,10 +783,12 @@ const DashboardPage = ({ setPage, taxRegime='REAL' }) => {
     const ordM = month ? orders.filter(o=>((o.scheduled_date||o.created_at||'')).startsWith(month)) : orders;
 
     const openSt = ['OPEN','SCHEDULED','IN_TRANSIT','IN_PROGRESS'];
-    const receivedRevenue = txs.filter(t=>t.type==='INCOME'&&t.status==='RECEIVED').reduce((s,t)=>s+(t.amount||0),0);
-    const paidExpense     = txs.filter(t=>t.type==='EXPENSE'&&t.status==='PAID').reduce((s,t)=>s+(t.amount||0),0);
-    const pendingRevenue  = txs.filter(t=>t.type==='INCOME'&&t.status==='PENDING').reduce((s,t)=>s+(t.amount||0),0);
-    const pendingExpense  = txs.filter(t=>t.type==='EXPENSE'&&t.status==='PENDING').reduce((s,t)=>s+(t.amount||0),0);
+    const pago   = t => t.amount_paid != null ? t.amount_paid : ((t.status==='PAID'||t.status==='RECEIVED') ? (t.amount||0) : 0);
+    const aberto = t => Math.max(0, (t.amount||0) - pago(t));
+    const receivedRevenue = txs.filter(t=>t.type==='INCOME' ).reduce((s,t)=>s+pago(t),0);
+    const paidExpense     = txs.filter(t=>t.type==='EXPENSE').reduce((s,t)=>s+pago(t),0);
+    const pendingRevenue  = txs.filter(t=>t.type==='INCOME' ).reduce((s,t)=>s+aberto(t),0);
+    const pendingExpense  = txs.filter(t=>t.type==='EXPENSE').reduce((s,t)=>s+aberto(t),0);
 
     setStats({
       openOrders:       ordM.filter(o=>openSt.includes(o.status)).length,
@@ -781,7 +814,7 @@ const DashboardPage = ({ setPage, taxRegime='REAL' }) => {
     products.filter(p=>(p.quantity||0)<=(p.min_stock||0)&&(p.min_stock||0)>0).slice(0,2).forEach(p=>{
       newAlerts.push({id:`inv-${p.id}`,severity:'MEDIUM',title:'Estoque crítico',message:`"${p.name}" — ${p.quantity||0} un. (mín: ${p.min_stock||0})`,type:'LOW_STOCK'});
     });
-    txs.filter(t=>t.due_date&&new Date(t.due_date)<now&&t.status==='PENDING').slice(0,2).forEach(t=>{
+    txs.filter(t=>t.due_date&&new Date(t.due_date)<now&&(t.status==='PENDING'||t.status==='PARTIAL')).slice(0,2).forEach(t=>{
       newAlerts.push({id:`tx-${t.id}`,severity:t.type==='INCOME'?'HIGH':'MEDIUM',title:t.type==='INCOME'?'Recebimento em atraso':'Pagamento em atraso',message:`${t.description||'—'} — venceu ${new Date(t.due_date).toLocaleDateString('pt-BR')}`,type:t.type==='INCOME'?'OVERDUE_RECEIVABLE':'OVERDUE_PAYABLE'});
     });
     setAlerts(newAlerts);
@@ -1591,6 +1624,9 @@ const CustomersPage = ({ setPage }) => {
             </div>
             <div className="flex gap-2 pt-2 border-t border-gray-100">
               <button onClick={()=>{setSelected(null);setPage('orders');}} className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Nova OS para este cliente</button>
+              <button onClick={()=>{setSelected(null);setPage('financial');}} className="px-4 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-sm font-semibold flex items-center gap-1.5" title="Ver DRE e rentabilidade financeira deste cliente">
+                <span>📊</span> Ver DRE & Lucro
+              </button>
               <button onClick={()=>toggleActive(sel.id)} className={`px-4 py-2.5 border rounded-lg text-sm ${sel.active?'border-red-200 text-red-600 hover:bg-red-50':'border-green-200 text-green-600 hover:bg-green-50'}`}>
                 {sel.active?'Inativar':'Ativar'}
               </button>
@@ -1838,6 +1874,45 @@ const ContractsPage = ({ taxRegime='REAL' }) => {
 const INCOME_CATS_INIT  = ['Receita de Contratos','Receita de OS','Multas e Juros','Adiantamentos','Outros Recebimentos'];
 const EXPENSE_CATS_INIT = ['Pessoal','Material','Combustível','Administrativo','Manutenção','Telecomunicações','Impostos','Outros','Veículo','Hospedagem','Alimentação','Material Operacional','Ferramentas','Material Escritório','Documentação','Outros Gastos','Folha de Pagamento','Imposto','Conta de Luz','Conta de Água','Conta de Internet','Barracão'];
 
+const DEFAULT_ACCOUNTING_CLASSES = {
+  // Receitas
+  'Receita de Contratos': 'RECEITA_CONTRATO',
+  'Receita de OS': 'RECEITA_SERVICO',
+  'Multas e Juros': 'RECEITA_FINANCEIRA',
+  'Adiantamentos': 'OUTRAS_RECEITAS',
+  'Outros Recebimentos': 'OUTRAS_RECEITAS',
+  // Custos Diretos dos Serviços Prestados (CSP)
+  'Material': 'CSP',
+  'Material Operacional': 'CSP',
+  'Ferramentas': 'CSP',
+  'Manutenção': 'CSP',
+  'Combustível': 'CSP',
+  'Veículo': 'CSP',
+  'Hospedagem': 'CSP',
+  'Alimentação': 'CSP',
+  // Despesas Operacionais — Pessoal
+  'Pessoal': 'DESPESA_PESSOAL',
+  'Folha de Pagamento': 'DESPESA_PESSOAL',
+  // Despesas Operacionais — G&A (Administrativo)
+  'Administrativo': 'DESPESA_ADMINISTRATIVA',
+  'Material Escritório': 'DESPESA_ADMINISTRATIVA',
+  'Conta de Luz': 'DESPESA_ADMINISTRATIVA',
+  'Conta de Água': 'DESPESA_ADMINISTRATIVA',
+  'Conta de Internet': 'DESPESA_ADMINISTRATIVA',
+  'Barracão': 'DESPESA_ADMINISTRATIVA',
+  'Telecomunicações': 'DESPESA_ADMINISTRATIVA',
+  'Documentação': 'DESPESA_ADMINISTRATIVA',
+  // Outras Despesas
+  'Outros Gastos': 'OUTRAS_DESPESAS',
+  'Outros': 'OUTRAS_DESPESAS',
+  // Impostos sobre Receita
+  'Impostos': 'IMPOSTO_RECEITA',
+  'Imposto': 'IMPOSTO_RECEITA',
+};
+
+const INCOME_CATS_INITIAL_OBJS = INCOME_CATS_INIT.map(n => ({ id: n, name: n, accounting_class: DEFAULT_ACCOUNTING_CLASSES[n] || 'OUTRAS_RECEITAS' }));
+const EXPENSE_CATS_INITIAL_OBJS = EXPENSE_CATS_INIT.map(n => ({ id: n, name: n, accounting_class: DEFAULT_ACCOUNTING_CLASSES[n] || 'OUTRAS_DESPESAS' }));
+
 const BANK_ACCOUNTS_INIT = [
   { id:1, bank:'Bradesco',  agency:'0001-9', account:'12345-6', type:'Corrente', balance:8500000, active:true  },
   { id:2, bank:'Itaú',      agency:'0042-7', account:'98765-4', type:'Corrente', balance:4000000, active:true  },
@@ -1936,6 +2011,8 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
   const [statusP, setStatusP]   = useState('all');
   const [catR, setCatR]         = useState('all');
   const [catP, setCatP]         = useState('all');
+  const [custR, setCustR]       = useState('all');
+  const [custP, setCustP]       = useState('all');
   // filtros de data por aba
   const [dateFromR, setDateFromR] = useState('');
   const [dateToR,   setDateToR]   = useState('');
@@ -1944,20 +2021,29 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
   const [dateFromCF,setDateFromCF]= useState(()=>{ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`; });
   const [dateToCF,  setDateToCF]  = useState(()=>{ const d=new Date(); const e=new Date(d.getFullYear(),d.getMonth()+1,0); return e.toISOString().split('T')[0]; });
   const [drePeriod, setDrePeriod] = useState(()=>new Date().toISOString().slice(0,7));
+  const [dreBase, setDreBase] = useState('previsto'); // previsto (competência) | efetivo (caixa)
+  const [dreViewMode, setDreViewMode]             = useState('by_customer'); // 'by_customer' ou 'consolidated'
+  const [dreCustomerFilter, setDreCustomerFilter] = useState('all');
+  const [dreCustSearch, setDreCustSearch]         = useState('');
+  const [dreCustSort, setDreCustSort]             = useState('profit_desc');
+  const [dreCustStatusFilter, setDreCustStatusFilter] = useState('all');
+  const [dreExpandedCust, setDreExpandedCust]     = useState(null);
+  const [dreTimeScope, setDreTimeScope]           = useState('month'); // 'month' | 'year' | 'all'
   const [infoOpen,  setInfoOpen]  = useState(null);
   const [budPeriod, setBudPeriod] = useState('2026-03');
   const [approvalSel, setApprovalSel] = useState(new Set());
   const [selR, setSelR] = useState(new Set());
   const [selP, setSelP] = useState(new Set());
-  const [transactions, setTx]   = useState([]);
-  const [incomeCats,   setIncomeCats]   = useState(INCOME_CATS_INIT.map(n=>({id:n,name:n})));
-  const [expenseCats,  setExpenseCats]  = useState(EXPENSE_CATS_INIT.map(n=>({id:n,name:n})));
+  const [transactions, setTx]   = useState(TRANSACTIONS_INIT);
+  const [incomeCats,   setIncomeCats]   = useState(INCOME_CATS_INITIAL_OBJS);
+  const [expenseCats,  setExpenseCats]  = useState(EXPENSE_CATS_INITIAL_OBJS);
   const [bankAccounts, setBankAccounts] = useState(BANK_ACCOUNTS_INIT);
   const [payMethods,   setPayMethods]   = useState(PAYMENT_METHODS_INIT);
-  const [customers,    setCustomers]    = useState([]);
+  const [customers,    setCustomers]    = useState(CUSTOMERS_INIT);
   const [toast, setToast]       = useState(null);
   const [newTxModal, setNewTxModal] = useState(false);
   const [editTxId, setEditTxId] = useState(null);
+  const [settleModal, setSettleModal] = useState(null); // { tx, valor } da baixa em andamento
   const [newTx, setNewTx]       = useState({ type:'INCOME', description:'', amount:'', due_date:'', status:'PENDING', category_id:'', bank_account_id:'', payment_method_id:'', customer_id:'', invoice_number:'' });
 
   useEffect(() => { loadFinancialData(); }, []);
@@ -2236,14 +2322,31 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
     ['2026-01','Janeiro 2026'],['2025-12','Dezembro 2025'],['2025-11','Novembro 2025'],
   ];
 
-  const settle = async id => {
+  // Baixa: abre o modal já com o saldo em aberto preenchido, para quitar
+  // integralmente continuar sendo dois cliques.
+  const settle = id => {
     const tx = transactions.find(t=>t.id===id);
-    const newStatus = tx?.type==='INCOME' ? 'RECEIVED' : 'PAID';
+    if (!tx) return;
+    setSettleModal({ tx, valor: (txAberto(tx)/100).toFixed(2) });
+  };
+
+  const confirmSettle = async () => {
+    const { tx, valor } = settleModal;
+    const valorCents = Math.round(parseFloat(String(valor).replace(',','.'))*100);
+    if (!Number.isFinite(valorCents) || valorCents <= 0) { setToast('Informe um valor válido'); return; }
+    if (valorCents > txAberto(tx)) { setToast(`Valor acima do saldo em aberto (${fmt(txAberto(tx))})`); return; }
+
+    const novoPago = txPago(tx) + valorCents;
+    const quitou = novoPago >= (tx.amount||0);
+    const novoStatus = quitou ? (tx.type==='INCOME' ? 'RECEIVED' : 'PAID') : 'PARTIAL';
     const today = new Date().toISOString().split('T')[0];
-    const result = await api.updateTransaction(id, { status: newStatus, paid_date: today });
+
+    const result = await api.updateTransaction(tx.id, { amount_paid: novoPago, status: novoStatus, paid_date: today });
     if (result.success) {
-      setTx(prev=>prev.map(t=>t.id!==id?t:{...t,status:newStatus,paid_date:today}));
-      setToast(tx?.type==='INCOME'?'Recebimento registrado!':'Pagamento registrado!');
+      setTx(prev=>prev.map(t=>t.id!==tx.id?t:{...t,amount_paid:novoPago,status:novoStatus,paid_date:today}));
+      setSettleModal(null);
+      const verbo = tx.type==='INCOME' ? 'Recebimento' : 'Pagamento';
+      setToast(quitou ? `${verbo} quitado!` : `${verbo} parcial de ${fmt(valorCents)} — restam ${fmt((tx.amount||0)-novoPago)}`);
     } else {
       setToast(`Erro: ${result.error}`);
     }
@@ -2373,7 +2476,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
     return days.map(d=>{ running+=d.diff; return {...d, balance:running}; });
   };
 
-  const TxTable = ({ txList, btnLabel, onSettle, showNF, selected, onToggle, onToggleAll }) => (
+  const TxTable = ({ txList, btnLabel, baixaLabel, onSettle, showNF, selected, onToggle, onToggleAll }) => (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <table className="w-full text-sm">
         <thead className="bg-gray-50 border-b border-gray-200">
@@ -2384,13 +2487,13 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                 checked={txList.length>0 && txList.every(t=>selected.has(t.id))}
                 onChange={e=>onToggleAll(txList.map(t=>t.id), e.target.checked)}/>
             </th>
-            {['Descrição','Categoria','Cliente',...(showNF?['NF']:[]),'Banco','F. Pagamento','Vencimento','Valor','Status',''].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>)}
+            {['Descrição','Categoria','Cliente',...(showNF?['NF']:[]),'Banco','F. Pagamento','Vencimento','Valor',baixaLabel,'Em aberto','Status',''].map(h=><th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">{h}</th>)}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
-          {txList.length===0&&<tr><td colSpan={showNF?11:10} className="px-4 py-8 text-center text-sm text-gray-400">Nenhum lançamento encontrado</td></tr>}
+          {txList.length===0&&<tr><td colSpan={showNF?13:12} className="px-4 py-8 text-center text-sm text-gray-400">Nenhum lançamento encontrado</td></tr>}
           {txList.map(t=>(
-            <tr key={t.id} className={`hover:bg-gray-50 ${selected.has(t.id)?'bg-blue-50':t.status==='OVERDUE'?'bg-red-50':t.status==='PAID'||t.status==='RECEIVED'?'bg-green-50/30':''}`}>
+            <tr key={t.id} className={`hover:bg-gray-50 ${selected.has(t.id)?'bg-blue-50':t.status==='OVERDUE'?'bg-red-50':t.status==='PARTIAL'?'bg-sky-50/40':t.status==='PAID'||t.status==='RECEIVED'?'bg-green-50/30':''}`}>
               <td className="px-4 py-3">
                 <input type="checkbox" className="w-4 h-4 accent-blue-600"
                   aria-label={`Selecionar lançamento ${t.description||''}`}
@@ -2404,10 +2507,12 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
               <td className="px-4 py-3 text-xs text-gray-500">{payMethods.find(m=>m.id===t.payment_method_id)?.name||t.payMethod||<span className="text-gray-300">—</span>}</td>
               <td className="px-4 py-3 text-gray-600">{fmtDate(txDue(t))}</td>
               <td className="px-4 py-3 font-semibold text-gray-800">{fmt(t.amount)}</td>
+              <td className="px-4 py-3 text-green-700">{txPago(t)>0?fmt(txPago(t)):<span className="text-gray-300">—</span>}</td>
+              <td className={`px-4 py-3 font-medium ${txAberto(t)>0?'text-amber-700':'text-gray-300'}`}>{txAberto(t)>0?fmt(txAberto(t)):'—'}</td>
               <td className="px-4 py-3"><Badge status={t.status}/></td>
               <td className="px-4 py-3">
                 <div className="flex items-center justify-end gap-1.5">
-                  {(t.status==='PENDING'||t.status==='OVERDUE')&&
+                  {txAberto(t)>0 &&
                     <button onClick={()=>onSettle(t.id)} className="text-xs bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-700 font-medium whitespace-nowrap">{btnLabel}</button>}
                   <button onClick={()=>openEditTx(t)} title="Editar lançamento" aria-label={`Editar lançamento ${t.description||''}`} className="text-xs text-gray-500 hover:text-blue-600 border border-gray-200 rounded-lg px-2 py-1 hover:bg-blue-50">✎</button>
                   <button onClick={()=>deleteTx(t.id)} title="Excluir lançamento" aria-label={`Excluir lançamento ${t.description||''}`} className="text-xs text-gray-500 hover:text-red-600 border border-gray-200 rounded-lg px-2 py-1 hover:bg-red-50">🗑</button>
@@ -2421,18 +2526,30 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
   );
 
 
+  // Previsto x efetivo. amount é o valor da conta e não muda com as baixas;
+  // amount_paid é quanto entrou/saiu de fato. Lançamentos criados antes da
+  // baixa parcial não têm amount_paid, então quitados contam valor cheio.
+  const txPago = t => {
+    if (t.amount_paid != null) return t.amount_paid;
+    return (t.status==='PAID'||t.status==='RECEIVED') ? (t.amount||0) : 0;
+  };
+  const txAberto = t => Math.max(0, (t.amount||0) - txPago(t));
+  const soma = (list, f) => list.reduce((s,t)=>s+f(t), 0);
+
   const totalIn  = transactions.filter(t=>t.type==='INCOME').reduce((s,t)=>s+t.amount,0);
   const totalOut = transactions.filter(t=>t.type==='EXPENSE').reduce((s,t)=>s+t.amount,0);
-  const pendingIn  = transactions.filter(t=>t.type==='INCOME'  && (t.status==='PENDING'||t.status==='OVERDUE')).reduce((s,t)=>s+t.amount,0);
-  const pendingOut = transactions.filter(t=>t.type==='EXPENSE' && (t.status==='PENDING'||t.status==='OVERDUE')).reduce((s,t)=>s+t.amount,0);
+  const pendingIn  = transactions.filter(t=>t.type==='INCOME' ).reduce((s,t)=>s+txAberto(t),0);
+  const pendingOut = transactions.filter(t=>t.type==='EXPENSE').reduce((s,t)=>s+txAberto(t),0);
 
   const txCatName = t => (incomeCats.concat(expenseCats).find(c=>c.id===t.category_id)?.name) || t.cat || '—';
   const txDue = t => t.due_date || t.due || '';
+
 
   const receivable = transactions.filter(t=>
     t.type==='INCOME' &&
     (statusR==='all'||t.status===statusR) &&
     (catR==='all'||txCatName(t)===catR) &&
+    (custR==='all'||(custR==='__sem_cliente__'?(!t.customer_id):(String(t.customer_id)===String(custR)))) &&
     (!dateFromR||txDue(t)>=dateFromR) &&
     (!dateToR  ||txDue(t)<=dateToR)
   );
@@ -2440,13 +2557,14 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
     t.type==='EXPENSE' &&
     (statusP==='all'||t.status===statusP) &&
     (catP==='all'||txCatName(t)===catP) &&
+    (custP==='all'||(custP==='__sem_cliente__'?(!t.customer_id):(String(t.customer_id)===String(custP)))) &&
     (!dateFromP||txDue(t)>=dateFromP) &&
     (!dateToP  ||txDue(t)<=dateToP)
   );
 
   const TODAY = new Date().toISOString().split('T')[0];
   const approvalQueue = transactions.filter(t=>
-    (t.status==='PENDING'||t.status==='OVERDUE') && txDue(t)<=TODAY
+    (t.status==='PENDING'||t.status==='PARTIAL'||t.status==='OVERDUE') && txDue(t)<=TODAY
   );
 
   const ALL_MENU_ITEMS = [
@@ -2487,11 +2605,11 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
       <div className="flex-1 overflow-y-auto p-5 space-y-4">
 
         {tab==='receivable'&&(()=>{
-          const rTot      = receivable.reduce((s,t)=>s+t.amount,0);
-          const rReceived = receivable.filter(t=>t.status==='RECEIVED').reduce((s,t)=>s+t.amount,0);
-          const rPending  = receivable.filter(t=>t.status==='PENDING').reduce((s,t)=>s+t.amount,0);
-          const rOverdue  = receivable.filter(t=>t.status==='OVERDUE').reduce((s,t)=>s+t.amount,0);
-          const hasFilter = dateFromR||dateToR||statusR!=='all'||catR!=='all';
+          const rTot      = soma(receivable, t=>t.amount);           // previsto
+          const rReceived = soma(receivable, txPago);                  // efetivo
+          const rPending  = soma(receivable.filter(t=>t.status!=='OVERDUE'), txAberto);
+          const rOverdue  = soma(receivable.filter(t=>t.status==='OVERDUE'), txAberto);
+          const hasFilter = dateFromR||dateToR||statusR!=='all'||catR!=='all'||custR!=='all';
           return (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-4">
@@ -2501,8 +2619,9 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                   <p className="text-xs text-gray-400 mt-0.5">{receivable.length} lançamento(s)</p>
                 </div>
                 <div className="bg-green-50 border border-green-100 rounded-xl p-4">
-                  <p className="text-xs font-medium text-green-600 uppercase tracking-wide">Recebidos</p>
+                  <p className="text-xs font-medium text-green-600 uppercase tracking-wide">Recebido</p>
                   <p className="text-2xl font-bold text-green-700 mt-1">{fmt(rReceived)}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">de {fmt(rTot)} previsto</p>
                 </div>
                 <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
                   <p className="text-xs font-medium text-amber-600 uppercase tracking-wide">Pendentes</p>
@@ -2515,15 +2634,20 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <select value={statusR} onChange={e=>setStatusR(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none">
-                  <option value="all">Todos os status</option><option value="PENDING">Pendente</option><option value="RECEIVED">Recebido</option><option value="OVERDUE">Vencido</option>
+                  <option value="all">Todos os status</option><option value="PENDING">Pendente</option><option value="PARTIAL">Parcial</option><option value="RECEIVED">Recebido</option><option value="OVERDUE">Vencido</option>
                 </select>
                 <select value={catR} onChange={e=>setCatR(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none">
                   <option value="all">Todas as categorias</option>
                   {incomeCats.map(c=><option key={c.id||c} value={c.name||c}>{c.name||c}</option>)}
                 </select>
+                <select value={custR} onChange={e=>setCustR(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none max-w-[180px] truncate">
+                  <option value="all">Todos os clientes</option>
+                  {customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+                  <option value="__sem_cliente__">Sem cliente vinculado</option>
+                </select>
                 <DateFilter from={dateFromR} setFrom={setDateFromR} to={dateToR} setTo={setDateToR}/>
                 {hasFilter&&
-                  <button onClick={()=>{setDateFromR('');setDateToR('');setStatusR('all');setCatR('all');}}
+                  <button onClick={()=>{setDateFromR('');setDateToR('');setStatusR('all');setCatR('all');setCustR('all');}}
                     className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 border border-gray-200 rounded-lg">Limpar filtros</button>}
                 <button onClick={()=>setImportModal('INCOME')} className="flex items-center gap-1.5 text-sm border border-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-50">↑ Importar planilha</button>
                 <button onClick={()=>{setEditTxId(null);setNewTx({type:'INCOME',description:'',amount:'',due_date:'',status:'PENDING',category_id:'',bank_account_id:'',payment_method_id:'',customer_id:'',invoice_number:''});setNewTxModal(true);}} className="ml-auto flex items-center gap-1.5 bg-green-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-green-700"><Icon name="plus" className="w-4 h-4"/> Novo Recebimento</button>
@@ -2534,7 +2658,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                   <button onClick={()=>bulkDeleteTx([...selR], setSelR)} className="flex items-center gap-1.5 bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-red-700">🗑 Excluir selecionados</button>
                   <button onClick={()=>setSelR(new Set())} className="text-xs text-blue-600 hover:underline ml-auto">Limpar seleção</button>
                 </div>}
-              <TxTable txList={receivable} btnLabel="Baixar" onSettle={settle} showNF
+              <TxTable txList={receivable} btnLabel="Baixar" baixaLabel="Recebido" onSettle={settle} showNF
                 selected={selR}
                 onToggle={id=>setSelR(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;})}
                 onToggleAll={(ids,checked)=>setSelR(prev=>{const n=new Set(prev);ids.forEach(id=>checked?n.add(id):n.delete(id));return n;})}/>
@@ -2543,11 +2667,11 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
         })()}
 
         {tab==='payable'&&(()=>{
-          const pTot    = payable.reduce((s,t)=>s+t.amount,0);
-          const pPaid   = payable.filter(t=>t.status==='PAID').reduce((s,t)=>s+t.amount,0);
-          const pPend   = payable.filter(t=>t.status==='PENDING').reduce((s,t)=>s+t.amount,0);
-          const pOver   = payable.filter(t=>t.status==='OVERDUE').reduce((s,t)=>s+t.amount,0);
-          const hasFilter = dateFromP||dateToP||statusP!=='all'||catP!=='all';
+          const pTot    = soma(payable, t=>t.amount);                 // previsto
+          const pPaid   = soma(payable, txPago);                       // efetivo
+          const pPend   = soma(payable.filter(t=>t.status!=='OVERDUE'), txAberto);
+          const pOver   = soma(payable.filter(t=>t.status==='OVERDUE'), txAberto);
+          const hasFilter = dateFromP||dateToP||statusP!=='all'||catP!=='all'||custP!=='all';
           return (
             <div className="space-y-4">
               <div className="grid grid-cols-4 gap-4">
@@ -2557,8 +2681,9 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                   <p className="text-xs text-gray-400 mt-0.5">{payable.length} lançamento(s)</p>
                 </div>
                 <div className="bg-green-50 border border-green-100 rounded-xl p-4">
-                  <p className="text-xs font-medium text-green-600 uppercase tracking-wide">Pagos</p>
+                  <p className="text-xs font-medium text-green-600 uppercase tracking-wide">Pago</p>
                   <p className="text-2xl font-bold text-green-700 mt-1">{fmt(pPaid)}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">de {fmt(pTot)} previsto</p>
                 </div>
                 <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
                   <p className="text-xs font-medium text-amber-600 uppercase tracking-wide">Pendentes</p>
@@ -2571,15 +2696,20 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 <select value={statusP} onChange={e=>setStatusP(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none">
-                  <option value="all">Todos os status</option><option value="PENDING">Pendente</option><option value="PAID">Pago</option><option value="OVERDUE">Vencido</option>
+                  <option value="all">Todos os status</option><option value="PENDING">Pendente</option><option value="PARTIAL">Parcial</option><option value="PAID">Pago</option><option value="OVERDUE">Vencido</option>
                 </select>
                 <select value={catP} onChange={e=>setCatP(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none">
                   <option value="all">Todas as categorias</option>
                   {expenseCats.map(c=><option key={c.id||c} value={c.name||c}>{c.name||c}</option>)}
                 </select>
+                <select value={custP} onChange={e=>setCustP(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none max-w-[180px] truncate">
+                  <option value="all">Todos os clientes</option>
+                  {customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+                  <option value="__sem_cliente__">Sem cliente vinculado</option>
+                </select>
                 <DateFilter from={dateFromP} setFrom={setDateFromP} to={dateToP} setTo={setDateToP}/>
                 {hasFilter&&
-                  <button onClick={()=>{setDateFromP('');setDateToP('');setStatusP('all');setCatP('all');}}
+                  <button onClick={()=>{setDateFromP('');setDateToP('');setStatusP('all');setCatP('all');setCustP('all');}}
                     className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 border border-gray-200 rounded-lg">Limpar filtros</button>}
                 <button onClick={()=>setImportModal('EXPENSE')} className="flex items-center gap-1.5 text-sm border border-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-50">↑ Importar planilha</button>
                 <button onClick={()=>{setEditTxId(null);setNewTx({type:'EXPENSE',description:'',amount:'',due_date:'',status:'PENDING',category_id:'',bank_account_id:'',payment_method_id:'',customer_id:'',invoice_number:''});setNewTxModal(true);}} className="ml-auto flex items-center gap-1.5 bg-red-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-red-700"><Icon name="plus" className="w-4 h-4"/> Nova Despesa</button>
@@ -2590,7 +2720,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                   <button onClick={()=>bulkDeleteTx([...selP], setSelP)} className="flex items-center gap-1.5 bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-red-700">🗑 Excluir selecionados</button>
                   <button onClick={()=>setSelP(new Set())} className="text-xs text-blue-600 hover:underline ml-auto">Limpar seleção</button>
                 </div>}
-              <TxTable txList={payable} btnLabel="Pagar" onSettle={settle}
+              <TxTable txList={payable} btnLabel="Pagar" baixaLabel="Pago" onSettle={settle}
                 selected={selP}
                 onToggle={id=>setSelP(prev=>{const n=new Set(prev);n.has(id)?n.delete(id):n.add(id);return n;})}
                 onToggleAll={(ids,checked)=>setSelP(prev=>{const n=new Set(prev);ids.forEach(id=>checked?n.add(id):n.delete(id));return n;})}/>
@@ -2610,56 +2740,69 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
           const from=dateFromCF||defaultFrom; const to=dateToCF||defaultTo;
           const txP=transactions.filter(t=>{const d=t.due_date||''; return d>=from&&d<=to;});
 
-          const sumCls=(type,...cls)=>txP.filter(t=>t.type===type&&cls.includes(getCls(t))).reduce((s,t)=>s+t.amount,0);
-
-          const recClientes = sumCls('INCOME','RECEITA_SERVICO','RECEITA_CONTRATO','OUTRAS_RECEITAS');
-          const pagCSP      = sumCls('EXPENSE','CSP');
-          const pagPessoal  = sumCls('EXPENSE','DESPESA_PESSOAL');
-          const pagAdmin    = sumCls('EXPENSE','DESPESA_ADMINISTRATIVA','DESPESA_COMERCIAL');
-          const pagImpostos = sumCls('EXPENSE','IMPOSTO_RECEITA','IMPOSTO_RENDA');
-          const pagOutOp    = sumCls('EXPENSE','OUTRAS_DESPESAS','DEPRECIACAO');
-          const caixaOper   = recClientes-pagCSP-pagPessoal-pagAdmin-pagImpostos-pagOutOp;
-
-          const recAtivos   = sumCls('INCOME','RECEITA_INVESTIMENTO');
-          const pagAtivos   = sumCls('EXPENSE','INVESTIMENTO');
-          const caixaInv    = recAtivos-pagAtivos;
-
-          const recFin      = sumCls('INCOME','FINANCIAMENTO_ENTRADA');
-          const pagFin      = sumCls('EXPENSE','FINANCIAMENTO_SAIDA','DESPESA_FINANCEIRA');
-          const caixaFin    = recFin-pagFin;
-
-          const varLiq       = caixaOper+caixaInv+caixaFin;
-          const saldoInicial = bankAccounts.reduce((s,b)=>s+(b.initial_balance||0),0);
-          const saldoFinal   = saldoInicial+varLiq;
+          // Mesmo cálculo rodado duas vezes: previsto usa o valor da conta,
+          // efetivo usa só o que foi baixado de fato.
+          const calcDFC = valor => {
+            const sumCls=(type,...cls)=>txP.filter(t=>t.type===type&&cls.includes(getCls(t))).reduce((s,t)=>s+valor(t),0);
+            const recClientes = sumCls('INCOME','RECEITA_SERVICO','RECEITA_CONTRATO','OUTRAS_RECEITAS');
+            const pagCSP      = sumCls('EXPENSE','CSP');
+            const pagPessoal  = sumCls('EXPENSE','DESPESA_PESSOAL');
+            const pagAdmin    = sumCls('EXPENSE','DESPESA_ADMINISTRATIVA','DESPESA_COMERCIAL');
+            const pagImpostos = sumCls('EXPENSE','IMPOSTO_RECEITA','IMPOSTO_RENDA');
+            const pagOutOp    = sumCls('EXPENSE','OUTRAS_DESPESAS','DEPRECIACAO');
+            const caixaOper   = recClientes-pagCSP-pagPessoal-pagAdmin-pagImpostos-pagOutOp;
+            const recAtivos   = sumCls('INCOME','RECEITA_INVESTIMENTO');
+            const pagAtivos   = sumCls('EXPENSE','INVESTIMENTO');
+            const caixaInv    = recAtivos-pagAtivos;
+            const recFin      = sumCls('INCOME','FINANCIAMENTO_ENTRADA');
+            const pagFin      = sumCls('EXPENSE','FINANCIAMENTO_SAIDA','DESPESA_FINANCEIRA');
+            const caixaFin    = recFin-pagFin;
+            const varLiq      = caixaOper+caixaInv+caixaFin;
+            const saldoInicial= bankAccounts.reduce((s,b)=>s+(b.initial_balance||0),0);
+            return { recClientes,pagCSP,pagPessoal,pagAdmin,pagImpostos,pagOutOp,caixaOper,
+                     recAtivos,pagAtivos,caixaInv,recFin,pagFin,caixaFin,varLiq,
+                     saldoInicial, saldoFinal: saldoInicial+varLiq };
+          };
+          const PV = calcDFC(t=>t.amount);   // previsto
+          const EF = calcDFC(txPago);        // efetivo
+          const { recClientes,pagCSP,pagPessoal,pagAdmin,pagImpostos,pagOutOp,caixaOper,
+                  recAtivos,pagAtivos,caixaInv,recFin,pagFin,caixaFin,varLiq,
+                  saldoInicial,saldoFinal } = PV;
 
           const dailyRows   = projectedFlow();
           const fv  = v=>v===0?'—':v<0?`(${fmt(Math.abs(v))})`:fmt(v);
           const sfv = v=>v===0?'—':(v>0?'+':'')+fmt(v);
           const cfLabel=from.slice(0,7)===to.slice(0,7)?monthLabel(from.slice(0,7)):`${from.slice(8,10)}/${from.slice(5,7)} — ${to.slice(8,10)}/${to.slice(5,7)}/${to.slice(0,4)}`;
 
-          const SH=({l})=>(<tr className="bg-gray-100 border-t-2 border-gray-300"><td colSpan="2" className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">{l}</td></tr>);
-          const DR=({l,v,ind=0,tot=false})=>{
+          const SH=({l})=>(<tr className="bg-gray-100 border-t-2 border-gray-300"><td colSpan="3" className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">{l}</td></tr>);
+          const DR=({l,k,neg=false,ind=0,tot=false})=>{
+            const v  = neg ? -PV[k] : PV[k];
+            const ve = neg ? -EF[k] : EF[k];
             const pl=['','pl-6','pl-10'][ind]||'pl-6';
             const bg=tot?'bg-gray-50 border-t border-gray-200':'hover:bg-gray-50 border-t border-gray-100';
             const tw=tot?'text-gray-800 font-semibold text-sm':'text-gray-600 text-sm';
-            const vw=tot?(v>=0?'text-green-800 font-semibold':'text-red-700 font-semibold'):(v>=0?'text-green-700':'text-red-500');
-            return(<tr className={bg}><td className={`px-4 py-2.5 ${tw} ${pl}`}>{l}</td><td className={`px-4 py-2.5 text-right whitespace-nowrap text-sm ${vw}`}>{fv(v)}</td></tr>);
+            const cor=x=>tot?(x>=0?'text-green-800 font-semibold':'text-red-700 font-semibold'):(x>=0?'text-green-700':'text-red-500');
+            return(<tr className={bg}>
+              <td className={`px-4 py-2.5 ${tw} ${pl}`}>{l}</td>
+              <td className={`px-4 py-2.5 text-right whitespace-nowrap text-sm text-gray-400`}>{fv(v)}</td>
+              <td className={`px-4 py-2.5 text-right whitespace-nowrap text-sm ${cor(ve)}`}>{fv(ve)}</td>
+            </tr>);
           };
 
           return (
           <div className="space-y-4">
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex-1"><h2 className="text-sm font-bold text-gray-800">DFC — Demonstração dos Fluxos de Caixa</h2><p className="text-xs text-gray-400">Método Direto · CPC 03 · Base: lançamentos por vencimento</p></div>
+              <div className="flex-1"><h2 className="text-sm font-bold text-gray-800">DFC — Demonstração dos Fluxos de Caixa</h2><p className="text-xs text-gray-400">Método Direto · CPC 03 · Previsto = valor das contas · Efetivo = o que foi baixado</p></div>
               <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2.5 py-1 rounded-lg font-medium">{cfLabel}</span>
               <DateFilter from={dateFromCF} setFrom={setDateFromCF} to={dateToCF} setTo={setDateToCF}/>
             </div>
 
             <div className="grid grid-cols-4 gap-3">
               {[
-                {l:'Atividades Operacionais',  v:caixaOper, info:'dfc-oper', sub:'Operação principal',     pos:'bg-green-50 border-green-200 text-green-800', neg:'bg-red-50 border-red-200 text-red-800'},
-                {l:'Atividades de Investimento',v:caixaInv, info:'dfc-inv',  sub:'Ativos e imobilizado',   pos:'bg-blue-50 border-blue-200 text-blue-800',  neg:'bg-orange-50 border-orange-200 text-orange-800'},
-                {l:'Atividades de Financiamento',v:caixaFin,info:'dfc-fin',  sub:'Empréstimos e aportes',  pos:'bg-purple-50 border-purple-200 text-purple-800',neg:'bg-amber-50 border-amber-200 text-amber-800'},
-                {l:'Variação Líquida de Caixa', v:varLiq,  info:'dfc-var',  sub:cfLabel,                  pos:'bg-teal-50 border-teal-200 text-teal-800',  neg:'bg-rose-50 border-rose-200 text-rose-800'},
+                {l:'Atividades Operacionais',  v:EF.caixaOper, info:'dfc-oper', sub:`previsto ${sfv(PV.caixaOper)}`, pos:'bg-green-50 border-green-200 text-green-800', neg:'bg-red-50 border-red-200 text-red-800'},
+                {l:'Atividades de Investimento',v:EF.caixaInv, info:'dfc-inv',  sub:`previsto ${sfv(PV.caixaInv)}`,  pos:'bg-blue-50 border-blue-200 text-blue-800',  neg:'bg-orange-50 border-orange-200 text-orange-800'},
+                {l:'Atividades de Financiamento',v:EF.caixaFin,info:'dfc-fin',  sub:`previsto ${sfv(PV.caixaFin)}`,  pos:'bg-purple-50 border-purple-200 text-purple-800',neg:'bg-amber-50 border-amber-200 text-amber-800'},
+                {l:'Variação Líquida de Caixa', v:EF.varLiq,  info:'dfc-var',  sub:`previsto ${sfv(PV.varLiq)} · ${cfLabel}`, pos:'bg-teal-50 border-teal-200 text-teal-800',  neg:'bg-rose-50 border-rose-200 text-rose-800'},
               ].map((k,i)=>{
                 const cls=k.v>=0?k.pos:k.neg;
                 const [bg,bdr,tc]=cls.split(' ');
@@ -2694,41 +2837,44 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
               <table className="w-full text-sm">
                 <thead><tr className="bg-gray-100 border-b-2 border-gray-300">
                   <th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wide">Demonstração dos Fluxos de Caixa — {cfLabel}</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Valor (R$)</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">Previsto</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Efetivo</th>
                 </tr></thead>
                 <tbody>
                   <SH l="1. Atividades Operacionais"/>
-                  {recClientes>0&&<DR l="(+) Recebimentos de Clientes — Serviços e Contratos" v={recClientes} ind={1}/>}
-                  {pagCSP>0     &&<DR l="(-) Pagamentos de Custo dos Serviços (CSP)" v={-pagCSP} ind={1}/>}
-                  {pagPessoal>0 &&<DR l="(-) Pagamentos de Pessoal" v={-pagPessoal} ind={1}/>}
-                  {pagAdmin>0   &&<DR l="(-) Despesas Administrativas e Comerciais" v={-pagAdmin} ind={1}/>}
-                  {pagImpostos>0&&<DR l="(-) Impostos Pagos (ISS, PIS, COFINS, IR/CSLL)" v={-pagImpostos} ind={1}/>}
-                  {pagOutOp>0   &&<DR l="(-) Outros Pagamentos Operacionais" v={-pagOutOp} ind={1}/>}
+                  {recClientes>0&&<DR l="(+) Recebimentos de Clientes — Serviços e Contratos" k="recClientes" ind={1}/>}
+                  {pagCSP>0     &&<DR l="(-) Pagamentos de Custo dos Serviços (CSP)" k="pagCSP" neg ind={1}/>}
+                  {pagPessoal>0 &&<DR l="(-) Pagamentos de Pessoal" k="pagPessoal" neg ind={1}/>}
+                  {pagAdmin>0   &&<DR l="(-) Despesas Administrativas e Comerciais" k="pagAdmin" neg ind={1}/>}
+                  {pagImpostos>0&&<DR l="(-) Impostos Pagos (ISS, PIS, COFINS, IR/CSLL)" k="pagImpostos" neg ind={1}/>}
+                  {pagOutOp>0   &&<DR l="(-) Outros Pagamentos Operacionais" k="pagOutOp" neg ind={1}/>}
                   {recClientes===0&&pagCSP===0&&pagPessoal===0&&pagAdmin===0&&pagImpostos===0&&pagOutOp===0&&(
-                    <tr className="border-t border-gray-100"><td colSpan="2" className="px-4 py-3 text-xs text-gray-400 text-center">Nenhum lançamento operacional — adicione receitas e despesas com as categorias corretas</td></tr>
+                    <tr className="border-t border-gray-100"><td colSpan="3" className="px-4 py-3 text-xs text-gray-400 text-center">Nenhum lançamento operacional — adicione receitas e despesas com as categorias corretas</td></tr>
                   )}
-                  <DR l="(=) Caixa Líquido das Atividades Operacionais" v={caixaOper} tot/>
+                  <DR l="(=) Caixa Líquido das Atividades Operacionais" k="caixaOper" tot/>
 
                   <SH l="2. Atividades de Investimento"/>
-                  {recAtivos>0&&<DR l="(+) Recebimentos — Venda de Ativos" v={recAtivos} ind={1}/>}
-                  {pagAtivos>0&&<DR l="(-) Pagamentos — Compra de Equipamentos / Veículos" v={-pagAtivos} ind={1}/>}
-                  {recAtivos===0&&pagAtivos===0&&<tr className="border-t border-gray-100"><td colSpan="2" className="px-4 py-3 text-xs text-gray-400 text-center">Nenhum lançamento de investimento no período</td></tr>}
-                  <DR l="(=) Caixa Líquido das Atividades de Investimento" v={caixaInv} tot/>
+                  {recAtivos>0&&<DR l="(+) Recebimentos — Venda de Ativos" k="recAtivos" ind={1}/>}
+                  {pagAtivos>0&&<DR l="(-) Pagamentos — Compra de Equipamentos / Veículos" k="pagAtivos" neg ind={1}/>}
+                  {recAtivos===0&&pagAtivos===0&&<tr className="border-t border-gray-100"><td colSpan="3" className="px-4 py-3 text-xs text-gray-400 text-center">Nenhum lançamento de investimento no período</td></tr>}
+                  <DR l="(=) Caixa Líquido das Atividades de Investimento" k="caixaInv" tot/>
 
                   <SH l="3. Atividades de Financiamento"/>
-                  {recFin>0&&<DR l="(+) Empréstimos Obtidos / Aportes de Capital" v={recFin} ind={1}/>}
-                  {pagFin>0&&<DR l="(-) Amortizações, Juros e Encargos Financeiros" v={-pagFin} ind={1}/>}
-                  {recFin===0&&pagFin===0&&<tr className="border-t border-gray-100"><td colSpan="2" className="px-4 py-3 text-xs text-gray-400 text-center">Nenhum lançamento de financiamento no período</td></tr>}
-                  <DR l="(=) Caixa Líquido das Atividades de Financiamento" v={caixaFin} tot/>
+                  {recFin>0&&<DR l="(+) Empréstimos Obtidos / Aportes de Capital" k="recFin" ind={1}/>}
+                  {pagFin>0&&<DR l="(-) Amortizações, Juros e Encargos Financeiros" k="pagFin" neg ind={1}/>}
+                  {recFin===0&&pagFin===0&&<tr className="border-t border-gray-100"><td colSpan="3" className="px-4 py-3 text-xs text-gray-400 text-center">Nenhum lançamento de financiamento no período</td></tr>}
+                  <DR l="(=) Caixa Líquido das Atividades de Financiamento" k="caixaFin" tot/>
 
                   <tr className={`border-t-2 ${varLiq>=0?'bg-blue-700':'bg-red-700'}`}>
                     <td className="px-4 py-3.5 text-sm font-bold text-white">(=) VARIAÇÃO LÍQUIDA DE CAIXA NO PERÍODO</td>
-                    <td className="px-4 py-3.5 text-sm font-bold text-white text-right">{sfv(varLiq)}</td>
+                    <td className="px-4 py-3.5 text-sm font-bold text-white/60 text-right">{sfv(PV.varLiq)}</td>
+                    <td className="px-4 py-3.5 text-sm font-bold text-white text-right">{sfv(EF.varLiq)}</td>
                   </tr>
-                  {saldoInicial>0&&<tr className="bg-gray-50 border-t border-gray-200"><td className="px-4 py-2.5 text-sm text-gray-500 pl-6">(+) Saldo Inicial das Contas</td><td className="px-4 py-2.5 text-right text-sm text-gray-700 font-medium">{fmt(saldoInicial)}</td></tr>}
+                  {saldoInicial>0&&<tr className="bg-gray-50 border-t border-gray-200"><td className="px-4 py-2.5 text-sm text-gray-500 pl-6">(+) Saldo Inicial das Contas</td><td className="px-4 py-2.5 text-right text-sm text-gray-400">{fmt(saldoInicial)}</td><td className="px-4 py-2.5 text-right text-sm text-gray-700 font-medium">{fmt(saldoInicial)}</td></tr>}
                   <tr className={`border-t-2 ${saldoFinal>=0?'bg-teal-600':'bg-rose-700'}`}>
                     <td className="px-4 py-3.5 text-sm font-bold text-white">(=) SALDO FINAL DE CAIXA E EQUIVALENTES</td>
-                    <td className="px-4 py-3.5 text-sm font-bold text-white text-right">{fmt(saldoFinal)}</td>
+                    <td className="px-4 py-3.5 text-sm font-bold text-white/60 text-right">{fmt(PV.saldoFinal)}</td>
+                    <td className="px-4 py-3.5 text-sm font-bold text-white text-right">{fmt(EF.saldoFinal)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -2770,21 +2916,54 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
           const prevLabel = monthLabel(prevM);
 
           const catMap={};
-          incomeCats.forEach(c=>catMap[c.id]=c);
-          expenseCats.forEach(c=>catMap[c.id]=c);
-          const getCls    = t => catMap[t.category_id]?.accounting_class||(t.type==='INCOME'?'OUTRAS_RECEITAS':'OUTRAS_DESPESAS');
-          const getCatName= t => catMap[t.category_id]?.name||'Sem Categoria';
+          incomeCats.forEach(c=>{ if(c&&c.id) catMap[c.id]=c; });
+          expenseCats.forEach(c=>{ if(c&&c.id) catMap[c.id]=c; });
+          const getCls    = t => {
+            const cat = catMap[t.category_id];
+            if (cat?.accounting_class) return cat.accounting_class;
+            const name = cat?.name || t.cat || t.category;
+            if (name && DEFAULT_ACCOUNTING_CLASSES[name]) return DEFAULT_ACCOUNTING_CLASSES[name];
+            return t.type==='INCOME'?'OUTRAS_RECEITAS':'OUTRAS_DESPESAS';
+          };
+          const getCatName= t => catMap[t.category_id]?.name || t.cat || t.category || 'Sem Categoria';
+          const getCustName = custId => {
+            if (!custId || custId === '__sem_cliente__') return 'Custos Gerais / Não Alocados';
+            const c = customers.find(x => String(x.id) === String(custId));
+            return c?.name || `Cliente #${String(custId).slice(0, 8)}`;
+          };
 
-          const txOfMonth = m => transactions.filter(t=>(t.due_date||'').startsWith(m));
-          const curTx  = txOfMonth(curM);
-          const prevTx = txOfMonth(prevM);
+          // Scope filtering for by_customer mode or consolidated mode
+          const getScopedTxs = (period, scope) => {
+            if (scope === 'all') return transactions;
+            if (scope === 'year') {
+              const yr = (period || '').slice(0, 4);
+              return transactions.filter(t => (t.due_date || t.due || '').startsWith(yr));
+            }
+            return transactions.filter(t => (t.due_date || t.due || '').startsWith(period));
+          };
+
+          // Month-based filtering for consolidated CPC 26 DRE
+          const txOfMonth = m => transactions.filter(t=>(t.due_date||t.due||'').startsWith(m));
+          const applyCustomerFilter = (list, custFilter) => {
+            if (!custFilter || custFilter === 'all') return list;
+            if (custFilter === '__sem_cliente__') return list.filter(t => !t.customer_id);
+            return list.filter(t => String(t.customer_id) === String(custFilter));
+          };
+
+          const rawCurTx  = txOfMonth(curM);
+          const rawPrevTx = txOfMonth(prevM);
+          const curTx     = applyCustomerFilter(rawCurTx, dreCustomerFilter);
+          const prevTx    = applyCustomerFilter(rawPrevTx, dreCustomerFilter);
 
           // helpers
-          const sumC=(txList,type,...cls)=>txList.filter(t=>t.type===type&&cls.includes(getCls(t))).reduce((s,t)=>s+t.amount,0);
+          // Previsto = valor da conta (regime de competência, o padrão do DRE).
+          // Efetivo = só o que foi baixado (regime de caixa).
+          const valorDRE = t => dreBase==='efetivo' ? txPago(t) : (t.amount||0);
+          const sumC=(txList,type,...cls)=>txList.filter(t=>t.type===type&&cls.includes(getCls(t))).reduce((s,t)=>s+valorDRE(t),0);
           const itemsFor=(type,...cls)=>{
             const cg={},pg={};
-            curTx.filter(t=>t.type===type&&cls.includes(getCls(t))).forEach(t=>{const n=getCatName(t);cg[n]=(cg[n]||0)+t.amount;});
-            prevTx.filter(t=>t.type===type&&cls.includes(getCls(t))).forEach(t=>{const n=getCatName(t);pg[n]=(pg[n]||0)+t.amount;});
+            curTx.filter(t=>t.type===type&&cls.includes(getCls(t))).forEach(t=>{const n=getCatName(t);cg[n]=(cg[n]||0)+valorDRE(t);});
+            prevTx.filter(t=>t.type===type&&cls.includes(getCls(t))).forEach(t=>{const n=getCatName(t);pg[n]=(pg[n]||0)+valorDRE(t);});
             return [...new Set([...Object.keys(cg),...Object.keys(pg)])].map(n=>({n,c:cg[n]||0,p:pg[n]||0})).sort((a,b)=>b.c-a.c);
           };
 
@@ -2802,7 +2981,8 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
           const dPes=sumC(curTx,'EXPENSE','DESPESA_PESSOAL');     const dPesP=sumC(prevTx,'EXPENSE','DESPESA_PESSOAL');
           const dAdm=sumC(curTx,'EXPENSE','DESPESA_ADMINISTRATIVA');const dAdmP=sumC(prevTx,'EXPENSE','DESPESA_ADMINISTRATIVA');
           const dCom=sumC(curTx,'EXPENSE','DESPESA_COMERCIAL');   const dComP=sumC(prevTx,'EXPENSE','DESPESA_COMERCIAL');
-          const totOp=dPes+dAdm+dCom; const totOpP=dPesP+dAdmP+dComP;
+          const dOut=sumC(curTx,'EXPENSE','OUTRAS_DESPESAS');     const dOutP=sumC(prevTx,'EXPENSE','OUTRAS_DESPESAS');
+          const totOp=dPes+dAdm+dCom+dOut; const totOpP=dPesP+dAdmP+dComP+dOutP;
           const ebit=lb-totOp;  const ebitP=lbP-totOpP;
           // ── DEPRECIAÇÃO / EBITDA
           const da=sumC(curTx,'EXPENSE','DEPRECIACAO'); const daP=sumC(prevTx,'EXPENSE','DEPRECIACAO');
@@ -2823,7 +3003,168 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
 
           const monthOptions=Array.from({length:13},(_,i)=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);return d.toISOString().slice(0,7);});
 
-          // Row components
+          // ════════════════════════════════════════════════════════════════════════
+          // CÁLCULOS DA DRE POR CLIENTE
+          // ════════════════════════════════════════════════════════════════════════
+          const customerScopedTxs = getScopedTxs(curM, dreTimeScope);
+          const scopeLabel = dreTimeScope === 'month' ? monthLabel(curM) : dreTimeScope === 'year' ? `Ano ${curM.slice(0,4)} (Acumulado)` : 'Todo o Histórico';
+
+          // Mapa de clientes
+          const custMetricsMap = new Map();
+          customers.forEach(c => {
+            custMetricsMap.set(String(c.id), {
+              id: c.id,
+              name: c.name,
+              type: c.type || 'PJ',
+              doc: c.doc || '',
+              city: c.city || ''
+            });
+          });
+
+          // Clientes em transações não listados em customers
+          customerScopedTxs.forEach(t => {
+            if (t.customer_id && !custMetricsMap.has(String(t.customer_id))) {
+              custMetricsMap.set(String(t.customer_id), {
+                id: t.customer_id,
+                name: t.customers?.name || `Cliente #${String(t.customer_id).slice(0,8)}`,
+                type: t.customers?.type || 'PJ',
+                doc: '',
+                city: ''
+              });
+            }
+          });
+
+          // Calcula DRE para cada cliente
+          const customerMetricsList = Array.from(custMetricsMap.values()).map(cust => {
+            const custTxs = customerScopedTxs.filter(t => String(t.customer_id) === String(cust.id));
+            const incList = custTxs.filter(t => t.type === 'INCOME');
+            const expList = custTxs.filter(t => t.type === 'EXPENSE');
+
+            const grossRev = incList.reduce((s,t) => s + (t.amount || 0), 0);
+            const dedTaxes = expList.filter(t => getCls(t) === 'IMPOSTO_RECEITA').reduce((s,t) => s + (t.amount || 0), 0);
+            const netRev   = grossRev - dedTaxes;
+
+            const cspCosts = expList.filter(t => getCls(t) === 'CSP').reduce((s,t) => s + (t.amount || 0), 0);
+            const grossPrf = netRev - cspCosts;
+            const grossMg  = netRev > 0 ? (grossPrf / netRev) * 100 : (grossRev > 0 ? (grossPrf / grossRev) * 100 : 0);
+
+            const opExp    = expList.filter(t => getCls(t) !== 'CSP' && getCls(t) !== 'IMPOSTO_RECEITA').reduce((s,t) => s + (t.amount || 0), 0);
+            const totExp   = expList.reduce((s,t) => s + (t.amount || 0), 0);
+            const netPrf   = grossRev - totExp;
+            const netMg    = netRev > 0 ? (netPrf / netRev) * 100 : (grossRev > 0 ? (netPrf / grossRev) * 100 : (netPrf < 0 ? -100 : 0));
+
+            // Composição por categoria
+            const cats = {};
+            custTxs.forEach(t => {
+              const cName = getCatName(t);
+              if (!cats[cName]) cats[cName] = { name: cName, type: t.type, cls: getCls(t), total: 0, count: 0 };
+              cats[cName].total += (t.amount || 0);
+              cats[cName].count += 1;
+            });
+
+            return {
+              ...cust,
+              transactions: custTxs,
+              incomeCount: incList.length,
+              expenseCount: expList.length,
+              totalCount: custTxs.length,
+              grossRevenue: grossRev,
+              deductions: dedTaxes,
+              netRevenue: netRev,
+              csp: cspCosts,
+              grossProfit: grossPrf,
+              grossMargin: grossMg,
+              opExpenses: opExp,
+              totalExpense: totExp,
+              netProfit: netPrf,
+              netMargin: netMg,
+              catBreakdown: Object.values(cats).sort((a,b) => b.total - a.total),
+              hasActivity: custTxs.length > 0
+            };
+          });
+
+          // Custos Gerais da Sede (Sem cliente vinculado)
+          const unassignedTxs = customerScopedTxs.filter(t => !t.customer_id);
+          const unassignedInc = unassignedTxs.filter(t => t.type === 'INCOME');
+          const unassignedExp = unassignedTxs.filter(t => t.type === 'EXPENSE');
+          const unassignedGrossRev = unassignedInc.reduce((s,t) => s + (t.amount || 0), 0);
+          const unassignedDed      = unassignedExp.filter(t => getCls(t) === 'IMPOSTO_RECEITA').reduce((s,t) => s + (t.amount || 0), 0);
+          const unassignedNetRev   = unassignedGrossRev - unassignedDed;
+          const unassignedCsp      = unassignedExp.filter(t => getCls(t) === 'CSP').reduce((s,t) => s + (t.amount || 0), 0);
+          const unassignedGrossPrf = unassignedNetRev - unassignedCsp;
+          const unassignedOpExp    = unassignedExp.filter(t => getCls(t) !== 'CSP' && getCls(t) !== 'IMPOSTO_RECEITA').reduce((s,t) => s + (t.amount || 0), 0);
+          const unassignedTotExp   = unassignedExp.reduce((s,t) => s + (t.amount || 0), 0);
+          const unassignedNetPrf   = unassignedGrossRev - unassignedTotExp;
+
+          const unassignedCats = {};
+          unassignedTxs.forEach(t => {
+            const cName = getCatName(t);
+            if (!unassignedCats[cName]) unassignedCats[cName] = { name: cName, type: t.type, cls: getCls(t), total: 0, count: 0 };
+            unassignedCats[cName].total += (t.amount || 0);
+            unassignedCats[cName].count += 1;
+          });
+
+          const unassignedItem = {
+            id: '__sem_cliente__',
+            name: 'Custos Gerais da Sede (Estrutural / Sem Cliente)',
+            type: 'ESTRUTURAL',
+            transactions: unassignedTxs,
+            incomeCount: unassignedInc.length,
+            expenseCount: unassignedExp.length,
+            totalCount: unassignedTxs.length,
+            grossRevenue: unassignedGrossRev,
+            deductions: unassignedDed,
+            netRevenue: unassignedNetRev,
+            csp: unassignedCsp,
+            grossProfit: unassignedGrossPrf,
+            grossMargin: unassignedNetRev > 0 ? (unassignedGrossPrf / unassignedNetRev) * 100 : 0,
+            opExpenses: unassignedOpExp,
+            totalExpense: unassignedTotExp,
+            netProfit: unassignedNetPrf,
+            netMargin: unassignedNetRev > 0 ? (unassignedNetPrf / unassignedNetRev) * 100 : 0,
+            catBreakdown: Object.values(unassignedCats).sort((a,b) => b.total - a.total),
+            hasActivity: unassignedTxs.length > 0
+          };
+
+          // Totais Gerais
+          const allItemsForTotals = [...customerMetricsList, unassignedItem];
+          const totalGrossRevenue = allItemsForTotals.reduce((s, c) => s + c.grossRevenue, 0);
+          const totalDeductions   = allItemsForTotals.reduce((s, c) => s + c.deductions, 0);
+          const totalNetRevenue   = totalGrossRevenue - totalDeductions;
+          const totalCsp          = allItemsForTotals.reduce((s, c) => s + c.csp, 0);
+          const totalGrossProfit  = totalNetRevenue - totalCsp;
+          const totalOpExpenses   = allItemsForTotals.reduce((s, c) => s + c.opExpenses, 0);
+          const totalExpensesAll  = allItemsForTotals.reduce((s, c) => s + c.totalExpense, 0);
+          const totalNetProfitAll = totalGrossRevenue - totalExpensesAll;
+          const overallNetMargin  = totalNetRevenue > 0 ? (totalNetProfitAll / totalNetRevenue) * 100 : 0;
+
+          // Filtragem e ordenação para a tabela
+          let displayedCustList = customerMetricsList.filter(c => {
+            if (dreCustSearch && !c.name.toLowerCase().includes(dreCustSearch.toLowerCase())) return false;
+            if (dreCustStatusFilter === 'with_movement' && !c.hasActivity) return false;
+            if (dreCustStatusFilter === 'profit_only' && c.netProfit <= 0) return false;
+            if (dreCustStatusFilter === 'loss_only' && (c.netProfit >= 0 || !c.hasActivity)) return false;
+            return true;
+          });
+
+          displayedCustList.sort((a, b) => {
+            if (dreCustSort === 'profit_desc') return b.netProfit - a.netProfit;
+            if (dreCustSort === 'profit_asc')  return a.netProfit - b.netProfit;
+            if (dreCustSort === 'margin_desc') return b.netMargin - a.netMargin;
+            if (dreCustSort === 'revenue_desc') return b.grossRevenue - a.grossRevenue;
+            if (dreCustSort === 'name_asc')    return a.name.localeCompare(b.name);
+            return b.netProfit - a.netProfit;
+          });
+
+          // Top performers da carteira
+          const activeCustomers = customerMetricsList.filter(c => c.hasActivity);
+          const topProfitCust = activeCustomers.slice().sort((a,b) => b.netProfit - a.netProfit)[0] || null;
+          const topRevenueCust = activeCustomers.slice().sort((a,b) => b.grossRevenue - a.grossRevenue)[0] || null;
+          const lossCustomers = activeCustomers.filter(c => c.netProfit < 0);
+          const lossTotal = lossCustomers.reduce((s,c) => s + Math.abs(c.netProfit), 0);
+          const maxProfitVal = topProfitCust && topProfitCust.netProfit > 0 ? topProfitCust.netProfit : 1;
+
+          // Row components para a DRE consolidada
           const HR=({l})=>(<tr className="bg-gray-100 border-t-2 border-gray-300"><td colSpan="5" className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">{l}</td></tr>);
           const SubHR=({l})=>(<tr className="bg-gray-50 border-t border-gray-200"><td colSpan="5" className="px-4 py-1.5 text-xs font-semibold text-gray-500 pl-6">{l}</td></tr>);
           const IR2=({l,c,p,neg=false,ind=1})=>{
@@ -2862,172 +3203,858 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
 
           return (
             <div className="space-y-4">
-              {/* KPI cards */}
-              {hasData&&(
-              <div className="grid grid-cols-5 gap-3">
-                {[
-                  {l:'Receita Líquida',c:recLiq, p:recLiqP, info:'dre-recliq', bg:'bg-blue-50',   bdr:'border-blue-200',   tc:'text-blue-700'},
-                  {l:'Lucro Bruto',    c:lb,     p:lbP,     info:'dre-lb',     bg:'bg-green-50',  bdr:'border-green-200',  tc:'text-green-700',  mg:recLiq>0?av(lb,recLiq):'—'},
-                  {l:'EBIT',          c:ebit,   p:ebitP,   info:'dre-ebit',   bg:'bg-indigo-50', bdr:'border-indigo-200', tc:'text-indigo-700', mg:recLiq>0?av(ebit,recLiq):'—'},
-                  {l:'EBITDA',        c:ebitda, p:ebitdaP, info:'dre-ebitda', bg:'bg-teal-50',   bdr:'border-teal-200',   tc:'text-teal-700',   mg:recLiq>0?av(ebitda,recLiq):'—'},
-                  {l:'Lucro Líquido', c:ll,     p:llP,     info:'dre-ll',     bg:'bg-emerald-50',bdr:'border-emerald-200',tc:'text-emerald-700',mg:recLiq>0?av(ll,recLiq):'—'},
-                ].map((k,i)=>{const {l:vl,u}=vp(k.c,k.p); return(
-                  <div key={i} className={`${k.bg} border ${k.bdr} rounded-xl p-3`}>
-                    <div className="flex items-center justify-between gap-1 mb-1">
-                      <p className="text-xs text-gray-500">{k.l}</p>
-                      <InfoBtn id={k.info}/>
-                    </div>
-                    <p className={`text-base font-bold ${k.tc}`}>{fv(k.c)}</p>
-                    {k.mg&&<p className="text-xs text-gray-400 mt-0.5">Margem: <span className={`font-semibold ${k.tc}`}>{k.mg}</span></p>}
-                    <p className={`text-xs mt-1 font-medium ${vl==='—'?'text-gray-400':u?'text-green-600':'text-red-500'}`}>{vl} vs {prevLabel}</p>
+              {/* Barra Superior de Navegação do DRE */}
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-bold text-gray-800">DRE — Demonstração do Resultado</h2>
+                    <span className="text-xs bg-purple-100 text-purple-700 font-semibold px-2.5 py-0.5 rounded-full">Controladoria & Custos por Obra</span>
                   </div>
-                );})}
-              </div>
-              )}
+                  <p className="text-xs text-gray-500 mt-0.5">Analise a saúde financeira global da Opticom e a lucratividade gerada por cada cliente e contrato</p>
+                </div>
 
-              {/* ── Margens ───────────────────────────────────────── */}
-              {hasData&&(
-              <div className="grid grid-cols-3 gap-4">
-                {[
-                  { l:'Margem Bruta',         formula:'Lucro Bruto / Receita Líquida',       info:'mg-bruta', c:lb,   p:lbP   },
-                  { l:'Margem Operacional',    formula:'EBIT / Receita Líquida',              info:'mg-oper',  c:ebit, p:ebitP },
-                  { l:'Margem Líquida',        formula:'Lucro Líquido / Receita Líquida',     info:'mg-liq',   c:ll,   p:llP   },
-                ].map(({l,formula,info,c,p})=>{
-                  const pct    = recLiq>0  ? (c/recLiq*100)   : null;
-                  const pctP   = recLiqP>0 ? (p/recLiqP*100)  : null;
-                  const diff   = pct!==null&&pctP!==null ? pct-pctP : null;
-                  const good   = pct===null ? false : pct>=0;
-                  const bar    = pct===null ? 0 : Math.min(Math.abs(pct),100);
-                  return (
-                    <div key={l} className={`rounded-xl border p-4 ${good?'bg-white border-gray-200':'bg-red-50 border-red-200'}`}>
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <div className="flex items-center gap-1.5"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{l}</p><InfoBtn id={info}/></div>
-                          <p className={`text-2xl font-bold mt-0.5 ${pct===null?'text-gray-300':good?'text-gray-800':'text-red-700'}`}>
-                            {pct===null?'—':`${pct.toFixed(1)}%`}
-                          </p>
-                        </div>
-                        {pct!==null&&(
-                          <span className={`text-xs font-bold px-2 py-1 rounded-lg mt-0.5 ${good?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}`}>
-                            {good?'▲ Positiva':'▼ Negativa'}
-                          </span>
-                        )}
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  {/* Seletor de Modo: Por Cliente vs Consolidada */}
+                  <div className="flex bg-gray-100 p-1 rounded-xl">
+                    <button
+                      onClick={()=>setDreViewMode('by_customer')}
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${dreViewMode==='by_customer'?'bg-white text-purple-700 shadow-sm font-bold':'text-gray-600 hover:text-gray-900'}`}>
+                      <span>👥</span> DRE por Cliente
+                    </button>
+                    <button
+                      onClick={()=>setDreViewMode('consolidated')}
+                      className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${dreViewMode==='consolidated'?'bg-white text-blue-700 shadow-sm font-bold':'text-gray-600 hover:text-gray-900'}`}>
+                      <span>📊</span> DRE Consolidada (CPC 26)
+                    </button>
+                  </div>
+
+                  {/* Base: valor das contas x valor efetivamente baixado */}
+                  <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                    {[['previsto','Previsto','competência — valor das contas'],['efetivo','Efetivo','caixa — só o que foi baixado']].map(([v,l,t])=>(
+                      <button key={v} onClick={()=>setDreBase(v)} title={t}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${dreBase===v?'bg-white text-gray-800 shadow-sm':'text-gray-500 hover:text-gray-800'}`}>{l}</button>
+                    ))}
+                  </div>
+
+                  {/* Seletor de Mês */}
+                  <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg px-2.5 py-1.5">
+                    <span className="text-xs text-gray-400">Ref:</span>
+                    <select
+                      value={drePeriod}
+                      onChange={e=>setDrePeriod(e.target.value)}
+                      className="text-xs font-semibold text-gray-700 bg-transparent focus:outline-none cursor-pointer">
+                      {monthOptions.map(m=><option key={m} value={m}>{monthLabel(m)}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* ═══════════════════════════════════════════════════════════ */}
+              {/* VISÃO 1: DRE POR CLIENTE                                   */}
+              {/* ═══════════════════════════════════════════════════════════ */}
+              {dreViewMode==='by_customer'&&(
+                <div className="space-y-4">
+                  {/* Controles de Escopo de Tempo e Resumo */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200 rounded-xl p-3.5">
+                    <div className="flex items-center gap-2">
+                      <span className="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">👥</span>
+                      <div>
+                        <p className="text-xs font-bold text-purple-900 uppercase tracking-wide">Rentabilidade da Carteira de Clientes</p>
+                        <p className="text-xs text-gray-600">Período de Análise: <span className="font-bold text-purple-800">{scopeLabel}</span> · {customerScopedTxs.length} lançamento(s) vinculados</p>
                       </div>
-                      {/* barra de progresso */}
-                      <div className="h-1.5 rounded-full bg-gray-100 mb-2.5 overflow-hidden">
-                        <div className={`h-full rounded-full transition-all ${good?'bg-green-400':'bg-red-400'}`} style={{width:`${bar}%`}}/>
+                    </div>
+                    {/* Seletor de Escopo de Período */}
+                    <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm p-1 rounded-lg border border-purple-200 text-xs">
+                      {[
+                        ['month', `Mês (${monthLabel(curM)})`],
+                        ['year', `Ano ${curM.slice(0,4)} (Acumulado)`],
+                        ['all', 'Todo o Histórico']
+                      ].map(([scope, lbl])=>(
+                        <button
+                          key={scope}
+                          onClick={()=>setDreTimeScope(scope)}
+                          className={`px-3 py-1 rounded-md font-medium transition-colors ${dreTimeScope===scope?'bg-purple-600 text-white shadow-xs':'text-gray-600 hover:text-purple-700'}`}>
+                          {lbl}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Top KPIs da Carteira */}
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">🏆 Cliente Mais Lucrativo</p>
+                        <span className="text-xs bg-emerald-200/60 text-emerald-800 font-bold px-1.5 py-0.5 rounded">Top Lucro</span>
                       </div>
-                      <p className="text-xs text-gray-400">{formula}</p>
-                      {diff!==null&&(
-                        <p className={`text-xs font-medium mt-1 ${diff>0?'text-green-600':diff<0?'text-red-500':'text-gray-400'}`}>
-                          {diff>0?`▲ +${diff.toFixed(1)} p.p.`:diff<0?`▼ ${diff.toFixed(1)} p.p.`:'= sem variação'} vs {prevLabel}
-                          {pctP!==null&&<span className="text-gray-400 font-normal"> (era {pctP.toFixed(1)}%)</span>}
+                      <p className="text-lg font-bold text-emerald-900 truncate" title={topProfitCust?.name||'—'}>{topProfitCust?.name||'—'}</p>
+                      <div className="flex items-baseline gap-2 mt-1">
+                        <span className="text-base font-extrabold text-emerald-700">{topProfitCust?fmt(topProfitCust.netProfit):'—'}</span>
+                        {topProfitCust&&topProfitCust.netRevenue>0&&<span className="text-xs font-semibold text-emerald-600">({topProfitCust.netMargin.toFixed(1)}% margem)</span>}
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-3.5">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">📈 Maior Faturamento</p>
+                        <span className="text-xs bg-blue-200/60 text-blue-800 font-bold px-1.5 py-0.5 rounded">Top Receita</span>
+                      </div>
+                      <p className="text-lg font-bold text-blue-900 truncate" title={topRevenueCust?.name||'—'}>{topRevenueCust?.name||'—'}</p>
+                      <div className="flex items-baseline gap-2 mt-1">
+                        <span className="text-base font-extrabold text-blue-700">{topRevenueCust?fmt(topRevenueCust.grossRevenue):'—'}</span>
+                        {topRevenueCust&&<span className="text-xs text-blue-500">{topRevenueCust.incomeCount} fatura(s)</span>}
+                      </div>
+                    </div>
+
+                    <div className="bg-purple-50 border border-purple-200 rounded-xl p-3.5">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs font-semibold text-purple-700 uppercase tracking-wide">💎 Margem Líquida da Carteira</p>
+                        <span className="text-xs bg-purple-200/60 text-purple-800 font-bold px-1.5 py-0.5 rounded">Média Ponderada</span>
+                      </div>
+                      <p className="text-2xl font-extrabold text-purple-900">{overallNetMargin.toFixed(1)}%</p>
+                      <p className="text-xs text-purple-600 mt-0.5 font-medium">{fmt(totalNetProfitAll)} de resultado líquido consolidado</p>
+                    </div>
+
+                    <div className={`${lossCustomers.length>0?'bg-amber-50 border-amber-200':'bg-teal-50 border-teal-200'} border rounded-xl p-3.5`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className={`text-xs font-semibold ${lossCustomers.length>0?'text-amber-700':'text-teal-700'} uppercase tracking-wide`}>
+                          {lossCustomers.length>0?'⚠️ Atenção de Prejuízo':'✅ Saúde da Carteira'}
                         </p>
+                        <span className={`text-xs ${lossCustomers.length>0?'bg-amber-200 text-amber-800':'bg-teal-200 text-teal-800'} font-bold px-1.5 py-0.5 rounded`}>
+                          {activeCustomers.length} Ativos
+                        </span>
+                      </div>
+                      <p className={`text-2xl font-extrabold ${lossCustomers.length>0?'text-amber-900':'text-teal-900'}`}>
+                        {lossCustomers.length>0?`${lossCustomers.length} no vermelho`:'100% no Lucro'}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {lossCustomers.length>0?`Prejuízo acumulado de ${fmt(lossTotal)}`:`Todos os ${activeCustomers.length} clientes ativos geraram lucro`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Alerta de Prejuízo em Destaque */}
+                  {lossCustomers.length>0&&(
+                    <div className="bg-rose-50 border border-rose-200 rounded-xl p-3 flex items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2.5 text-rose-800 font-medium">
+                        <span className="text-base">🚨</span>
+                        <span>
+                          <strong className="font-bold">Atenção Gerencial:</strong> Os seguintes clientes tiveram custos superiores à receita no período: <strong>{lossCustomers.map(c=>`${c.name} (${fv(c.netProfit)})`).join(', ')}</strong>. Expanda os detalhes na tabela para auditar os lançamentos.
+                        </span>
+                      </div>
+                      <button onClick={()=>setDreCustStatusFilter('loss_only')} className="shrink-0 bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 rounded-md font-semibold text-xs">
+                        Filtrar só no prejuízo
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Ranking Visual dos Principais Clientes em Lucro */}
+                  {activeCustomers.length>0&&(
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wide">Ranking Visual de Lucro Líquido por Cliente</h3>
+                          <span className="text-xs text-gray-400">· Contribuição no período</span>
+                        </div>
+                        <span className="text-xs text-gray-400">{activeCustomers.length} cliente(s) com movimentação</span>
+                      </div>
+                      <div className="space-y-2">
+                        {activeCustomers.slice(0, 5).map((c, i)=>{
+                          const isLoss = c.netProfit < 0;
+                          const barWidth = isLoss
+                            ? Math.min(100, Math.round((Math.abs(c.netProfit) / maxProfitVal) * 100))
+                            : Math.min(100, Math.round((c.netProfit / maxProfitVal) * 100));
+                          return (
+                            <div key={c.id} className="space-y-1">
+                              <div className="flex items-center justify-between text-xs">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="w-5 text-center font-bold text-gray-400 text-xs">#{i+1}</span>
+                                  <span className="font-semibold text-gray-800 truncate">{c.name}</span>
+                                  <span className="text-xs text-gray-400">({c.incomeCount} rec / {c.expenseCount} desp)</span>
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <span className="text-gray-400">Receita: <span className="text-gray-700 font-medium">{fmt(c.grossRevenue)}</span></span>
+                                  <span className="text-gray-400">Custos: <span className="text-gray-700 font-medium">{fmt(c.totalExpense)}</span></span>
+                                  <span className={`font-bold ${isLoss?'text-rose-600':'text-emerald-700'}`}>Lucro: {fv(c.netProfit)}</span>
+                                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${isLoss?'bg-rose-100 text-rose-700':c.netMargin>=20?'bg-emerald-100 text-emerald-800':'bg-blue-100 text-blue-800'}`}>
+                                    {c.netMargin.toFixed(1)}%
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all duration-500 ${isLoss?'bg-rose-500':'bg-gradient-to-r from-purple-500 to-emerald-500'}`}
+                                  style={{width:`${Math.max(barWidth, 3)}%`}}/>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Barra de Filtros e Busca da Tabela */}
+                  <div className="flex flex-wrap items-center justify-between gap-2.5 bg-white p-3 rounded-xl border border-gray-200">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={dreCustSearch}
+                          onChange={e=>setDreCustSearch(e.target.value)}
+                          placeholder="Buscar cliente por nome..."
+                          className="text-xs pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-purple-400"/>
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">🔍</span>
+                      </div>
+
+                      <select
+                        value={dreCustStatusFilter}
+                        onChange={e=>setDreCustStatusFilter(e.target.value)}
+                        className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none">
+                        <option value="all">Todos os clientes ({customerMetricsList.length})</option>
+                        <option value="with_movement">Com movimentação ({activeCustomers.length})</option>
+                        <option value="profit_only">Apenas no lucro ({customerMetricsList.filter(c=>c.netProfit>0&&c.hasActivity).length})</option>
+                        <option value="loss_only">No prejuízo ({lossCustomers.length})</option>
+                      </select>
+
+                      {(dreCustSearch||dreCustStatusFilter!=='all')&&(
+                        <button
+                          onClick={()=>{setDreCustSearch('');setDreCustStatusFilter('all');}}
+                          className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 border border-gray-200 rounded-lg">
+                          Limpar filtros
+                        </button>
                       )}
                     </div>
-                  );
-                })}
-              </div>
+
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                      <span>Ordenar por:</span>
+                      <select
+                        value={dreCustSort}
+                        onChange={e=>setDreCustSort(e.target.value)}
+                        className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 font-semibold focus:outline-none">
+                        <option value="profit_desc">Maior Lucro Líquido (R$)</option>
+                        <option value="profit_asc">Menor Lucro / Prejuízo (R$)</option>
+                        <option value="margin_desc">Maior Margem Líquida (%)</option>
+                        <option value="revenue_desc">Maior Faturamento (R$)</option>
+                        <option value="name_asc">Nome do Cliente (A-Z)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Tabela Comparativa de DRE por Cliente */}
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead className="bg-gray-100 border-b-2 border-gray-300">
+                          <tr>
+                            <th className="px-4 py-3 text-left font-bold text-gray-700 uppercase tracking-wide">Cliente / Obra</th>
+                            <th className="px-3 py-3 text-center font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">Lançamentos</th>
+                            <th className="px-3 py-3 text-right font-semibold text-blue-700 uppercase tracking-wide whitespace-nowrap">Receita Bruta</th>
+                            <th className="px-3 py-3 text-right font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">(-) Deduções</th>
+                            <th className="px-3 py-3 text-right font-bold text-blue-900 uppercase tracking-wide whitespace-nowrap">(=) Rec. Líquida</th>
+                            <th className="px-3 py-3 text-right font-semibold text-amber-700 uppercase tracking-wide whitespace-nowrap">(-) Custos (CSP)</th>
+                            <th className="px-3 py-3 text-right font-bold text-green-800 uppercase tracking-wide whitespace-nowrap">(=) Lucro Bruto</th>
+                            <th className="px-3 py-3 text-right font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">(-) Despesas Op.</th>
+                            <th className="px-4 py-3 text-right font-extrabold text-gray-900 uppercase tracking-wide whitespace-nowrap">(=) Lucro Líquido</th>
+                            <th className="px-3 py-3 text-center font-bold text-gray-700 uppercase tracking-wide whitespace-nowrap">Margem Líq.</th>
+                            <th className="px-3 py-3 text-center font-semibold text-gray-400 uppercase tracking-wide">Ações</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {displayedCustList.length===0?(
+                            <tr>
+                              <td colSpan="11" className="px-4 py-10 text-center text-gray-400">
+                                <p className="text-2xl mb-1">🔍</p>
+                                <p className="text-sm font-medium">Nenhum cliente encontrado com os filtros aplicados</p>
+                              </td>
+                            </tr>
+                          ):(
+                            displayedCustList.map(c=>{
+                              const isExp = dreExpandedCust === c.id;
+                              const isLoss = c.netProfit < 0;
+                              const noData = !c.hasActivity;
+
+                              return (
+                                <React.Fragment key={c.id}>
+                                  <tr
+                                    onClick={()=>setDreExpandedCust(isExp ? null : c.id)}
+                                    className={`hover:bg-purple-50/40 cursor-pointer transition-colors ${isExp?'bg-purple-50/60':isLoss?'bg-rose-50/30':noData?'opacity-60 bg-gray-50/30':''}`}>
+                                    {/* Cliente */}
+                                    <td className="px-4 py-3">
+                                      <div className="flex items-center gap-2">
+                                        <span className={`w-2 h-2 rounded-full shrink-0 ${noData?'bg-gray-300':isLoss?'bg-rose-500':'bg-emerald-500'}`}/>
+                                        <div className="min-w-0">
+                                          <p className="font-bold text-gray-900 truncate max-w-xs">{c.name}</p>
+                                          <div className="flex items-center gap-1.5 mt-0.5">
+                                            <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.2 rounded font-mono">{c.type||'PJ'}</span>
+                                            {c.city&&<span className="text-[10px] text-gray-400 truncate">{c.city}</span>}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </td>
+
+                                    {/* Lançamentos */}
+                                    <td className="px-3 py-3 text-center">
+                                      {c.hasActivity?(
+                                        <div className="inline-flex items-center gap-1 text-[11px] font-medium">
+                                          <span className="text-green-700 bg-green-50 px-1 rounded">{c.incomeCount} rec</span>
+                                          <span className="text-gray-300">/</span>
+                                          <span className="text-red-600 bg-red-50 px-1 rounded">{c.expenseCount} desp</span>
+                                        </div>
+                                      ):(
+                                        <span className="text-gray-300">—</span>
+                                      )}
+                                    </td>
+
+                                    {/* Receita Bruta */}
+                                    <td className="px-3 py-3 text-right font-medium text-blue-700 whitespace-nowrap">
+                                      {c.grossRevenue>0 ? fmt(c.grossRevenue) : '—'}
+                                    </td>
+
+                                    {/* Deduções */}
+                                    <td className="px-3 py-3 text-right text-gray-500 whitespace-nowrap">
+                                      {c.deductions>0 ? `(${fmt(c.deductions)})` : '—'}
+                                    </td>
+
+                                    {/* Receita Líquida */}
+                                    <td className="px-3 py-3 text-right font-semibold text-blue-900 whitespace-nowrap">
+                                      {c.netRevenue>0 ? fmt(c.netRevenue) : '—'}
+                                    </td>
+
+                                    {/* Custos Diretos (CSP) */}
+                                    <td className="px-3 py-3 text-right text-amber-800 whitespace-nowrap">
+                                      {c.csp>0 ? `(${fmt(c.csp)})` : '—'}
+                                    </td>
+
+                                    {/* Lucro Bruto */}
+                                    <td className="px-3 py-3 text-right whitespace-nowrap">
+                                      {c.hasActivity?(
+                                        <div>
+                                          <span className={`font-bold ${c.grossProfit>=0?'text-emerald-700':'text-rose-600'}`}>{fv(c.grossProfit)}</span>
+                                          {c.netRevenue>0&&<p className="text-[10px] text-gray-400">{c.grossMargin.toFixed(0)}% mg</p>}
+                                        </div>
+                                      ):(
+                                        <span className="text-gray-300">—</span>
+                                      )}
+                                    </td>
+
+                                    {/* Despesas Operacionais */}
+                                    <td className="px-3 py-3 text-right text-gray-500 whitespace-nowrap">
+                                      {c.opExpenses>0 ? `(${fmt(c.opExpenses)})` : '—'}
+                                    </td>
+
+                                    {/* Lucro Líquido */}
+                                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                                      {c.hasActivity?(
+                                        <span className={`text-sm font-extrabold ${isLoss?'text-rose-600':'text-emerald-700'}`}>
+                                          {fv(c.netProfit)}
+                                        </span>
+                                      ):(
+                                        <span className="text-gray-300">—</span>
+                                      )}
+                                    </td>
+
+                                    {/* Margem Líquida % */}
+                                    <td className="px-3 py-3 text-center whitespace-nowrap">
+                                      {c.hasActivity&&c.netRevenue>0?(
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-bold text-[11px] ${isLoss?'bg-rose-100 text-rose-700':c.netMargin>=20?'bg-emerald-100 text-emerald-800':c.netMargin>=10?'bg-blue-100 text-blue-800':'bg-amber-100 text-amber-800'}`}>
+                                          {c.netMargin>=0?'+':''}{c.netMargin.toFixed(1)}%
+                                        </span>
+                                      ):c.hasActivity&&isLoss?(
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full font-bold text-[11px] bg-rose-100 text-rose-700">
+                                          Prejuízo
+                                        </span>
+                                      ):(
+                                        <span className="text-gray-300">—</span>
+                                      )}
+                                    </td>
+
+                                    {/* Ações */}
+                                    <td className="px-3 py-3 text-center whitespace-nowrap">
+                                      <div className="flex items-center justify-center gap-1.5" onClick={e=>e.stopPropagation()}>
+                                        <button
+                                          onClick={()=>setDreExpandedCust(isExp ? null : c.id)}
+                                          title={isExp?'Ocultar detalhes':'Ver detalhes de receitas e custos deste cliente'}
+                                          className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${isExp?'bg-purple-600 text-white':'bg-gray-100 hover:bg-purple-100 text-gray-700'}`}>
+                                          {isExp?'Ocultar ▴':'Detalhes ▾'}
+                                        </button>
+                                        <button
+                                          onClick={()=>{
+                                            setDreCustomerFilter(String(c.id));
+                                            setDreViewMode('consolidated');
+                                          }}
+                                          title="Abrir demonstrativo contábil CPC 26 deste cliente"
+                                          className="px-2 py-1 rounded text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors">
+                                          DRE Formal ↗
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+
+                                  {/* Painel Drill-Down Expandido do Cliente */}
+                                  {isExp&&(
+                                    <tr className="bg-purple-50/50 border-y border-purple-200">
+                                      <td colSpan="11" className="p-4">
+                                        <div className="bg-white rounded-xl border border-purple-200 shadow-xs p-4 space-y-4">
+                                          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                                            <div className="flex items-center gap-2">
+                                              <span className="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs font-bold">👤</span>
+                                              <div>
+                                                <h4 className="font-bold text-sm text-gray-900">{c.name} — Extrato Gerencial de Obra/Cliente</h4>
+                                                <p className="text-xs text-gray-400">Detalhamento dos lançamentos que formam o resultado no período: <span className="font-semibold text-purple-700">{scopeLabel}</span></p>
+                                              </div>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                              <button
+                                                onClick={()=>{
+                                                  setDreCustomerFilter(String(c.id));
+                                                  setDreViewMode('consolidated');
+                                                }}
+                                                className="text-xs font-semibold bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-xs">
+                                                <span>📊</span> Ver DRE Formal CPC 26 deste Cliente
+                                              </button>
+                                              <button
+                                                onClick={()=>setDreExpandedCust(null)}
+                                                className="text-xs text-gray-500 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded-lg">
+                                                ✕ Fechar
+                                              </button>
+                                            </div>
+                                          </div>
+
+                                          {/* Mini Cards de Síntese Contábil */}
+                                          <div className="grid grid-cols-5 gap-2.5">
+                                            <div className="bg-blue-50 border border-blue-100 rounded-lg p-2.5 text-center">
+                                              <p className="text-[11px] text-blue-600 font-semibold uppercase">Receita Bruta</p>
+                                              <p className="text-sm font-bold text-blue-900 mt-0.5">{fmt(c.grossRevenue)}</p>
+                                              <p className="text-[10px] text-blue-400">{c.incomeCount} fatura(s)</p>
+                                            </div>
+                                            <div className="bg-amber-50 border border-amber-100 rounded-lg p-2.5 text-center">
+                                              <p className="text-[11px] text-amber-700 font-semibold uppercase">Custos Diretos (CSP)</p>
+                                              <p className="text-sm font-bold text-amber-900 mt-0.5">{fmt(c.csp)}</p>
+                                              <p className="text-[10px] text-amber-500">Material e campo</p>
+                                            </div>
+                                            <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2.5 text-center">
+                                              <p className="text-[11px] text-indigo-700 font-semibold uppercase">Lucro Bruto</p>
+                                              <p className="text-sm font-bold text-indigo-900 mt-0.5">{fv(c.grossProfit)}</p>
+                                              <p className="text-[10px] text-indigo-500">{c.grossMargin.toFixed(1)}% margem</p>
+                                            </div>
+                                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-center">
+                                              <p className="text-[11px] text-gray-600 font-semibold uppercase">Despesas Op. e Impostos</p>
+                                              <p className="text-sm font-bold text-gray-800 mt-0.5">{fmt(c.opExpenses + c.deductions)}</p>
+                                              <p className="text-[10px] text-gray-400">Outras despesas</p>
+                                            </div>
+                                            <div className={`${isLoss?'bg-rose-50 border-rose-200':'bg-emerald-50 border-emerald-200'} border rounded-lg p-2.5 text-center`}>
+                                              <p className={`text-[11px] font-bold uppercase ${isLoss?'text-rose-700':'text-emerald-700'}`}>Lucro Líquido</p>
+                                              <p className={`text-base font-extrabold mt-0.5 ${isLoss?'text-rose-700':'text-emerald-800'}`}>{fv(c.netProfit)}</p>
+                                              <p className={`text-[10px] font-semibold ${isLoss?'text-rose-600':'text-emerald-600'}`}>{c.netMargin.toFixed(1)}% margem líquida</p>
+                                            </div>
+                                          </div>
+
+                                          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 pt-1">
+                                            {/* Coluna 1: Composição por Categoria */}
+                                            <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 space-y-2">
+                                              <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Gastos e Receitas por Categoria</p>
+                                              {c.catBreakdown.length===0?(
+                                                <p className="text-xs text-gray-400 py-4 text-center">Nenhuma categoria movimentada</p>
+                                              ):(
+                                                <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                                                  {c.catBreakdown.map((cat, idx)=>(
+                                                    <div key={idx} className="flex items-center justify-between text-xs py-1 px-2 rounded bg-white border border-gray-100">
+                                                      <div className="min-w-0 pr-2">
+                                                        <p className="font-semibold text-gray-800 truncate">{cat.name}</p>
+                                                        <span className="text-[10px] text-gray-400">{cat.cls} · {cat.count}x</span>
+                                                      </div>
+                                                      <span className={`font-bold shrink-0 ${cat.type==='INCOME'?'text-emerald-700':'text-red-600'}`}>
+                                                        {cat.type==='INCOME'?'+':'-'}{fmt(cat.total)}
+                                                      </span>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              )}
+                                            </div>
+
+                                            {/* Coluna 2 e 3: Extrato de Lançamentos daquele cliente */}
+                                            <div className="lg:col-span-2 bg-gray-50 rounded-xl p-3 border border-gray-100 space-y-2">
+                                              <div className="flex items-center justify-between">
+                                                <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">Extrato Individual de Lançamentos ({c.transactions.length})</p>
+                                                <span className="text-xs text-gray-400">Ordenado por data</span>
+                                              </div>
+                                              {c.transactions.length===0?(
+                                                <p className="text-xs text-gray-400 py-6 text-center">Nenhum lançamento vinculado neste período</p>
+                                              ):(
+                                                <div className="overflow-x-auto max-h-56 overflow-y-auto">
+                                                  <table className="w-full text-xs">
+                                                    <thead>
+                                                      <tr className="border-b border-gray-200 text-gray-400 text-[10px] uppercase">
+                                                        <th className="text-left pb-1.5 font-semibold">Vencimento</th>
+                                                        <th className="text-left pb-1.5 font-semibold">Descrição</th>
+                                                        <th className="text-left pb-1.5 font-semibold">Categoria</th>
+                                                        <th className="text-center pb-1.5 font-semibold">Status</th>
+                                                        <th className="text-right pb-1.5 font-semibold">Valor</th>
+                                                      </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-gray-100">
+                                                      {c.transactions.map((tx)=>(
+                                                        <tr key={tx.id} className="hover:bg-white/80">
+                                                          <td className="py-1.5 text-gray-500 font-mono text-[11px] whitespace-nowrap">{fmtDate(txDue(tx))}</td>
+                                                          <td className="py-1.5 font-medium text-gray-800 max-w-xs truncate" title={tx.description||tx.desc}>{tx.description||tx.desc}</td>
+                                                          <td className="py-1.5 text-gray-500 text-[11px] truncate">{txCatName(tx)}</td>
+                                                          <td className="py-1.5 text-center"><Badge status={tx.status}/></td>
+                                                          <td className={`py-1.5 text-right font-bold whitespace-nowrap ${tx.type==='INCOME'?'text-emerald-700':'text-red-600'}`}>
+                                                            {tx.type==='INCOME'?'+':'-'}{fmt(tx.amount)}
+                                                          </td>
+                                                        </tr>
+                                                      ))}
+                                                    </tbody>
+                                                  </table>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )}
+                                </React.Fragment>
+                              );
+                            })
+                          )}
+
+                          {/* Linha Especial: Custos Estruturais da Sede / Geral (Sem Cliente Vinculado) */}
+                          {unassignedItem.hasActivity&&(
+                            <tr className="bg-slate-100/70 border-t-2 border-gray-300">
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-2.5 h-2.5 rounded-full bg-slate-500 shrink-0"/>
+                                  <div>
+                                    <p className="font-bold text-slate-800">🏛️ Custos Gerais da Sede (Sem Cliente Vinculado)</p>
+                                    <p className="text-[10px] text-slate-500">Aluguel central, folha administrativa, barracão e infraestrutura não alocada</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-3 py-3 text-center text-slate-600 font-medium">
+                                {unassignedItem.incomeCount} rec / {unassignedItem.expenseCount} desp
+                              </td>
+                              <td className="px-3 py-3 text-right text-slate-600 font-medium">
+                                {unassignedItem.grossRevenue>0?fmt(unassignedItem.grossRevenue):'—'}
+                              </td>
+                              <td className="px-3 py-3 text-right text-slate-600">
+                                {unassignedItem.deductions>0?`(${fmt(unassignedItem.deductions)})`:'—'}
+                              </td>
+                              <td className="px-3 py-3 text-right font-semibold text-slate-700">
+                                {unassignedItem.netRevenue>0?fmt(unassignedItem.netRevenue):'—'}
+                              </td>
+                              <td className="px-3 py-3 text-right text-slate-600">
+                                {unassignedItem.csp>0?`(${fmt(unassignedItem.csp)})`:'—'}
+                              </td>
+                              <td className="px-3 py-3 text-right text-slate-700">
+                                {unassignedItem.grossProfit!==0?fv(unassignedItem.grossProfit):'—'}
+                              </td>
+                              <td className="px-3 py-3 text-right text-slate-700 font-medium">
+                                {unassignedItem.opExpenses>0?`(${fmt(unassignedItem.opExpenses)})`:'—'}
+                              </td>
+                              <td className="px-4 py-3 text-right font-bold text-rose-700">
+                                {fv(unassignedItem.netProfit)}
+                              </td>
+                              <td className="px-3 py-3 text-center text-slate-400 text-[10px]">
+                                Estrutural
+                              </td>
+                              <td className="px-3 py-3 text-center">
+                                <button
+                                  onClick={()=>{
+                                    setDreCustomerFilter('__sem_cliente__');
+                                    setDreViewMode('consolidated');
+                                  }}
+                                  className="text-[11px] font-semibold text-slate-700 hover:text-slate-900 underline">
+                                  Ver Gastos ↗
+                                </button>
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+
+                        {/* Linha de Totais da Carteira */}
+                        <tfoot>
+                          <tr className="bg-gradient-to-r from-purple-900 to-indigo-950 text-white font-bold text-xs border-t-2 border-purple-950">
+                            <td className="px-4 py-3.5">
+                              TOTAL DA EMPRESA (CLIENTES + GERAL)
+                            </td>
+                            <td className="px-3 py-3.5 text-center text-purple-200">
+                              {customerScopedTxs.length} lançamento(s)
+                            </td>
+                            <td className="px-3 py-3.5 text-right text-purple-100 font-extrabold">
+                              {fmt(totalGrossRevenue)}
+                            </td>
+                            <td className="px-3 py-3.5 text-right text-purple-300">
+                              {totalDeductions>0?`(${fmt(totalDeductions)})`:'—'}
+                            </td>
+                            <td className="px-3 py-3.5 text-right text-white font-extrabold">
+                              {fmt(totalNetRevenue)}
+                            </td>
+                            <td className="px-3 py-3.5 text-right text-purple-300">
+                              {totalCsp>0?`(${fmt(totalCsp)})`:'—'}
+                            </td>
+                            <td className="px-3 py-3.5 text-right text-emerald-300 font-extrabold">
+                              {fmt(totalGrossProfit)}
+                            </td>
+                            <td className="px-3 py-3.5 text-right text-purple-300">
+                              {totalOpExpenses>0?`(${fmt(totalOpExpenses)})`:'—'}
+                            </td>
+                            <td className="px-4 py-3.5 text-right text-sm font-black text-emerald-300">
+                              {fv(totalNetProfitAll)}
+                            </td>
+                            <td className="px-3 py-3.5 text-center text-emerald-300 font-extrabold text-sm">
+                              {overallNetMargin.toFixed(1)}%
+                            </td>
+                            <td className="px-3 py-3.5 text-center"></td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
+                </div>
               )}
 
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div className="px-5 py-3.5 border-b border-gray-100 flex flex-wrap gap-3 items-center bg-gray-50">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-bold text-gray-800">DRE — Demonstração do Resultado do Exercício</h3>
-                    <p className="text-xs text-gray-400 mt-0.5">{curLabel} × {prevLabel} · Regime de Competência · CPC 26 · Valores em R$</p>
+              {/* ═══════════════════════════════════════════════════════════ */}
+              {/* VISÃO 2: DRE CONSOLIDADA (CPC 26)                           */}
+              {/* ═══════════════════════════════════════════════════════════ */}
+              {dreViewMode==='consolidated'&&(
+                <div className="space-y-4">
+                  {/* Banner de Filtro Individual por Cliente */}
+                  <div className="bg-white rounded-xl border border-gray-200 p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm">📊</span>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-bold text-gray-700 uppercase tracking-wider">Demonstrativo Formal — Padrão CPC 26</p>
+                          {dreCustomerFilter!=='all'&&(
+                            <span className="text-[11px] bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-full">
+                              Filtro Individual Ativo
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500">Regime de Competência · Comparativo Mensal ({curLabel} × {prevLabel}) · Valores em R$</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-500 font-medium">Filtrar por Cliente:</span>
+                      <select
+                        value={dreCustomerFilter}
+                        onChange={e=>setDreCustomerFilter(e.target.value)}
+                        className="text-xs border border-gray-300 rounded-lg px-3 py-1.5 bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-xs">
+                        <option value="all">🏢 Toda a Empresa (Consolidado)</option>
+                        {customerMetricsList.filter(c=>c.hasActivity).map(c=>(
+                          <option key={c.id} value={c.id}>👤 {c.name} ({fmt(c.netProfit)} lucro)</option>
+                        ))}
+                        {unassignedItem.hasActivity&&(
+                          <option value="__sem_cliente__">🏛️ Lançamentos Gerais / Sem Cliente</option>
+                        )}
+                      </select>
+                      {dreCustomerFilter!=='all'&&(
+                        <button
+                          onClick={()=>setDreCustomerFilter('all')}
+                          className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1.5 rounded-lg font-medium">
+                          ✕ Limpar
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <select value={drePeriod} onChange={e=>setDrePeriod(e.target.value)}
-                    className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                    {monthOptions.map(m=><option key={m} value={m}>{monthLabel(m)}</option>)}
-                  </select>
-                </div>
-                {!hasData?(
-                  <div className="px-5 py-12 text-center">
-                    <p className="text-4xl mb-3">📋</p>
-                    <p className="text-sm font-medium text-gray-600">Nenhum lançamento em {curLabel}</p>
-                    <p className="text-xs text-gray-400 mt-1">Adicione receitas e despesas usando as categorias classificadas para gerar a DRE</p>
+
+                  {/* Banner Explicativo quando um cliente específico está filtrado */}
+                  {dreCustomerFilter!=='all'&&(
+                    <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-3.5 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">👤</span>
+                        <div>
+                          <p className="text-xs font-bold text-purple-700 uppercase tracking-wider">Visualizando DRE individual de</p>
+                          <p className="text-sm font-extrabold text-gray-900">{getCustName(dreCustomerFilter)}</p>
+                          <p className="text-xs text-gray-500">Todas as linhas abaixo (receitas, custos diretos e despesas) refletem exclusivamente os lançamentos deste cliente.</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={()=>setDreViewMode('by_customer')}
+                          className="text-xs font-semibold px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
+                          Ver Comparativo de Clientes →
+                        </button>
+                        <button
+                          onClick={()=>setDreCustomerFilter('all')}
+                          className="text-xs font-semibold px-3 py-1.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg">
+                          ✕ Voltar para Consolidado
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* KPI cards */}
+                  {hasData&&(
+                  <div className="grid grid-cols-5 gap-3">
+                    {[
+                      {l:'Receita Líquida',c:recLiq, p:recLiqP, info:'dre-recliq', bg:'bg-blue-50',   bdr:'border-blue-200',   tc:'text-blue-700'},
+                      {l:'Lucro Bruto',    c:lb,     p:lbP,     info:'dre-lb',     bg:'bg-green-50',  bdr:'border-green-200',  tc:'text-green-700',  mg:recLiq>0?av(lb,recLiq):'—'},
+                      {l:'EBIT',          c:ebit,   p:ebitP,   info:'dre-ebit',   bg:'bg-indigo-50', bdr:'border-indigo-200', tc:'text-indigo-700', mg:recLiq>0?av(ebit,recLiq):'—'},
+                      {l:'EBITDA',        c:ebitda, p:ebitdaP, info:'dre-ebitda', bg:'bg-teal-50',   bdr:'border-teal-200',   tc:'text-teal-700',   mg:recLiq>0?av(ebitda,recLiq):'—'},
+                      {l:'Lucro Líquido', c:ll,     p:llP,     info:'dre-ll',     bg:'bg-emerald-50',bdr:'border-emerald-200',tc:'text-emerald-700',mg:recLiq>0?av(ll,recLiq):'—'},
+                    ].map((k,i)=>{const {l:vl,u}=vp(k.c,k.p); return(
+                      <div key={i} className={`${k.bg} border ${k.bdr} rounded-xl p-3`}>
+                        <div className="flex items-center justify-between gap-1 mb-1">
+                          <p className="text-xs text-gray-500">{k.l}</p>
+                          <InfoBtn id={k.info}/>
+                        </div>
+                        <p className={`text-base font-bold ${k.tc}`}>{fv(k.c)}</p>
+                        {k.mg&&<p className="text-xs text-gray-400 mt-0.5">Margem: <span className={`font-semibold ${k.tc}`}>{k.mg}</span></p>}
+                        <p className={`text-xs mt-1 font-medium ${vl==='—'?'text-gray-400':u?'text-green-600':'text-red-500'}`}>{vl} vs {prevLabel}</p>
+                      </div>
+                    );})}
                   </div>
-                ):(
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead><tr className="bg-gray-100 border-b-2 border-gray-300">
-                      <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Descrição</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-semibold text-blue-700 uppercase tracking-wide whitespace-nowrap">{curLabel}</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">AV%</th>
-                      <th className="px-3 py-2.5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">Var%</th>
-                      <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{prevLabel}</th>
-                    </tr></thead>
-                    <tbody>
-                      {/* RECEITA BRUTA */}
-                      <HR l="Receita Bruta de Serviços"/>
-                      {itemsFor('INCOME','RECEITA_SERVICO','RECEITA_CONTRATO','OUTRAS_RECEITAS').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p}/>)}
-                      {recBruta===0&&<tr className="border-t border-gray-100"><td colSpan="5" className="px-4 py-2 text-xs text-gray-400 pl-8">Nenhuma receita — adicione lançamentos com categorias de receita</td></tr>}
-                      <STR l="(=) Receita Bruta Total" c={recBruta} p={recBrutaP} base={recBruta}/>
+                  )}
 
-                      {/* DEDUÇÕES */}
-                      {(ded>0||dedP>0)&&<><HR l="(-) Deduções da Receita Bruta (Impostos sobre Receita)"/>
-                        {itemsFor('EXPENSE','IMPOSTO_RECEITA').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p} neg/>)}
-                        <STR l="Total Deduções" c={ded} p={dedP} base={recBruta} neg/></>}
+                  {/* ── Margens ───────────────────────────────────────── */}
+                  {hasData&&(
+                  <div className="grid grid-cols-3 gap-4">
+                    {[
+                      { l:'Margem Bruta',         formula:'Lucro Bruto / Receita Líquida',       info:'mg-bruta', c:lb,   p:lbP   },
+                      { l:'Margem Operacional',    formula:'EBIT / Receita Líquida',              info:'mg-oper',  c:ebit, p:ebitP },
+                      { l:'Margem Líquida',        formula:'Lucro Líquido / Receita Líquida',     info:'mg-liq',   c:ll,   p:llP   },
+                    ].map(({l,formula,info,c,p})=>{
+                      const pct    = recLiq>0  ? (c/recLiq*100)   : null;
+                      const pctP   = recLiqP>0 ? (p/recLiqP*100)  : null;
+                      const diff   = pct!==null&&pctP!==null ? pct-pctP : null;
+                      const good   = pct===null ? false : pct>=0;
+                      const bar    = pct===null ? 0 : Math.min(Math.abs(pct),100);
+                      return (
+                        <div key={l} className={`rounded-xl border p-4 ${good?'bg-white border-gray-200':'bg-red-50 border-red-200'}`}>
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <div className="flex items-center gap-1.5"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{l}</p><InfoBtn id={info}/></div>
+                              <p className={`text-2xl font-bold mt-0.5 ${pct===null?'text-gray-300':good?'text-gray-800':'text-red-700'}`}>
+                                {pct===null?'—':`${pct.toFixed(1)}%`}
+                              </p>
+                            </div>
+                            {pct!==null&&(
+                              <span className={`text-xs font-bold px-2 py-1 rounded-lg mt-0.5 ${good?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}`}>
+                                {good?'▲ Positiva':'▼ Negativa'}
+                              </span>
+                            )}
+                          </div>
+                          {/* barra de progresso */}
+                          <div className="h-1.5 rounded-full bg-gray-100 mb-2.5 overflow-hidden">
+                            <div className={`h-full rounded-full transition-all ${good?'bg-green-400':'bg-red-400'}`} style={{width:`${bar}%`}}/>
+                          </div>
+                          <p className="text-xs text-gray-400">{formula}</p>
+                          {diff!==null&&(
+                            <p className={`text-xs font-medium mt-1 ${diff>0?'text-green-600':diff<0?'text-red-500':'text-gray-400'}`}>
+                              {diff>0?`▲ +${diff.toFixed(1)} p.p.`:diff<0?`▼ ${diff.toFixed(1)} p.p.`:'= sem variação'} vs {prevLabel}
+                              {pctP!==null&&<span className="text-gray-400 font-normal"> (era {pctP.toFixed(1)}%)</span>}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  )}
 
-                      {/* RECEITA LÍQUIDA */}
-                      <RR l="(=) RECEITA LÍQUIDA DE SERVIÇOS" c={recLiq} p={recLiqP} base={recLiq} hl="blue"/>
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="px-5 py-3.5 border-b border-gray-100 flex flex-wrap gap-3 items-center bg-gray-50">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-bold text-gray-800">
+                          DRE — Demonstração do Resultado {dreCustomerFilter!=='all'?`· ${getCustName(dreCustomerFilter)}`:''}
+                        </h3>
+                        <p className="text-xs text-gray-400 mt-0.5">{curLabel} × {prevLabel} · Regime de Competência · CPC 26 · Valores em R$</p>
+                      </div>
+                    </div>
+                    {!hasData?(
+                      <div className="px-5 py-12 text-center">
+                        <p className="text-4xl mb-3">📋</p>
+                        <p className="text-sm font-medium text-gray-600">Nenhum lançamento encontrado em {curLabel} {dreCustomerFilter!=='all'?'para este cliente':''}</p>
+                        <p className="text-xs text-gray-400 mt-1">Adicione receitas e despesas vinculadas para gerar os números</p>
+                      </div>
+                    ):(
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead><tr className="bg-gray-100 border-b-2 border-gray-300">
+                          <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide">Descrição</th>
+                          <th className="px-4 py-2.5 text-right text-xs font-semibold text-blue-700 uppercase tracking-wide whitespace-nowrap">{curLabel}</th>
+                          <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">AV%</th>
+                          <th className="px-3 py-2.5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">Var%</th>
+                          <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{prevLabel}</th>
+                        </tr></thead>
+                        <tbody>
+                          {/* RECEITA BRUTA */}
+                          <HR l="Receita Bruta de Serviços"/>
+                          {itemsFor('INCOME','RECEITA_SERVICO','RECEITA_CONTRATO','OUTRAS_RECEITAS').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p}/>)}
+                          {recBruta===0&&<tr className="border-t border-gray-100"><td colSpan="5" className="px-4 py-2 text-xs text-gray-400 pl-8">Nenhuma receita neste período</td></tr>}
+                          <STR l="(=) Receita Bruta Total" c={recBruta} p={recBrutaP} base={recBruta}/>
 
-                      {/* CSP */}
-                      {(csp>0||cspP>0)&&<><HR l="(-) Custo dos Serviços Prestados (CSP)"/>
-                        {itemsFor('EXPENSE','CSP').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p} neg/>)}
-                        <STR l="Total CSP" c={csp} p={cspP} neg/></>}
+                          {/* DEDUÇÕES */}
+                          {(ded>0||dedP>0)&&<><HR l="(-) Deduções da Receita Bruta (Impostos sobre Receita)"/>
+                            {itemsFor('EXPENSE','IMPOSTO_RECEITA').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p} neg/>)}
+                            <STR l="Total Deduções" c={ded} p={dedP} base={recBruta} neg/></>}
 
-                      {/* LUCRO BRUTO */}
-                      <RR l="(=) LUCRO BRUTO" c={lb} p={lbP} hl="green"/>
+                          {/* RECEITA LÍQUIDA */}
+                          <RR l="(=) RECEITA LÍQUIDA DE SERVIÇOS" c={recLiq} p={recLiqP} base={recLiq} hl="blue"/>
 
-                      {/* DESPESAS OPERACIONAIS */}
-                      {(totOp>0||totOpP>0)&&<><HR l="(-) Despesas Operacionais"/>
-                        {(dPes>0||dPesP>0)&&<><SubHR l="Despesas com Pessoal"/>
-                          {itemsFor('EXPENSE','DESPESA_PESSOAL').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p} ind={2} neg/>)}
-                          <STR l="Subtotal Pessoal" c={dPes} p={dPesP} neg/></>}
-                        {(dAdm>0||dAdmP>0)&&<><SubHR l="Despesas Gerais e Administrativas (G&A)"/>
-                          {itemsFor('EXPENSE','DESPESA_ADMINISTRATIVA').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p} ind={2} neg/>)}
-                          <STR l="Subtotal G&A" c={dAdm} p={dAdmP} neg/></>}
-                        {(dCom>0||dComP>0)&&<><SubHR l="Despesas Comerciais"/>
-                          {itemsFor('EXPENSE','DESPESA_COMERCIAL').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p} ind={2} neg/>)}
-                          <STR l="Subtotal Comercial" c={dCom} p={dComP} neg/></>}
-                        <STR l="(=) Total Despesas Operacionais" c={totOp} p={totOpP} neg/></>}
+                          {/* CSP */}
+                          {(csp>0||cspP>0)&&<><HR l="(-) Custo dos Serviços Prestados (CSP)"/>
+                            {itemsFor('EXPENSE','CSP').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p} neg/>)}
+                            <STR l="Total CSP" c={csp} p={cspP} neg/></>}
 
-                      {/* EBIT */}
-                      <RR l="(=) EBIT — Resultado Operacional" c={ebit} p={ebitP} hl="green"/>
+                          {/* LUCRO BRUTO */}
+                          <RR l="(=) LUCRO BRUTO" c={lb} p={lbP} hl="green"/>
 
-                      {/* EBITDA */}
-                      {(da>0||daP>0)&&<><HR l="EBITDA — Ajuste D&A"/>
-                        {itemsFor('EXPENSE','DEPRECIACAO').map(({n,c,p})=><IR2 key={n} l={`(+) D&A add-back — ${n}`} c={c} p={p}/>)}
-                        <RR l="(=) EBITDA" c={ebitda} p={ebitdaP} hl="blue"/></>}
+                          {/* DESPESAS OPERACIONAIS */}
+                          {(totOp>0||totOpP>0)&&<><HR l="(-) Despesas Operacionais"/>
+                            {(dPes>0||dPesP>0)&&<><SubHR l="Despesas com Pessoal"/>
+                              {itemsFor('EXPENSE','DESPESA_PESSOAL').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p} ind={2} neg/>)}
+                              <STR l="Subtotal Pessoal" c={dPes} p={dPesP} neg/></>}
+                            {(dAdm>0||dAdmP>0)&&<><SubHR l="Despesas Gerais e Administrativas (G&A)"/>
+                              {itemsFor('EXPENSE','DESPESA_ADMINISTRATIVA').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p} ind={2} neg/>)}
+                              <STR l="Subtotal G&A" c={dAdm} p={dAdmP} neg/></>}
+                            {(dCom>0||dComP>0)&&<><SubHR l="Despesas Comerciais"/>
+                              {itemsFor('EXPENSE','DESPESA_COMERCIAL').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p} ind={2} neg/>)}
+                              <STR l="Subtotal Comercial" c={dCom} p={dComP} neg/></>}
+                            {(dOut>0||dOutP>0)&&<><SubHR l="Outras Despesas Operacionais"/>
+                              {itemsFor('EXPENSE','OUTRAS_DESPESAS').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p} ind={2} neg/>)}
+                              <STR l="Subtotal Outras Despesas" c={dOut} p={dOutP} neg/></>}
+                            <STR l="(=) Total Despesas Operacionais" c={totOp} p={totOpP} neg/></>}
 
-                      {/* RESULTADO FINANCEIRO */}
-                      {(rFin>0||dFin>0||rFinP>0||dFinP>0)&&<><HR l="(+/-) Resultado Financeiro"/>
-                        {(rFin>0||rFinP>0)&&<IR2 l="(+) Receitas Financeiras (CDB/Aplicações)" c={rFin} p={rFinP}/>}
-                        {itemsFor('EXPENSE','DESPESA_FINANCEIRA').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p} neg/>)}
-                        <STR l="Resultado Financeiro Líquido" c={resFinLiq} p={resFinLiqP} neg={resFinLiq<0}/></>}
+                          {/* EBIT */}
+                          <RR l="(=) EBIT — Resultado Operacional" c={ebit} p={ebitP} hl="green"/>
 
-                      {/* LAIR */}
-                      <RR l="(=) LAIR — Lucro Antes do IR e CSLL" c={lair} p={lairP} hl="green"/>
+                          {/* EBITDA */}
+                          {(da>0||daP>0)&&<><HR l="EBITDA — Ajuste D&A"/>
+                            {itemsFor('EXPENSE','DEPRECIACAO').map(({n,c,p})=><IR2 key={n} l={`(+) D&A add-back — ${n}`} c={c} p={p}/>)}
+                            <RR l="(=) EBITDA" c={ebitda} p={ebitdaP} hl="blue"/></>}
 
-                      {/* IR / CSLL */}
-                      {(ir>0||irP>0)&&<><HR l="(-) Impostos sobre o Lucro (IR e CSLL)"/>
-                        {itemsFor('EXPENSE','IMPOSTO_RENDA').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p} neg/>)}
-                        <STR l="Total IR e CSLL" c={ir} p={irP} neg/></>}
+                          {/* RESULTADO FINANCEIRO */}
+                          {(rFin>0||dFin>0||rFinP>0||dFinP>0)&&<><HR l="(+/-) Resultado Financeiro"/>
+                            {(rFin>0||rFinP>0)&&<IR2 l="(+) Receitas Financeiras (CDB/Aplicações)" c={rFin} p={rFinP}/>}
+                            {itemsFor('EXPENSE','DESPESA_FINANCEIRA').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p} neg/>)}
+                            <STR l="Resultado Financeiro Líquido" c={resFinLiq} p={resFinLiqP} neg={resFinLiq<0}/></>}
 
-                      {/* LUCRO LÍQUIDO */}
-                      <tr className={`border-t-2 ${ll>=0?'bg-blue-700':'bg-red-700'}`}>
-                        <td className="px-4 py-3.5 text-sm font-bold text-white">(=) LUCRO LÍQUIDO DO EXERCÍCIO</td>
-                        <td className="px-4 py-3.5 text-sm font-bold text-white text-right">{fv(ll)}</td>
-                        <td className={`px-4 py-3.5 text-xs text-right ${ll>=0?'text-blue-200':'text-red-200'}`}>{recLiq>0?av(ll,recLiq):'—'}</td>
-                        <td className={`px-3 py-3.5 text-xs font-bold text-center ${vp(ll,llP).u?'text-green-300':'text-red-300'}`}>{vp(ll,llP).l}</td>
-                        <td className={`px-4 py-3.5 text-sm font-semibold text-right ${ll>=0?'text-blue-200':'text-red-200'}`}>{fv(llP)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                          {/* LAIR */}
+                          <RR l="(=) LAIR — Lucro Antes do IR e CSLL" c={lair} p={lairP} hl="green"/>
+
+                          {/* IR / CSLL */}
+                          {(ir>0||irP>0)&&<><HR l="(-) Impostos sobre o Lucro (IR e CSLL)"/>
+                            {itemsFor('EXPENSE','IMPOSTO_RENDA').map(({n,c,p})=><IR2 key={n} l={n} c={c} p={p} neg/>)}
+                            <STR l="Total IR e CSLL" c={ir} p={irP} neg/></>}
+
+                          {/* LUCRO LÍQUIDO */}
+                          <tr className={`border-t-2 ${ll>=0?'bg-blue-700':'bg-red-700'}`}>
+                            <td className="px-4 py-3.5 text-sm font-bold text-white">(=) LUCRO LÍQUIDO DO EXERCÍCIO</td>
+                            <td className="px-4 py-3.5 text-sm font-bold text-white text-right">{fv(ll)}</td>
+                            <td className={`px-4 py-3.5 text-xs text-right ${ll>=0?'text-blue-200':'text-red-200'}`}>{recLiq>0?av(ll,recLiq):'—'}</td>
+                            <td className={`px-3 py-3.5 text-xs font-bold text-center ${vp(ll,llP).u?'text-green-300':'text-red-300'}`}>{vp(ll,llP).l}</td>
+                            <td className={`px-4 py-3.5 text-sm font-semibold text-right ${ll>=0?'text-blue-200':'text-red-200'}`}>{fv(llP)}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    )}
+                  </div>
                 </div>
-                )}
-              </div>
+              )}
             </div>
           );
         })()}
@@ -3457,7 +4484,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
           const selInc = queueInc.filter(t=>approvalSel.has(t.id)).reduce((s,t)=>s+t.amount,0);
           const saldoAtual = 12500000;
           const saldoPos = saldoAtual - selExp + selInc;
-          const expPaid = transactions.filter(t=>t.type==='EXPENSE'&&t.status==='PAID').reduce((s,t)=>s+t.amount,0);
+          const expPaid = transactions.filter(t=>t.type==='EXPENSE').reduce((s,t)=>s+txPago(t),0);
           const totalExpBase = transactions.filter(t=>t.type==='EXPENSE').reduce((s,t)=>s+t.amount,0);
           const dreImpactPct = totalExpBase>0?((selExp/totalExpBase)*100).toFixed(1):'0.0';
           const cfTodayOuts = queueExp.reduce((s,t)=>s+t.amount,0);
@@ -3469,13 +4496,14 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
             if(approvalSel.size===0) return;
             const ids = [...approvalSel];
             const today = new Date().toISOString().split('T')[0];
+            // Aprovar em lote quita integralmente: o efetivo passa a ser o valor cheio
             const results = await Promise.all(ids.map(id => {
               const t = transactions.find(x=>x.id===id);
               const newStatus = t?.type==='INCOME' ? 'RECEIVED' : 'PAID';
-              return api.updateTransaction(id, { status: newStatus, paid_date: today }).then(r=>({id, ok:r.success}));
+              return api.updateTransaction(id, { status: newStatus, amount_paid: t?.amount||0, paid_date: today }).then(r=>({id, ok:r.success}));
             }));
             const okIds = new Set(results.filter(r=>r.ok).map(r=>r.id));
-            setTx(prev=>prev.map(t=>okIds.has(t.id)?{...t,status:t.type==='INCOME'?'RECEIVED':'PAID',paid_date:today}:t));
+            setTx(prev=>prev.map(t=>okIds.has(t.id)?{...t,status:t.type==='INCOME'?'RECEIVED':'PAID',amount_paid:t.amount||0,paid_date:today}:t));
             setApprovalSel(new Set());
             const failCount = ids.length - okIds.size;
             setToast(failCount===0 ? `${okIds.size} lançamento(s) aprovado(s) com sucesso!` : `${okIds.size} aprovado(s), ${failCount} falharam`);
@@ -3887,6 +4915,42 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
               <button onClick={addTx} className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">{editTxId ? 'Salvar Alterações' : 'Salvar Lançamento'}</button>
             </div>
           </div>
+        </Modal>
+        <Modal open={!!settleModal} onClose={()=>setSettleModal(null)}
+          title={settleModal?.tx?.type==='INCOME'?'Registrar Recebimento':'Registrar Pagamento'} size="sm">
+          {settleModal&&(()=>{
+            const { tx, valor } = settleModal;
+            const aberto = txAberto(tx);
+            const valorCents = Math.round(parseFloat(String(valor||'0').replace(',','.'))*100) || 0;
+            const restante = aberto - valorCents;
+            return (
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-lg p-3 space-y-1">
+                  <p className="text-sm font-medium text-gray-800 truncate">{tx.description}</p>
+                  <div className="flex justify-between text-xs text-gray-500"><span>Valor da conta</span><span className="font-medium text-gray-700">{fmt(tx.amount)}</span></div>
+                  {txPago(tx)>0&&<div className="flex justify-between text-xs text-gray-500"><span>Já {tx.type==='INCOME'?'recebido':'pago'}</span><span className="font-medium text-green-700">{fmt(txPago(tx))}</span></div>}
+                  <div className="flex justify-between text-xs text-gray-500"><span>Em aberto</span><span className="font-bold text-amber-700">{fmt(aberto)}</span></div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Valor a {tx.type==='INCOME'?'receber':'pagar'} agora (R$)</label>
+                  <input type="number" step="0.01" autoFocus value={valor}
+                    onChange={e=>setSettleModal(p=>({...p,valor:e.target.value}))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <button onClick={()=>setSettleModal(p=>({...p,valor:(aberto/100).toFixed(2)}))}
+                      className="text-xs text-blue-600 hover:underline">usar saldo total</button>
+                    <p className={`text-xs ${restante>0?'text-amber-600':restante<0?'text-red-600':'text-green-600'}`}>
+                      {restante>0?`restam ${fmt(restante)} em aberto`:restante<0?'valor acima do saldo':'quita a conta'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button onClick={()=>setSettleModal(null)} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Cancelar</button>
+                  <button onClick={confirmSettle} className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Confirmar</button>
+                </div>
+              </div>
+            );
+          })()}
         </Modal>
         {toast&&<Toast msg={toast} onClose={()=>setToast(null)}/>}
         <InfoModal/>

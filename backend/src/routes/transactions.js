@@ -6,13 +6,13 @@ const router = express.Router();
 
 const SERVICE_TYPES = ['Instalação', 'Manutenção', 'Revisão', 'Emergência', 'Contrato', 'Avulso'];
 const TYPES = ['INCOME', 'EXPENSE'];
-const STATUSES = ['PENDING', 'PAID', 'RECEIVED', 'OVERDUE', 'CANCELLED'];
+const STATUSES = ['PENDING', 'PARTIAL', 'PAID', 'RECEIVED', 'OVERDUE']; // espelha transactions_status_check
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 // Valida os campos presentes em `body`. Campos ausentes são ignorados, o que
 // permite reusar a mesma função no POST (criação) e no PUT (atualização parcial).
 const validateTransaction = body => {
-  const { type, status, description, amount, due_date, paid_date, service_type } = body;
+  const { type, status, description, amount, amount_paid, due_date, paid_date, service_type } = body;
 
   if (type !== undefined && !TYPES.includes(type)) {
     return `type inválido. Use: ${TYPES.join(' ou ')}`;
@@ -27,6 +27,10 @@ const validateTransaction = body => {
   if (amount !== undefined) {
     if (!Number.isInteger(amount)) return 'amount deve ser inteiro em centavos';
     if (amount <= 0) return 'amount deve ser maior que zero';
+  }
+  if (amount_paid !== undefined) {
+    if (!Number.isInteger(amount_paid)) return 'amount_paid deve ser inteiro em centavos';
+    if (amount_paid < 0) return 'amount_paid não pode ser negativo';
   }
   if (due_date !== undefined && !ISO_DATE.test(due_date)) return 'due_date deve estar no formato AAAA-MM-DD';
   if (paid_date !== undefined && paid_date !== null && !ISO_DATE.test(paid_date)) {
@@ -70,7 +74,7 @@ router.get('/', async (req, res) => {
 
 router.get('/dre-gerencial', async (req, res) => {
   try {
-    const { period, year } = req.query;
+    const { period, year, customer_id } = req.query;
 
     let query = supabase
       .from('transactions')
@@ -81,6 +85,14 @@ router.get('/dre-gerencial', async (req, res) => {
       query = query.gte('due_date', `${period}-01`).lte('due_date', `${period}-31`);
     } else if (year) {
       query = query.gte('due_date', `${year}-01-01`).lte('due_date', `${year}-12-31`);
+    }
+
+    if (customer_id) {
+      if (customer_id === '__sem_cliente__') {
+        query = query.is('customer_id', null);
+      } else {
+        query = query.eq('customer_id', customer_id);
+      }
     }
 
     const { data, error } = await query.order('due_date', { ascending: false });
@@ -96,26 +108,55 @@ router.get('/dre-gerencial', async (req, res) => {
 
       // Por cliente
       const custId = tx.customer_id || '__sem_cliente__';
-      const custName = tx.customers?.name || 'Sem cliente';
-      if (!byCustomer[custId]) byCustomer[custId] = { id: custId, name: custName, income: 0, expense: 0 };
-      if (isIncome) byCustomer[custId].income += amount;
-      else byCustomer[custId].expense += amount;
+      const custName = tx.customers?.name || (tx.customer_id ? 'Cliente #' + tx.customer_id.slice(0, 8) : 'Custos Gerais / Sem cliente');
+      const custType = tx.customers?.type || (tx.customer_id ? 'PJ' : 'GERAL');
+
+      if (!byCustomer[custId]) {
+        byCustomer[custId] = {
+          id: custId,
+          name: custName,
+          type: custType,
+          income: 0,
+          expense: 0,
+          profit: 0,
+          margin: 0,
+          incomeCount: 0,
+          expenseCount: 0,
+          totalCount: 0
+        };
+      }
+      if (isIncome) {
+        byCustomer[custId].income += amount;
+        byCustomer[custId].incomeCount += 1;
+      } else {
+        byCustomer[custId].expense += amount;
+        byCustomer[custId].expenseCount += 1;
+      }
+      byCustomer[custId].totalCount += 1;
+      byCustomer[custId].profit = byCustomer[custId].income - byCustomer[custId].expense;
+      byCustomer[custId].margin = byCustomer[custId].income > 0
+        ? Number(((byCustomer[custId].profit / byCustomer[custId].income) * 100).toFixed(1))
+        : 0;
 
       // Por tipo de serviço
       const svcKey = tx.service_type || '__sem_tipo__';
       const svcLabel = tx.service_type || 'Sem tipo';
-      if (!byServiceType[svcKey]) byServiceType[svcKey] = { type: svcLabel, income: 0, expense: 0 };
+      if (!byServiceType[svcKey]) byServiceType[svcKey] = { type: svcLabel, income: 0, expense: 0, profit: 0, count: 0 };
       if (isIncome) byServiceType[svcKey].income += amount;
       else byServiceType[svcKey].expense += amount;
+      byServiceType[svcKey].count += 1;
+      byServiceType[svcKey].profit = byServiceType[svcKey].income - byServiceType[svcKey].expense;
     });
 
     const totalIncome  = data.filter(t => t.type === 'INCOME').reduce((s, t) => s + (t.amount || 0), 0);
     const totalExpense = data.filter(t => t.type === 'EXPENSE').reduce((s, t) => s + (t.amount || 0), 0);
+    const totalResult  = totalIncome - totalExpense;
+    const totalMargin  = totalIncome > 0 ? Number(((totalResult / totalIncome) * 100).toFixed(1)) : 0;
 
     res.json({
       period: period || year || 'all',
-      totals: { income: totalIncome, expense: totalExpense, result: totalIncome - totalExpense },
-      byCustomer: Object.values(byCustomer).sort((a, b) => b.income - a.income),
+      totals: { income: totalIncome, expense: totalExpense, result: totalResult, margin: totalMargin },
+      byCustomer: Object.values(byCustomer).sort((a, b) => b.profit - a.profit),
       byServiceType: Object.values(byServiceType).sort((a, b) => b.income - a.income)
     });
   } catch (error) {
@@ -145,7 +186,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   try {
     const {
-      type, status, description, amount, due_date, paid_date,
+      type, status, description, amount, amount_paid, due_date, paid_date,
       category_id, bank_account_id, payment_method_id,
       customer_id, service_type, invoice_number
     } = req.body;
@@ -162,6 +203,7 @@ router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
       status: status || 'PENDING',
       description,
       amount,
+      amount_paid:         amount_paid        || 0,
       due_date,
       paid_date:           paid_date          || null,
       category_id:        category_id        || null,
@@ -191,7 +233,7 @@ router.put('/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
 
     const allowedFields = {};
     const fieldMap = [
-      'type', 'status', 'description', 'amount', 'due_date', 'paid_date',
+      'type', 'status', 'description', 'amount', 'amount_paid', 'due_date', 'paid_date',
       'category_id', 'bank_account_id', 'payment_method_id',
       'related_order_id', 'related_contract_id',
       'customer_id', 'service_type', 'invoice_number'

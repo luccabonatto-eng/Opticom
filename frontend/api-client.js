@@ -266,6 +266,11 @@ class OpticomAPI {
     return this._fetchAllPages('/transactions', filters);
   }
 
+  async getDreGerencial(filters = {}) {
+    const params = new URLSearchParams(filters);
+    return this._fetch(`/transactions/dre-gerencial?${params}`);
+  }
+
   async getAllOrders(filters = {})      { return this._fetchAllPages('/orders', filters); }
   async getAllCustomers(filters = {})   { return this._fetchAllPages('/customers', filters); }
   async getAllContracts(filters = {})   { return this._fetchAllPages('/contracts', filters); }
