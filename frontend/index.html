@@ -2063,6 +2063,9 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
   };
   const [importModal, setImportModal] = useState(null);
   const [importText, setImportText]   = useState('');
+  const [importTab,  setImportTab]    = useState('arquivo'); // arquivo | colar
+  const [importFileName, setImportFileName] = useState('');
+  const [importDragging, setImportDragging] = useState(false);
   // Folha Salarial — estados no topo (hooks não podem ficar dentro de IIFE)
   // Folha fica no banco (system_settings), não no navegador: salário e CPF não
   // podem sumir ao limpar o cache nem ficar presos a uma máquina.
@@ -2429,8 +2432,27 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
     setToast(failCount===0 ? `${okIds.length} lançamento(s) excluído(s).` : `${okIds.length} excluído(s), ${failCount} falharam.`);
   };
 
+  // Excel pt-BR costuma salvar CSV em windows-1252; lido como UTF-8 os acentos
+  // viram caracteres quebrados. Relê nesse caso.
+  const loadImportFile = file => {
+    if (!file) return;
+    setImportFileName(file.name);
+    const ler = encoding => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const txt = e.target.result;
+        if (encoding === 'utf-8' && txt.includes('�')) return ler('windows-1252');
+        setImportText(txt.trim());
+      };
+      reader.readAsText(file, encoding);
+    };
+    ler('utf-8');
+  };
+
   const parseImport = async () => {
-    const lines = importText.trim().split('\n').filter(l=>l.trim());
+    let lines = importText.trim().split('\n').filter(l=>l.trim());
+    // Descarta cabeçalho: primeira linha sem valor reconhecível não é lançamento
+    if (lines.length && parseMoney((lines[0].split(/[;\t]/)[1]||'')) === 0) lines = lines.slice(1);
     const type = importModal;
     const cats = type==='INCOME' ? incomeCats : expenseCats;
     const today = new Date().toISOString().split('T')[0];
@@ -2452,6 +2474,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
     }
     setImportModal(null);
     setImportText('');
+    setImportFileName('');
     setToast(created===rows.length ? `${created} lançamento(s) importado(s)!` : `${created} de ${rows.length} importado(s) — ${rows.length-created} falharam`);
   };
 
@@ -4840,25 +4863,82 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
           );
         })()}
 
-        <Modal open={!!importModal} onClose={()=>{setImportModal(null);setImportText('');}} title={importModal==='INCOME'?'Importar Recebimentos':'Importar Despesas'} size="md">
+        <Modal open={!!importModal} onClose={()=>{setImportModal(null);setImportText('');setImportFileName('');}} title={importModal==='INCOME'?'Importar Recebimentos':'Importar Despesas'} size="md">
+          {(()=>{
+            const linhas = importText.trim().split('\n').filter(l=>l.trim());
+            const temCabecalho = linhas.length>0 && parseMoney((linhas[0].split(/[;\t]/)[1]||''))===0;
+            const qtd = Math.max(0, linhas.length - (temCabecalho?1:0));
+            const fechar = ()=>{setImportModal(null);setImportText('');setImportFileName('');};
+            return (
           <div className="space-y-4">
+            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+              {[['arquivo','📎 Anexar arquivo'],['colar','📋 Colar texto']].map(([v,l])=>(
+                <button key={v} onClick={()=>setImportTab(v)}
+                  className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${importTab===v?'bg-white text-gray-800 shadow-sm':'text-gray-500 hover:text-gray-800'}`}>{l}</button>
+              ))}
+            </div>
+
             <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-700">
-              <p className="font-semibold mb-1">Formato esperado (CSV, separado por ; ou tab):</p>
+              <p className="font-semibold mb-1">Colunas esperadas (CSV separado por ; ou tab):</p>
               <p className="font-mono">Descrição; Valor; Vencimento (AAAA-MM-DD); Categoria</p>
               <p className="mt-1 text-blue-500">Exemplo: Fatura Cliente X; 1.500,00; 2026-05-10; Receita de OS</p>
+              <p className="mt-1 text-blue-400">Linha de cabeçalho é ignorada automaticamente.</p>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cole os dados da planilha aqui:</label>
-              <textarea value={importText} onChange={e=>setImportText(e.target.value)} rows={8}
-                placeholder={"Fatura ABC; 2500.00; 2026-05-15; Receita de Contratos\nFatura XYZ; 800.00; 2026-05-20; Receita de OS"}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"/>
-            </div>
-            <p className="text-xs text-gray-400">{importText.trim().split('\n').filter(l=>l.trim()).length} linha(s) detectada(s)</p>
+
+            {importTab==='arquivo' ? (
+              <div
+                onDragOver={e=>{e.preventDefault();setImportDragging(true);}}
+                onDragLeave={()=>setImportDragging(false)}
+                onDrop={e=>{e.preventDefault();setImportDragging(false);loadImportFile(e.dataTransfer.files[0]);}}
+                className={`rounded-xl border-2 border-dashed flex flex-col items-center gap-3 py-8 px-6 transition-colors ${importDragging?'border-blue-400 bg-blue-50':'border-gray-300 bg-gray-50'}`}>
+                <div className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-2xl">📄</div>
+                {importFileName
+                  ? <div className="text-center">
+                      <p className="text-sm font-semibold text-gray-800">{importFileName}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{qtd} lançamento(s) detectado(s){temCabecalho?' · cabeçalho ignorado':''}</p>
+                    </div>
+                  : <p className="text-sm text-gray-500">Arraste o arquivo CSV aqui</p>}
+                <label className="cursor-pointer bg-blue-600 text-white text-xs font-medium px-4 py-2 rounded-lg hover:bg-blue-700">
+                  {importFileName?'Trocar arquivo':'Selecionar arquivo'}
+                  <input type="file" className="hidden" accept=".csv,.txt,.tsv"
+                    onChange={e=>loadImportFile(e.target.files[0])}/>
+                </label>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Cole os dados da planilha aqui:</label>
+                <textarea value={importText} onChange={e=>{setImportText(e.target.value);setImportFileName('');}} rows={8}
+                  placeholder={"Fatura ABC; 2.500,00; 2026-05-15; Receita de Contratos\nFatura XYZ; 800,00; 2026-05-20; Receita de OS"}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"/>
+                <p className="text-xs text-gray-400 mt-1">{qtd} lançamento(s) detectado(s){temCabecalho?' · cabeçalho ignorado':''}</p>
+              </div>
+            )}
+
+            {qtd>0 && (
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <p className="bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-500 border-b border-gray-200">Prévia</p>
+                <div className="divide-y divide-gray-100 max-h-36 overflow-y-auto">
+                  {linhas.slice(temCabecalho?1:0, temCabecalho?4:3).map((l,i)=>{
+                    const c = l.split(/[;\t]/).map(x=>x.trim().replace(/"/g,''));
+                    return (<div key={i} className="flex items-center justify-between gap-2 px-3 py-1.5 text-xs">
+                      <span className="text-gray-700 truncate flex-1">{c[0]||'—'}</span>
+                      <span className="text-gray-400 whitespace-nowrap">{c[2]||'hoje'}</span>
+                      <span className={`font-semibold whitespace-nowrap ${parseMoney(c[1])>0?'text-gray-800':'text-red-500'}`}>{parseMoney(c[1])>0?fmt(parseMoney(c[1])):'valor inválido'}</span>
+                    </div>);
+                  })}
+                  {qtd>3 && <p className="px-3 py-1.5 text-xs text-gray-400">+ {qtd-3} linha(s)</p>}
+                </div>
+              </div>
+            )}
+
             <div className="flex gap-2">
-              <button onClick={()=>{setImportModal(null);setImportText('');}} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Cancelar</button>
-              <button onClick={parseImport} className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">Importar {importText.trim().split('\n').filter(l=>l.trim()).length} lançamentos</button>
+              <button onClick={fechar} className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">Cancelar</button>
+              <button onClick={parseImport} disabled={qtd===0}
+                className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed">Importar {qtd} lançamento(s)</button>
             </div>
           </div>
+            );
+          })()}
         </Modal>
         {/* New Transaction Modal */}
         <Modal open={newTxModal} onClose={()=>{setNewTxModal(false);setEditTxId(null);}} title={editTxId ? 'Editar Lançamento' : (newTx.type==='INCOME'?'Novo Recebimento':'Nova Despesa')} size="md">
