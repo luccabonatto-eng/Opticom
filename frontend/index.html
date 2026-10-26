@@ -2090,6 +2090,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
   const [newTxModal, setNewTxModal] = useState(false);
   const [editTxId, setEditTxId] = useState(null);
   const [settleModal, setSettleModal] = useState(null); // { tx, valor } da baixa em andamento
+  const [cardFiltro, setCardFiltro] = useState('all');
   const [faturaModal, setFaturaModal] = useState(null); // { pmId, nome, mes, compras, total, valorFatura, vencimento }
   const [newTx, setNewTx]       = useState({ type:'INCOME', description:'', amount:'', due_date:'', status:'PENDING', category_id:'', bank_account_id:'', payment_method_id:'', customer_id:'', invoice_number:'' });
 
@@ -2738,6 +2739,8 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
   const faturaDe = t => (t.due_date||'').slice(0,7);
 
   const txCatName = t => (incomeCats.concat(expenseCats).find(c=>c.id===t.category_id)?.name) || t.cat || '—';
+  const txClasse  = t => incomeCats.concat(expenseCats).find(c=>c.id===t.category_id)?.accounting_class
+                      || (t.type==='INCOME'?'OUTRAS_RECEITAS':'OUTRAS_DESPESAS');
   const txDue = t => t.due_date || t.due || '';
 
 
@@ -2765,12 +2768,12 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
   );
 
   const ALL_MENU_ITEMS = [
+    { id:'approval',   label:'Aprovações do Dia',  icon:'✓', color:'text-violet-600', bg:'bg-violet-50', badge: approvalQueue.length },
     { id:'receivable', label:'A Receber',          icon:'↑', color:'text-green-600',  bg:'bg-green-50'  },
     { id:'payable',    label:'A Pagar',             icon:'↓', color:'text-red-600',    bg:'bg-red-50'    },
     { id:'cashflow',   label:'Fluxo de Caixa',     icon:'~', color:'text-blue-600',   bg:'bg-blue-50'   },
     { id:'dre',        label:'DRE Gerencial',       icon:'≡', color:'text-purple-600', bg:'bg-purple-50' },
     { id:'payroll',    label:'Folha Salarial',      icon:'$', color:'text-cyan-600',   bg:'bg-cyan-50'   },
-    { id:'approval',   label:'Aprovações do Dia',  icon:'✓', color:'text-violet-600', bg:'bg-violet-50', badge: approvalQueue.length },
     { id:'card',       label:'Cartão de Crédito',   icon:'▭', color:'text-fuchsia-600',bg:'bg-fuchsia-50'},
     { id:'statement',  label:'Extrato Bancário',   icon:'⇅', color:'text-teal-600',   bg:'bg-teal-50'   },
   ];
@@ -4895,7 +4898,8 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
         {tab==='card'&&(()=>{
           // Agrupa as compras por cartão + mês de competência. A fatura não é um
           // registro: é esse conjunto.
-          const compras = transactions.filter(ehCompraCartao);
+          const cartoes = payMethods.filter(m=>/cart[aã]o/i.test(m.name||''));
+          const compras = transactions.filter(t=>ehCompraCartao(t) && (cardFiltro==='all'||t.payment_method_id===cardFiltro));
           const faturas = {};
           for (const t of compras) {
             const chave = `${t.payment_method_id}|${faturaDe(t)}`;
@@ -4908,6 +4912,13 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
             faturas[chave].total  += t.amount || 0;
             faturas[chave].aberto += txAberto(t);
           }
+          // shortcut: o pagamento é reencontrado pela descrição que nós mesmos
+          // geramos; vira frágil se alguém renomear o lançamento à mão.
+          // Ligar por coluna própria quando houver migration para isso.
+          const pagamentoDa = f => transactions.find(t =>
+            t.type==='EXPENSE' && txClasse(t)==='PAGAMENTO_CARTAO' &&
+            (t.description||'') === `Fatura ${f.nome} — ${monthLabel(f.mes)}`);
+
           const lista = Object.values(faturas).sort((a,b)=> b.mes.localeCompare(a.mes) || a.nome.localeCompare(b.nome));
           const emAberto = lista.filter(f=>f.aberto>0);
 
@@ -4915,10 +4926,31 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
             <div className="space-y-4">
               <div className="flex items-start gap-3 bg-fuchsia-50 border border-fuchsia-200 rounded-xl p-3.5">
                 <span className="w-8 h-8 rounded-lg bg-fuchsia-600 text-white flex items-center justify-center font-bold text-sm shrink-0">▭</span>
-                <div>
+                <div className="flex-1">
                   <p className="text-xs font-bold text-fuchsia-900 uppercase tracking-wide">Compras no Cartão</p>
                   <p className="text-xs text-gray-600 mt-0.5">A compra já conta como despesa no DRE (com cliente e categoria), mas não sai do caixa. O caixa só é afetado quando a fatura é paga — por isso elas não aparecem em A Pagar.</p>
                 </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <select value={cardFiltro} onChange={e=>setCardFiltro(e.target.value)}
+                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none">
+                  <option value="all">Todos os cartões</option>
+                  {cartoes.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+                <button
+                  onClick={()=>{
+                    const cartaoPadrao = cardFiltro!=='all' ? cardFiltro : (cartoes[0]?.id || '');
+                    if (!cartaoPadrao) { setToast('Cadastre uma forma de pagamento com "cartão" no nome em Configurações.'); return; }
+                    setEditTxId(null);
+                    setNewTx({ type:'EXPENSE', description:'', amount:'', due_date:new Date().toISOString().split('T')[0],
+                               status:'PENDING', category_id:'', bank_account_id:'', payment_method_id:cartaoPadrao,
+                               customer_id:'', invoice_number:'' });
+                    setNewTxModal(true);
+                  }}
+                  className="ml-auto flex items-center gap-1.5 bg-fuchsia-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-fuchsia-700">
+                  <Icon name="plus" className="w-4 h-4"/> Nova Compra no Cartão
+                </button>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
@@ -4957,7 +4989,11 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                     {f.aberto>0
                       ? <button onClick={()=>setFaturaModal({...f, valorFatura:(f.aberto/100).toFixed(2), vencimento:new Date().toISOString().split('T')[0]})}
                           className="px-4 py-2 bg-fuchsia-600 text-white rounded-lg text-xs font-semibold hover:bg-fuchsia-700">Pagar fatura</button>
-                      : <span className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-semibold">✓ Paga</span>}
+                      : (()=>{ const pg = pagamentoDa(f); return (
+                          <div className="text-right">
+                            <span className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-semibold">✓ Paga</span>
+                            {pg && <p className="text-xs text-gray-500 mt-1">{fmt(pg.amount)} em {fmtDate(pg.paid_date||pg.due_date)}</p>}
+                          </div>); })()}
                   </div>
                   <table className="w-full text-sm">
                     <tbody className="divide-y divide-gray-100">
