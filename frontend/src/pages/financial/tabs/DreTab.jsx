@@ -1,4 +1,5 @@
 import { DreCompany } from '../dre/DreCompany.jsx';
+import { companyResult } from '../company-result.js';
 import { BotaoExportar } from '../../../components/BotaoExportar.jsx';
 import { DEFAULT_ACCOUNTING_CLASSES } from '../../../config/financial.js';
 import { DreConsolidated } from '../dre/DreConsolidated.jsx';
@@ -443,7 +444,30 @@ const DreTab = ({
       dreBase === 'efetivo' ? 'Efetivo (caixa — só o que foi baixado)' : 'Previsto (competência — valor das contas)';
     const exportarDRE = () => {
       const cab = [['Base', baseLabel], ['Gerado em', new Date().toLocaleString('pt-BR')], []];
-      if (dreViewMode === 'consolidated') {
+      if (dreViewMode === 'company') {
+        const r = companyResult(originalScopedTxs, scopes.data, [...incomeCats, ...expenseCats], dreBase);
+        const L = (rot, k) => [rot, csvNum(r[k].income), csvNum(r[k].expense), csvNum(r[k].result)];
+        baixarCSV(`DRE_geral_empresa_${curM}.csv`, [
+          ['DRE Gerencial — Resultado da Empresa (sem rateio)'],
+          ['Período', scopeLabel],
+          ...cab,
+          ['Origem', 'Receitas (R$)', 'Custos e despesas (R$)', 'Resultado (R$)'],
+          L('Clientes', 'clients'),
+          L('Geral da empresa', 'general'),
+          L('Não classificados', 'unassigned'),
+          L('Total da empresa', 'total'),
+          [],
+          // O que falta classificar é a razão de exportar: vai para revisão fora do sistema.
+          [`Pendentes de classificação (${r.unassigned.transactions.length})`],
+          ['Data', 'Descrição', 'Tipo', 'Valor (R$)'],
+          ...r.unassigned.transactions.map((t) => [
+            dreBase === 'efetivo' ? t.paid_date || '' : t.due_date || t.due || '',
+            t.description,
+            t.type === 'INCOME' ? 'Receita' : 'Despesa',
+            csvNum(dreBase === 'efetivo' ? txPago(t) : t.amount),
+          ]),
+        ]);
+      } else if (dreViewMode === 'consolidated') {
         const L = (rot, c, p) => [rot, csvNum(c), recBruta > 0 ? csvPct((c / recBruta) * 100) : '', csvNum(p)];
         baixarCSV(`DRE_consolidada_${curM}.csv`, [
           ['DRE — Demonstração do Resultado do Exercício (CPC 26)'],
@@ -598,12 +622,14 @@ const DreTab = ({
                 ))}
               </select>
             </div>
-            {dreViewMode !== 'company' && <BotaoExportar
+            {(dreViewMode !== 'company' || scopes.ready) && <BotaoExportar
               onClick={exportarDRE}
               title={
-                dreViewMode === 'consolidated'
-                  ? 'Baixa a DRE consolidada do mês, com comparativo e AV%, em CSV (abre no Excel)'
-                  : 'Baixa uma linha por cliente, com receita, custo e margem, em CSV (abre no Excel)'
+                dreViewMode === 'company'
+                  ? 'Baixa o resultado da empresa por origem e a lista do que falta classificar, em CSV (abre no Excel)'
+                  : dreViewMode === 'consolidated'
+                    ? 'Baixa a DRE consolidada do mês, com comparativo e AV%, em CSV (abre no Excel)'
+                    : 'Baixa uma linha por cliente, com receita, custo e margem, em CSV (abre no Excel)'
               }
             />}
           </div>

@@ -103,3 +103,26 @@ test('DRE por cliente: a linha tem exatamente as colunas do cabeçalho', () => {
   assert.equal(linha.length, cab.length);
   assert.equal(linha[7], '60,5');
 });
+
+test('DRE geral: as três origens fecham com o total da empresa', async () => {
+  const { companyResult } = await import('../src/pages/financial/company-result.js');
+  const tx = (id, amount, extra = {}) => ({ id, amount, amount_paid: amount, type: 'INCOME', ...extra });
+  const r = companyResult(
+    [
+      tx('a', 8967548, { customer_id: 'claro' }),
+      tx('b', 2000000, { type: 'EXPENSE', customer_id: 'claro' }),
+      tx('c', 500000, { type: 'EXPENSE' }),
+      tx('d', 7000000),
+    ],
+    { c: 'general' },
+    [],
+    'previsto',
+  );
+  const L = (rot, k) => [rot, csvNum(r[k].income), csvNum(r[k].expense), csvNum(r[k].result)];
+  assert.deepEqual(L('Clientes', 'clients'), ['Clientes', '89675,48', '20000,00', '69675,48']);
+  assert.deepEqual(L('Geral da empresa', 'general'), ['Geral da empresa', '0,00', '5000,00', '-5000,00']);
+  assert.deepEqual(L('Não classificados', 'unassigned'), ['Não classificados', '70000,00', '0,00', '70000,00']);
+  // o total exportado é a soma das três origens, não um cálculo paralelo
+  assert.equal(r.total.result, r.clients.result + r.general.result + r.unassigned.result);
+  assert.equal(L('Total da empresa', 'total')[3], '134675,48');
+});
