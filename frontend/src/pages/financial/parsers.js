@@ -11,8 +11,21 @@ const parseMoney = (s) => {
   return Math.round(reais * 100); // retorna centavos
 };
 
+// O id identifica o movimento, não a posição dele no arquivo. Com o índice da
+// linha, baixar o mesmo extrato outra vez com um dia a mais no começo desloca
+// todos os ids e a reimportação falha com "movimento já importado com dados
+// diferentes". O sufixo #n mantém separados dois movimentos idênticos no mesmo
+// dia, que o banco de fato emite.
+const idMovimento = (vistos, date, type, amount, description) => {
+  const chave = `${date}|${type}|${amount}|${description}`;
+  const n = (vistos.get(chave) || 0) + 1;
+  vistos.set(chave, n);
+  return `${chave}#${n}`;
+};
+
 const parseOFX = (text, { strict = false } = {}) => {
   const lines = [];
+  const vistos = new Map();
   // Suporta SGML (sem fechamento) e XML (com fechamento de tag)
   const re = /<STMTTRN[^>]*>([\s\S]*?)<\/STMTTRN>|<STMTTRN>([\s\S]*?)(?=<STMTTRN>|<\/BANKTRANLIST>)/gi;
   let m;
@@ -27,13 +40,16 @@ const parseOFX = (text, { strict = false } = {}) => {
     const date = dtRaw.length >= 8 ? `${dtRaw.slice(0, 4)}-${dtRaw.slice(4, 6)}-${dtRaw.slice(6, 8)}` : '';
     const raw = Math.round(Number(g('TRNAMT')) * 100);
     if (!strict && raw === 0 && !g('FITID')) continue;
+    const amount = Math.abs(raw);
+    const type = raw >= 0 ? 'CREDIT' : 'DEBIT';
+    const description = g('MEMO') || g('NAME') || '—';
     lines.push({
-      id: g('FITID') || String(lines.length),
+      id: g('FITID') || idMovimento(vistos, date, type, amount, description),
       ...(strict ? { bankId: g('FITID') || null } : {}),
       date,
-      description: g('MEMO') || g('NAME') || '—',
-      amount: Math.abs(raw),
-      type: raw >= 0 ? 'CREDIT' : 'DEBIT',
+      description,
+      amount,
+      type,
     });
   }
   return lines;
@@ -58,6 +74,7 @@ const parseCSV = (text, { strict = false } = {}) => {
       h.includes('tipo') || h.includes('type') || h.includes('cr/db') || h.includes('deb') || h.includes('lancamento'),
   );
   const data = dI >= 0 || nI >= 0 ? rows.slice(1) : rows;
+  const vistos = new Map();
   return data
     .filter((r) => strict ? r.some(c => c.trim()) : r.length > 1)
     .map((r, i) => {
@@ -81,7 +98,9 @@ const parseCSV = (text, { strict = false } = {}) => {
         if (t.includes('DEB') || t === 'D') type = 'DEBIT';
         else if (t.includes('CRE') || t === 'C') type = 'CREDIT';
       }
-      return { id: String(i), date, description: clean(r[nI >= 0 ? nI : 1]) || '—', amount: Math.abs(rawAmt), type };
+      const description = clean(r[nI >= 0 ? nI : 1]) || '—';
+      const amount = Math.abs(rawAmt);
+      return { id: idMovimento(vistos, date, type, amount, description), date, description, amount, type };
     })
     .filter((l) => strict || l.amount > 0);
 };
