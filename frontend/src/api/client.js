@@ -25,7 +25,7 @@ class OpticomAPI {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
@@ -48,7 +48,7 @@ class OpticomAPI {
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, role })
+        body: JSON.stringify({ name, email, password, role }),
       });
 
       const data = await response.json();
@@ -75,7 +75,7 @@ class OpticomAPI {
   async _fetch(endpoint, options = {}) {
     const headers = {
       'Content-Type': 'application/json',
-      ...options.headers
+      ...options.headers,
     };
 
     // Adicionar token no Authorization header
@@ -86,7 +86,7 @@ class OpticomAPI {
     try {
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
-        headers
+        headers,
       });
 
       if (response.status === 401) {
@@ -271,12 +271,24 @@ class OpticomAPI {
     return this._fetch(`/transactions/dre-gerencial?${params}`);
   }
 
-  async getAllOrders(filters = {})      { return this._fetchAllPages('/orders', filters); }
-  async getAllCustomers(filters = {})   { return this._fetchAllPages('/customers', filters); }
-  async getAllContracts(filters = {})   { return this._fetchAllPages('/contracts', filters); }
-  async getAllProducts(filters = {})    { return this._fetchAllPages('/products', filters); }
-  async getAllTechnicians(filters = {}) { return this._fetchAllPages('/technicians', filters); }
-  async getAllVehicles(filters = {})    { return this._fetchAllPages('/vehicles', filters); }
+  async getAllOrders(filters = {}) {
+    return this._fetchAllPages('/orders', filters);
+  }
+  async getAllCustomers(filters = {}) {
+    return this._fetchAllPages('/customers', filters);
+  }
+  async getAllContracts(filters = {}) {
+    return this._fetchAllPages('/contracts', filters);
+  }
+  async getAllProducts(filters = {}) {
+    return this._fetchAllPages('/products', filters);
+  }
+  async getAllTechnicians(filters = {}) {
+    return this._fetchAllPages('/technicians', filters);
+  }
+  async getAllVehicles(filters = {}) {
+    return this._fetchAllPages('/vehicles', filters);
+  }
 
   async getTransaction(id) {
     return this._fetch(`/transactions/${id}`);
@@ -385,3 +397,5 @@ class OpticomAPI {
 
 // Instância global
 const api = new OpticomAPI();
+
+export { api };
