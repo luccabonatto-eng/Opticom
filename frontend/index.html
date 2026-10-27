@@ -2186,6 +2186,7 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
   const [stmtFileName, setStmtFileName] = useState('');
   const [stmtDragging, setStmtDragging] = useState(false);
   const [stmtBankAccountId, setStmtBankAccountId] = useState('');
+  const [stmtProgresso, setStmtProgresso] = useState(null); // { feito, total } durante a importação
 
   // abre o modal de edição pré-preenchido com os dados atuais do funcionário
   const openEditPay = emp => {
@@ -2292,20 +2293,24 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
     };
     reader.readAsText(file,'utf-8');
   };
+  // Linha de extrato é movimento que já aconteceu no banco: entra quitada, com
+  // o efetivo preenchido. Sem amount_paid ela apareceria como 100% em aberto.
+  const dadosDaLinha = (line, catId) => ({
+    type:        line.type==='CREDIT' ? 'INCOME' : 'EXPENSE',
+    description: line.description,
+    amount:      line.amount,
+    amount_paid: line.amount,
+    due_date:    line.date,
+    paid_date:   line.date,
+    status:      line.type==='CREDIT' ? 'RECEIVED' : 'PAID',
+    category_id: catId,
+    bank_account_id: stmtBankAccountId || null,
+  });
+
   const importStmtLine = async line => {
     const catId = stmtCats[line.id];
     if (!catId) { setToast('Selecione uma categoria antes de importar'); return; }
-    const txData = {
-      type:        line.type==='CREDIT' ? 'INCOME' : 'EXPENSE',
-      description: line.description,
-      amount:      line.amount,
-      due_date:    line.date,
-      paid_date:   line.date,
-      status:      line.type==='CREDIT' ? 'RECEIVED' : 'PAID',
-      category_id: catId,
-      bank_account_id: stmtBankAccountId || null,
-    };
-    const r = await api.createTransaction(txData);
+    const r = await api.createTransaction(dadosDaLinha(line, catId));
     if (r.success) {
       const tx = r.data?.data || r.data;
       setTx(p=>[tx,...p]);
@@ -2315,10 +2320,39 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
       setToast(r.error||'Erro ao criar lançamento');
     }
   };
+
   const importAllStmt = async () => {
     const pending = stmtLines.filter(l=>!stmtResults[l.id]?.action && stmtCats[l.id]);
     if (!pending.length) { setToast('Nenhuma linha com categoria selecionada'); return; }
-    for (const line of pending) await importStmtLine(line);
+
+    // Antes cada linha disparava três atualizações de estado, e cada uma
+    // recalculava a página inteira sobre a lista de lançamentos crescendo.
+    // Com algumas dezenas de linhas a tela parecia travada. Agora o estado é
+    // tocado uma vez no fim, e o progresso aparece a cada 5 linhas.
+    setStmtProgresso({ feito: 0, total: pending.length });
+    const criados = [];
+    const resultados = {};
+    const erros = [];
+
+    for (let i = 0; i < pending.length; i++) {
+      const line = pending[i];
+      const r = await api.createTransaction(dadosDaLinha(line, stmtCats[line.id]));
+      if (r.success) {
+        criados.push(r.data?.data || r.data);
+        resultados[line.id] = { action: 'imported' };
+      } else {
+        erros.push(`${line.description.slice(0,30)}: ${r.error}`);
+        resultados[line.id] = { action: 'erro', msg: r.error };
+      }
+      if (i % 5 === 4) setStmtProgresso({ feito: i + 1, total: pending.length });
+    }
+
+    setTx(p => [...criados, ...p]);
+    setStmtResults(p => ({ ...p, ...resultados }));
+    setStmtProgresso(null);
+    setToast(erros.length === 0
+      ? `${criados.length} lançamento(s) importado(s)!`
+      : `${criados.length} importado(s), ${erros.length} falharam — ${erros[0]}`);
   };
   const ignoreStmt = id => setStmtResults(p=>({...p,[id]:{action:'ignore'}}));
 
@@ -5085,9 +5119,11 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                     <option value="">Conta bancária deste extrato...</option>
                     {bankAccounts.map(b=><option key={b.id} value={b.id}>{b.name||b.bank_name||b.bank} — {b.account_number||b.account||''}</option>)}
                   </select>
-                  <button onClick={importAllStmt}
-                    className="px-4 py-1.5 bg-teal-600 text-white rounded-lg text-xs font-medium hover:bg-teal-700">
-                    Importar todas com categoria
+                  <button onClick={importAllStmt} disabled={!!stmtProgresso}
+                    className="px-4 py-1.5 bg-teal-600 text-white rounded-lg text-xs font-medium hover:bg-teal-700 disabled:opacity-60 disabled:cursor-wait">
+                    {stmtProgresso
+                      ? `Importando ${stmtProgresso.feito} de ${stmtProgresso.total}...`
+                      : 'Importar todas com categoria'}
                   </button>
                   <button onClick={()=>{setStmtLines([]);setStmtResults({});setStmtCats({});setStmtFileName('');setStmtBankAccountId('');}}
                     className="px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-500 hover:bg-gray-50">Novo arquivo</button>
@@ -5111,7 +5147,8 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
 
               {/* Progress bar */}
               <div className="w-full bg-gray-100 rounded-full h-1.5">
-                <div className="bg-teal-500 h-1.5 rounded-full transition-all" style={{width:`${pct}%`}}/>
+                <div className={`h-1.5 rounded-full transition-all ${stmtProgresso?'bg-teal-400 animate-pulse':'bg-teal-500'}`}
+                  style={{width:`${stmtProgresso?Math.round(stmtProgresso.feito/stmtProgresso.total*100):pct}%`}}/>
               </div>
 
               {/* Table */}
@@ -5157,10 +5194,11 @@ const FinancialPage = ({ taxRegime='REAL', finPerms }) => {
                         </tr>
                       );
                       return (
-                        <tr key={line.id} className="hover:bg-gray-50">
+                        <tr key={line.id} className={res.action==='erro'?'bg-red-50':'hover:bg-gray-50'}>
                           <td className="px-3 py-2.5 text-xs text-gray-500 whitespace-nowrap">{fmtDate(line.date)}</td>
                           <td className="px-3 py-2.5">
                             <p className="text-xs text-gray-800 font-medium truncate max-w-xs">{line.description}</p>
+                            {res.action==='erro' && <p className="text-xs text-red-600 mt-0.5">falhou: {res.msg}</p>}
                           </td>
                           <td className={`px-3 py-2.5 text-right font-semibold text-sm whitespace-nowrap ${isCredit?'text-green-600':'text-red-600'}`}>
                             {isCredit?'+':'−'}{fmt(line.amount)}
