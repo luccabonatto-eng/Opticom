@@ -1,14 +1,7 @@
 import { ApprovalTab } from './tabs/ApprovalTab.jsx';
-import {
-  BANK_ACCOUNTS_INIT,
-  EXPENSE_CATS_INITIAL_OBJS,
-  INCOME_CATS_INITIAL_OBJS,
-  PAYMENT_METHODS_INIT,
-  PAYROLL_INIT,
-} from '../../config/financial.js';
+import { EXPENSE_CATS_INITIAL_OBJS, INCOME_CATS_INITIAL_OBJS, PAYROLL_INIT } from '../../config/financial.js';
 import { Badge } from '../../components/Badge.jsx';
 import { BulkSettlementModal } from './modals/BulkSettlementModal.jsx';
-import { CUSTOMERS_INIT, TRANSACTIONS_INIT } from '../../mocks/demo.js';
 import { CardPaymentModal } from './modals/CardPaymentModal.jsx';
 import { CardsTab } from './tabs/CardsTab.jsx';
 import { CashFlowTab } from './tabs/CashFlowTab.jsx';
@@ -78,12 +71,14 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
   const [selP, setSelP] = useState(new Set());
   const [qR, setQR] = useState('');
   const [qP, setQP] = useState('');
-  const [transactions, setTx] = useState(TRANSACTIONS_INIT);
+  // Tudo vazio até o banco responder: um número de demonstração aqui é lido
+  // como saldo real por quem abre a tela.
+  const [transactions, setTx] = useState([]);
   const [incomeCats, setIncomeCats] = useState(INCOME_CATS_INITIAL_OBJS);
   const [expenseCats, setExpenseCats] = useState(EXPENSE_CATS_INITIAL_OBJS);
-  const [bankAccounts, setBankAccounts] = useState(BANK_ACCOUNTS_INIT);
-  const [payMethods, setPayMethods] = useState(PAYMENT_METHODS_INIT);
-  const [customers, setCustomers] = useState(CUSTOMERS_INIT);
+  const [bankAccounts, setBankAccounts] = useState([]);
+  const [payMethods, setPayMethods] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [toast, setToast] = useState(null);
   const [newTxModal, setNewTxModal] = useState(false);
   const [editTxId, setEditTxId] = useState(null);
@@ -124,10 +119,11 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
       if (catRes.data?.income) setIncomeCats(catRes.data.income);
       if (catRes.data?.expense) setExpenseCats(catRes.data.expense);
     }
-    if (baRes.success) setBankAccounts(baRes.data?.data || baRes.data || BANK_ACCOUNTS_INIT);
-    if (pmRes.success) setPayMethods(pmRes.data?.data || pmRes.data || PAYMENT_METHODS_INIT);
+    if (baRes.success) setBankAccounts(baRes.data?.data || baRes.data || []);
+    if (pmRes.success) setPayMethods(pmRes.data?.data || pmRes.data || []);
     if (techRes.success) setPayTechs(techRes.data?.data || techRes.data || []);
     if (custRes.success) setCustomers(custRes.data?.data || custRes.data || []);
+    if (!txRes.success) setToast(`Não foi possível carregar os lançamentos: ${txRes.error || 'erro de conexão'}`);
   };
   const [importModal, setImportModal] = useState(null);
   const [importText, setImportText] = useState('');
