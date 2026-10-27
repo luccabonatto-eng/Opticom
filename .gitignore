@@ -49,3 +49,6 @@ temp/
 
 # SIstema/ é um repositório git independente — gerenciado separadamente
 SIstema/
+
+# Local migration snapshots and tooling
+.migration/

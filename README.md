@@ -17,11 +17,11 @@ opticom/
 │   ├── .env.example
 │   └── README.md
 │
-├── frontend/                   # React SPA (CDN-based, sem build tools)
-│   ├── index.html             # App principal (todos os componentes)
-│   ├── api-client.js          # HTTP client com gerenciamento de token
-│   ├── validators.js          # Validações de entrada
-│   ├── notifications.js       # Sistema de toast notifications
+├── frontend/                   # React SPA modular (Vite + Tailwind compilados)
+│   ├── index.html             # Entrada mínima da aplicação
+│   ├── src/                   # Páginas, componentes, API e regras por domínio
+│   ├── public/                # Logos e favicons
+│   ├── tests/                 # Testes unitários e navegação com API simulada
 │   ├── .env.example
 │   └── README.md
 │
@@ -61,8 +61,9 @@ CORS_ORIGIN=http://localhost:3000
 
 ```bash
 cd frontend
-# Abrir index.html no navegador
-# Ou servir com: python -m http.server 3000
+npm ci
+npm run dev
+# Produção: npm run build (publicar frontend/dist)
 ```
 
 ## 🔐 Autenticação
@@ -132,8 +133,9 @@ npm run lint         # Verificar código
 Frontend:
 ```bash
 cd frontend
-# Abrir index.html no navegador
-# Ou instalar extensão "Live Server" no VS Code
+npm ci
+npm run dev
+# Mapa dos módulos e testes: frontend/README.md
 ```
 
 ### Estrutura de Pastas do Backend
