@@ -1,12 +1,15 @@
 import { Icon } from '../components/Icon.jsx';
-import { MOCK_ALERTS } from '../mocks/demo.js';
 import { TITLES } from '../config/navigation.js';
 import { useState } from 'react';
 
-const Header = ({ page, onLogout, setPage, regime, user }) => {
+// shortcut: os alertas vinham de uma lista fixa de demonstração ('Empresa ABC
+// — R$ 2.500,00 vencido') que nunca mudava. Enquanto não existe endpoint de
+// alertas no backend, o sininho fica vazio em vez de mentir. Passar `alerts`
+// quando o endpoint existir.
+const Header = ({ page, onLogout, setPage, regime, user, alerts = [] }) => {
   const [notifOpen, setNotifOpen] = useState(false);
   const [dismissed, setDismissed] = useState([]);
-  const visible = MOCK_ALERTS.filter((a) => !dismissed.includes(a.id));
+  const visible = alerts.filter((a) => !dismissed.includes(a.id));
   const navMap = {
     OVERDUE_RECEIVABLE: 'financial',
     BATTERY_END_OF_LIFE: 'inventory',
@@ -48,7 +51,7 @@ const Header = ({ page, onLogout, setPage, regime, user }) => {
                 </p>
                 {visible.length > 0 && (
                   <button
-                    onClick={() => setDismissed(MOCK_ALERTS.map((a) => a.id))}
+                    onClick={() => setDismissed(alerts.map((a) => a.id))}
                     className="text-xs text-blue-600 hover:underline"
                   >
                     Marcar todas como lidas

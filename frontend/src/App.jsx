@@ -1,4 +1,4 @@
-import { BANK_ACCOUNTS_INIT, EXPENSE_CATS_INIT, INCOME_CATS_INIT, PAYMENT_METHODS_INIT } from './config/financial.js';
+import { EXPENSE_CATS_INIT, INCOME_CATS_INIT } from './config/financial.js';
 
 import { DEFAULT_PERMISSIONS } from './config/navigation.js';
 
@@ -60,8 +60,10 @@ function App() {
   // Configurações financeiras globais
   const [incomeCats, setIncomeCats] = useState(INCOME_CATS_INIT.map((n) => ({ id: n, name: n })));
   const [expenseCats, setExpenseCats] = useState(EXPENSE_CATS_INIT.map((n) => ({ id: n, name: n })));
-  const [bankAccounts, setBankAccounts] = useState(BANK_ACCOUNTS_INIT);
-  const [payMethods, setPayMethods] = useState(PAYMENT_METHODS_INIT);
+  // Vazias até o banco responder: as contas de exemplo traziam saldo de
+  // R$ 85.000 que aparecia em Contas e Saldos como se fosse real.
+  const [bankAccounts, setBankAccounts] = useState([]);
+  const [payMethods, setPayMethods] = useState([]);
 
   useEffect(() => {
     if (!api.token) return;
