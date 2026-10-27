@@ -253,6 +253,32 @@ const Icon = ({ name, className='w-5 h-5' }) => (
 
 // ─── BADGES ───────────────────────────────────────────────────────────────────
 
+
+// Classe contábil decide onde a categoria entra no DRE e no DFC. Sem isso tudo
+// cai em "Outras Despesas" e os dois relatórios viram uma linha só.
+const CLASSES_DESPESA = [
+  ['CSP',                    'Custo do Serviço (CSP)'],
+  ['DESPESA_PESSOAL',        'Pessoal e Folha'],
+  ['DESPESA_ADMINISTRATIVA', 'Administrativa'],
+  ['DESPESA_COMERCIAL',      'Comercial'],
+  ['DESPESA_FINANCEIRA',     'Financeira (juros, tarifas)'],
+  ['IMPOSTO_RECEITA',        'Impostos sobre Receita'],
+  ['IMPOSTO_RENDA',          'IRPJ / CSLL'],
+  ['DEPRECIACAO',            'Depreciação e Amortização'],
+  ['INVESTIMENTO',           'Investimento (imobilizado)'],
+  ['FINANCIAMENTO_SAIDA',    'Amortização de Empréstimo'],
+  ['PAGAMENTO_CARTAO',       'Pagamento de Fatura de Cartão'],
+  ['OUTRAS_DESPESAS',        'Outras Despesas'],
+];
+const CLASSES_RECEITA = [
+  ['RECEITA_SERVICO',        'Receita de Serviço'],
+  ['RECEITA_CONTRATO',       'Receita de Contrato'],
+  ['RECEITA_FINANCEIRA',     'Receita Financeira'],
+  ['RECEITA_INVESTIMENTO',   'Venda de Ativo'],
+  ['FINANCIAMENTO_ENTRADA',  'Empréstimo / Aporte'],
+  ['OUTRAS_RECEITAS',        'Outras Receitas'],
+];
+
 const STATUS_MAP = {
   OPEN:          ['bg-gray-100 text-gray-700',    'Aberta'],
   SCHEDULED:     ['bg-blue-100 text-blue-700',    'Agendada'],
@@ -6056,6 +6082,8 @@ const SettingsPage = ({ taxRegime, setTaxRegime, incomeCats=[], setIncomeCats, e
   // Financial tab state — moved here from IIFE (hooks cannot be inside callbacks)
   const [newCat,     setNewCat]     = useState('');
   const [newCatType, setNewCatType] = useState('income');
+  const [newCatClass, setNewCatClass] = useState('OUTRAS_DESPESAS');
+  const [newCatClassIn, setNewCatClassIn] = useState('RECEITA_SERVICO');
   const [newBank,    setNewBank]    = useState({ bank:'', agency:'', account:'', type:'Corrente' });
   const [newPay,     setNewPay]     = useState('');
   // Contas e Saldos tab state
@@ -6320,8 +6348,19 @@ const SettingsPage = ({ taxRegime, setTaxRegime, incomeCats=[], setIncomeCats, e
                   </div>
                   <div className="space-y-1 mb-3">
                     {incomeCats.map(c=>(
-                      <div key={c.id} className="flex items-center justify-between bg-green-50 rounded-lg px-3 py-1.5">
-                        <span className="text-sm text-green-800">{c.name}</span>
+                      <div key={c.id} className="flex items-center gap-2 bg-green-50 rounded-lg px-3 py-1.5">
+                        <span className="text-sm text-green-800 flex-1 truncate">{c.name}</span>
+                        <select value={c.accounting_class||'OUTRAS_RECEITAS'}
+                          onChange={async e=>{
+                            const cls = e.target.value;
+                            const r = await api.updateCategory('income', c.id, { accounting_class: cls });
+                            if (r.success) setIncomeCats(p=>p.map(x=>x.id===c.id?{...x,accounting_class:cls}:x));
+                            else setToast(r.error||'Erro ao mudar a classe');
+                          }}
+                          title="Onde esta categoria entra no DRE e no fluxo de caixa"
+                          className="text-xs bg-white border border-green-200 rounded px-1.5 py-0.5 text-green-700 max-w-[190px]">
+                          {CLASSES_RECEITA.map(([v,l])=><option key={v} value={v}>{l}</option>)}
+                        </select>
                         <button onClick={async ()=>{
                           const r = await api.deleteCategory('income', c.id);
                           if (r.success) setIncomeCats(p=>p.filter(x=>x.id!==c.id));
@@ -6330,15 +6369,21 @@ const SettingsPage = ({ taxRegime, setTaxRegime, incomeCats=[], setIncomeCats, e
                       </div>
                     ))}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="space-y-2">
                     <input value={newCatType==='income'?newCat:''} onChange={e=>{ setNewCat(e.target.value); setNewCatType('income'); }}
-                      placeholder="Nova categoria..." className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"/>
-                    <button onClick={async ()=>{
-                      if(!newCat.trim()||newCatType!=='income') return;
-                      const r = await api.createCategory('income', { name: newCat.trim() });
-                      if (r.success) { setIncomeCats(p=>[...p, r.data]); setNewCat(''); }
-                      else setToast(r.error||'Erro ao criar categoria');
-                    }} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">+ Add</button>
+                      placeholder="Nova categoria..." className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"/>
+                    <div className="flex gap-2">
+                      <select value={newCatClassIn} onChange={e=>setNewCatClassIn(e.target.value)}
+                        className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-green-500">
+                        {CLASSES_RECEITA.map(([v,l])=><option key={v} value={v}>{l}</option>)}
+                      </select>
+                      <button onClick={async ()=>{
+                        if(!newCat.trim()||newCatType!=='income') return;
+                        const r = await api.createCategory('income', { name: newCat.trim(), accounting_class: newCatClassIn });
+                        if (r.success) { setIncomeCats(p=>[...p, r.data?.data||r.data]); setNewCat(''); }
+                        else setToast(r.error||'Erro ao criar categoria');
+                      }} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 whitespace-nowrap">+ Add</button>
+                    </div>
                   </div>
                 </div>
                 {/* Despesa */}
@@ -6349,8 +6394,19 @@ const SettingsPage = ({ taxRegime, setTaxRegime, incomeCats=[], setIncomeCats, e
                   </div>
                   <div className="space-y-1 mb-3">
                     {expenseCats.map(c=>(
-                      <div key={c.id} className="flex items-center justify-between bg-red-50 rounded-lg px-3 py-1.5">
-                        <span className="text-sm text-red-800">{c.name}</span>
+                      <div key={c.id} className="flex items-center gap-2 bg-red-50 rounded-lg px-3 py-1.5">
+                        <span className="text-sm text-red-800 flex-1 truncate">{c.name}</span>
+                        <select value={c.accounting_class||'OUTRAS_DESPESAS'}
+                          onChange={async e=>{
+                            const cls = e.target.value;
+                            const r = await api.updateCategory('expense', c.id, { accounting_class: cls });
+                            if (r.success) setExpenseCats(p=>p.map(x=>x.id===c.id?{...x,accounting_class:cls}:x));
+                            else setToast(r.error||'Erro ao mudar a classe');
+                          }}
+                          title="Onde esta categoria entra no DRE e no fluxo de caixa"
+                          className="text-xs bg-white border border-red-200 rounded px-1.5 py-0.5 text-red-700 max-w-[190px]">
+                          {CLASSES_DESPESA.map(([v,l])=><option key={v} value={v}>{l}</option>)}
+                        </select>
                         <button onClick={async ()=>{
                           const r = await api.deleteCategory('expense', c.id);
                           if (r.success) setExpenseCats(p=>p.filter(x=>x.id!==c.id));
@@ -6359,15 +6415,21 @@ const SettingsPage = ({ taxRegime, setTaxRegime, incomeCats=[], setIncomeCats, e
                       </div>
                     ))}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="space-y-2">
                     <input value={newCatType==='expense'?newCat:''} onChange={e=>{ setNewCat(e.target.value); setNewCatType('expense'); }}
-                      placeholder="Nova categoria..." className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"/>
-                    <button onClick={async ()=>{
-                      if(!newCat.trim()||newCatType!=='expense') return;
-                      const r = await api.createCategory('expense', { name: newCat.trim() });
-                      if (r.success) { setExpenseCats(p=>[...p, r.data]); setNewCat(''); }
-                      else setToast(r.error||'Erro ao criar categoria');
-                    }} className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700">+ Add</button>
+                      placeholder="Nova categoria..." className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"/>
+                    <div className="flex gap-2">
+                      <select value={newCatClass} onChange={e=>setNewCatClass(e.target.value)}
+                        className="flex-1 border border-gray-300 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-red-500">
+                        {CLASSES_DESPESA.map(([v,l])=><option key={v} value={v}>{l}</option>)}
+                      </select>
+                      <button onClick={async ()=>{
+                        if(!newCat.trim()||newCatType!=='expense') return;
+                        const r = await api.createCategory('expense', { name: newCat.trim(), accounting_class: newCatClass });
+                        if (r.success) { setExpenseCats(p=>[...p, r.data?.data||r.data]); setNewCat(''); }
+                        else setToast(r.error||'Erro ao criar categoria');
+                      }} className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 whitespace-nowrap">+ Add</button>
+                    </div>
                   </div>
                 </div>
               </div>

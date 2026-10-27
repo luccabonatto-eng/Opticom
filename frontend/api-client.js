@@ -344,6 +344,10 @@ class OpticomAPI {
     return this._fetch(`/categories/${type}`, { method: 'POST', body: JSON.stringify(data) });
   }
 
+  async updateCategory(type, id, data) {
+    return this._fetch(`/categories/${type}/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  }
+
   async deleteCategory(type, id) {
     return this._fetch(`/categories/${type}/${id}`, { method: 'DELETE' });
   }
