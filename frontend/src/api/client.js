@@ -95,7 +95,7 @@ class OpticomAPI {
       }
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Erro na requisição');
+      if (!response.ok) return { success: false, status: response.status, error: data.error || 'Erro na requisição' };
 
       return { success: true, data };
     } catch (error) {
@@ -337,8 +337,8 @@ class OpticomAPI {
     return this._fetch(`/settings/${key}`);
   }
 
-  async setSetting(key, value) {
-    return this._fetch(`/settings/${key}`, { method: 'PUT', body: JSON.stringify({ value }) });
+  async setSetting(key, value, expectedValue) {
+    return this._fetch(`/settings/${key}`, { method: 'PUT', body: JSON.stringify({ value, ...(expectedValue !== undefined ? { expectedValue } : {}) }) });
   }
 
   // === Auditoria ===

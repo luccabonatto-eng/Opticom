@@ -75,3 +75,26 @@ produção. Otimizar consultas/caches é outra mudança, baseada no uso real.
 
 A economia de tokens vem de ler e editar módulos menores e usar este mapa. Não há
 estimativa percentual garantida, nem troca automática do modelo da conversa.
+
+## DRE geral e conciliação bancária
+
+No lançamento, escolha um cliente, **Geral da empresa (sem rateio)** ou **Não classificado**.
+O DRE Geral da Empresa separa esses grupos e inclui todos no resultado. O previsto
+usa vencimento; o efetivo usa total baixado e última data de baixa disponível.
+
+Conciliação Bancária compara extratos OFX/CSV com as baixas por conta e período.
+Importar não cria lançamento. Vínculos são confirmados explicitamente e podem ser
+desfeitos; vários movimentos podem completar uma baixa acumulada. O estado salvo
+é reavaliado se o lançamento mudar. Arquivos OFX usam FITID; reimportar o mesmo
+CSV não duplica, mas arquivos CSV diferentes com sobreposição exigem revisão.
+A conferência cobre movimentos, não o saldo bancário inicial/final. O cadastro
+atual não preserva datas individuais de cada baixa parcial; casos entre períodos
+precisam de revisão e não são conciliados automaticamente.
+
+Classificações (`financial_scopes`) e conferências (`bank_reconciliation_<conta>`)
+são persistidas no endpoint de settings existente. Este frontend precisa da versão
+atualizada do backend, que implementa gravação condicional `expectedValue` e responde
+409 em caso de alteração concorrente. Não há migração de schema nesta funcionalidade.
+
+Com preview na porta 4179, `npm run test:financial` valida classificação,
+importação, vínculo, persistência, reimportação e desfazer com API interceptada.

@@ -1,3 +1,5 @@
+import { useFinancialSetting } from './hooks/useFinancialSetting.js';
+import { ReconciliationTab } from './tabs/ReconciliationTab.jsx';
 import { ApprovalTab } from './tabs/ApprovalTab.jsx';
 import { EXPENSE_CATS_INITIAL_OBJS, INCOME_CATS_INITIAL_OBJS, PAYROLL_INIT } from '../../config/financial.js';
 import { Badge } from '../../components/Badge.jsx';
@@ -31,9 +33,13 @@ import {
   txStatus as calcStatus,
   txVencido as calcVencido,
 } from './calculations.js';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
+  const savingTx = useRef(false);
+  const [txBusy, setTxBusy] = useState(false);
+  const scopes = useFinancialSetting('financial_scopes', {});
+  const [financialLoaded, setFinancialLoaded] = useState(false);
   const [tab, setTab] = useState('receivable');
   const [statusR, setStatusR] = useState('all');
   const [statusP, setStatusP] = useState('all');
@@ -114,7 +120,7 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
       api.getAllTechnicians(),
       api.getAllCustomers(),
     ]);
-    if (txRes.success) setTx(txRes.data?.data || txRes.data || []);
+    if (txRes.success) { setTx(txRes.data?.data || txRes.data || []); setFinancialLoaded(true); }
     if (catRes.success) {
       if (catRes.data?.income) setIncomeCats(catRes.data.income);
       if (catRes.data?.expense) setExpenseCats(catRes.data.expense);
@@ -575,6 +581,9 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
     }
   };
   const addTx = async () => {
+    if (savingTx.current) return;
+    savingTx.current = true; setTxBusy(true);
+    try {
     if (!newTx.description) {
       setToast('Descrição é obrigatória');
       return;
@@ -592,6 +601,13 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
       setToast('Informe a data do pagamento');
       return;
     }
+    if (!scopes.ready) { setToast('Aguarde a classificação carregar ou recarregue a página.'); return; }
+    const persistScope = async (ids) => {
+      if (!scopes.ready) return true;
+      const next = { ...scopes.data };
+      ids.forEach(id => { if (!newTx.customer_id && newTx.allocation === 'general') next[id] = 'general'; else delete next[id]; });
+      return JSON.stringify(next) === JSON.stringify(scopes.data) || scopes.save(next);
+    };
     const payload = {
       type: newTx.type,
       description: newTx.description,
@@ -620,6 +636,11 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
         paid_date: '',
       });
     if (editTxId) {
+      const original = transactions.find(t => t.id === editTxId);
+      if (original && txPago(original) > 0) {
+        if (!newTx.paid_date) { setToast('Informe a data da baixa.'); return; }
+        payload.paid_date = newTx.paid_date;
+      }
       // O status não é editável à mão: ele vem da baixa. Marcar "Pago" aqui
       // deixava amount_paid em zero — selo verde com o valor todo em aberto.
       const result = await api.updateTransaction(editTxId, payload);
@@ -628,7 +649,8 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
         setNewTxModal(false);
         setEditTxId(null);
         resetForm();
-        setToast('Lançamento atualizado!');
+        const classified = await persistScope([editTxId]);
+        setToast(classified ? 'Lançamento atualizado!' : 'Lançamento salvo, mas a classificação não foi salva. Confira no DRE geral.');
       } else {
         setToast(`Erro ao atualizar lançamento: ${result.error}`);
       }
@@ -650,13 +672,14 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
       const criados = results.filter((r) => r.success).map((r) => r.data);
       const falhas = results.length - criados.length;
       if (criados.length) setTx((prev) => [...criados, ...prev]);
+      const classified = criados.length ? await persistScope(criados.map(t => t.id)) : true;
       if (falhas === results.length) {
         setToast(`Erro ao criar lançamento: ${results[0].error}`);
       } else {
         setNewTxModal(false);
         resetForm();
         setToast(
-          falhas === 0
+          !classified ? 'Lançamentos salvos, mas a classificação não foi salva. Confira no DRE geral.' : falhas === 0
             ? vezes > 1
               ? `${vezes} parcelas criadas!`
               : 'Lançamento criado!'
@@ -664,6 +687,7 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
         );
       }
     }
+    } finally { savingTx.current = false; setTxBusy(false); }
   };
   const openEditTx = (tx) => {
     setEditTxId(tx.id);
@@ -677,10 +701,12 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
       bank_account_id: tx.bank_account_id || '',
       payment_method_id: tx.payment_method_id || '',
       customer_id: tx.customer_id || '',
+      allocation: !tx.customer_id && scopes.data[tx.id] === 'general' ? 'general' : '',
       invoice_number: tx.invoice_number || '',
       repetir: 1,
       jaPago: false,
       paid_date: tx.paid_date || '',
+      hasPayment: txPago(tx) > 0,
     });
     setNewTxModal(true);
   };
@@ -896,6 +922,7 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
     { id: 'payroll', label: 'Folha Salarial', icon: '$', color: 'text-cyan-600', bg: 'bg-cyan-50' },
     { id: 'card', label: 'Cartão de Crédito', icon: '▭', color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
     { id: 'expcard', label: 'Cartão de Despesa', icon: '▬', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+    { id: 'reconciliation', label: 'Conciliação Bancária', icon: '✓', color: 'text-teal-600', bg: 'bg-teal-50' },
     { id: 'statement', label: 'Extrato Bancário', icon: '⇅', color: 'text-teal-600', bg: 'bg-teal-50' },
   ];
   const allowedFinSet = finPerms ? new Set(finPerms) : null;
@@ -1032,7 +1059,7 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
         )}
 
         {tab === 'dre' && (
-          <DreTab
+          <DreTab financialLoaded={financialLoaded} scopes={scopes} openEditTx={openEditTx}
             InfoBtn={InfoBtn}
             customers={customers}
             dreBase={dreBase}
@@ -1124,6 +1151,13 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
           />
         )}
 
+        {tab === 'reconciliation' && (
+          <ReconciliationTab transactions={transactions} financialLoaded={financialLoaded} bankAccounts={bankAccounts} openEditTx={openEditTx} onCreate={(line, bankId) => {
+            setEditTxId(null);
+            setNewTx({ type: line.type === 'CREDIT' ? 'INCOME' : 'EXPENSE', description: line.description, amount: (line.amount / 100).toFixed(2), due_date: line.date, paid_date: line.date, jaPago: true, repetir: 1, customer_id: '', allocation: '', category_id: '', payment_method_id: '', bank_account_id: bankId, invoice_number: '' });
+            setNewTxModal(true);
+          }} />
+        )}
         {tab === 'statement' && (
           <StatementTab
             bankAccounts={bankAccounts}
@@ -1165,7 +1199,7 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
           setImportText={setImportText}
         />
         {/* New Transaction Modal */}
-        <TransactionModal
+        <TransactionModal txBusy={txBusy}
           addTx={addTx}
           bankAccounts={bankAccounts}
           customers={customers}

@@ -1,3 +1,4 @@
+import { DreCompany } from '../dre/DreCompany.jsx';
 import { BotaoExportar } from '../../../components/BotaoExportar.jsx';
 import { DEFAULT_ACCOUNTING_CLASSES } from '../../../config/financial.js';
 import { DreConsolidated } from '../dre/DreConsolidated.jsx';
@@ -7,6 +8,7 @@ import { fmt } from '../../../utils/format.js';
 import { txPago } from '../calculations.js';
 
 const DreTab = ({
+  scopes, openEditTx, financialLoaded,
   InfoBtn,
   customers,
   dreBase,
@@ -56,7 +58,7 @@ const DreTab = ({
     };
     const getCatName = (t) => catMap[t.category_id]?.name || t.cat || t.category || 'Sem Categoria';
     const getCustName = (custId) => {
-      if (!custId || custId === '__sem_cliente__') return 'Custos Gerais / Não Alocados';
+      if (!custId || custId === '__sem_cliente__') return 'Sem cliente — gerais e não classificados';
       const c = customers.find((x) => String(x.id) === String(custId));
       return c?.name || `Cliente #${String(custId).slice(0, 8)}`;
     };
@@ -69,9 +71,9 @@ const DreTab = ({
       if (scope === 'all') return base;
       if (scope === 'year') {
         const yr = (period || '').slice(0, 4);
-        return base.filter((t) => (t.due_date || t.due || '').startsWith(yr));
+        return base.filter((t) => (dreBase === 'efetivo' ? t.paid_date || '' : t.due_date || t.due || '').startsWith(yr));
       }
-      return base.filter((t) => (t.due_date || t.due || '').startsWith(period));
+      return base.filter((t) => (dreBase === 'efetivo' ? t.paid_date || '' : t.due_date || t.due || '').startsWith(period));
     };
 
     // Month-based filtering for consolidated CPC 26 DRE
@@ -178,7 +180,8 @@ const DreTab = ({
     // ════════════════════════════════════════════════════════════════════════
     // CÁLCULOS DA DRE POR CLIENTE
     // ════════════════════════════════════════════════════════════════════════
-    const customerScopedTxs = getScopedTxs(curM, dreTimeScope);
+    const originalScopedTxs = getScopedTxs(curM, dreTimeScope);
+    const customerScopedTxs = originalScopedTxs.map(t => ({ ...t, amount: dreBase === 'efetivo' ? txPago(t) : t.amount }));
     const scopeLabel =
       dreTimeScope === 'month'
         ? monthLabel(curM)
@@ -291,7 +294,7 @@ const DreTab = ({
 
     const unassignedItem = {
       id: '__sem_cliente__',
-      name: 'Custos Gerais da Sede (Estrutural / Sem Cliente)',
+      name: 'Sem cliente — gerais e não classificados',
       type: 'ESTRUTURAL',
       transactions: unassignedTxs,
       incomeCount: unassignedInc.length,
@@ -562,6 +565,7 @@ const DreTab = ({
               </button>
             </div>
 
+            <button onClick={() => setDreViewMode('company')} className={`px-3 py-2 rounded-lg text-xs font-semibold ${dreViewMode === 'company' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}>DRE Geral da Empresa</button>
             {/* Base: valor das contas x valor efetivamente baixado */}
             <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
               {[
@@ -594,20 +598,24 @@ const DreTab = ({
                 ))}
               </select>
             </div>
-            <BotaoExportar
+            {dreViewMode !== 'company' && <BotaoExportar
               onClick={exportarDRE}
               title={
                 dreViewMode === 'consolidated'
                   ? 'Baixa a DRE consolidada do mês, com comparativo e AV%, em CSV (abre no Excel)'
                   : 'Baixa uma linha por cliente, com receita, custo e margem, em CSV (abre no Excel)'
               }
-            />
+            />}
           </div>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════ */}
         {/* VISÃO 1: DRE POR CLIENTE                                   */}
         {/* ═══════════════════════════════════════════════════════════ */}
+        {dreViewMode === 'company' && <>
+          <select aria-label="Período do DRE geral" value={dreTimeScope} onChange={e => setDreTimeScope(e.target.value)} className="border rounded-lg p-2 text-sm"><option value="month">Mês selecionado</option><option value="year">Ano selecionado</option><option value="all">Todo o histórico</option></select>
+          <DreCompany financialLoaded={financialLoaded} transactions={originalScopedTxs} categories={[...incomeCats, ...expenseCats]} scopes={scopes} base={dreBase} openEditTx={openEditTx} customers={customers} />
+        </>}
         {dreViewMode === 'by_customer' && (
           <DreCustomers
             activeCustomers={activeCustomers}

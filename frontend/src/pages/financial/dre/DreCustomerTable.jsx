@@ -393,9 +393,9 @@ const DreCustomerTable = ({
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-slate-500 shrink-0" />
                   <div>
-                    <p className="font-bold text-slate-800">🏛️ Custos Gerais da Sede (Sem Cliente Vinculado)</p>
+                    <p className="font-bold text-slate-800">Sem cliente — gerais e não classificados</p>
                     <p className="text-[10px] text-slate-500">
-                      Aluguel central, folha administrativa, barracão e infraestrutura não alocada
+                      Confira a separação e classifique pendências no DRE Geral da Empresa
                     </p>
                   </div>
                 </div>
@@ -422,7 +422,7 @@ const DreCustomerTable = ({
                 {unassignedItem.opExpenses > 0 ? `(${fmt(unassignedItem.opExpenses)})` : '—'}
               </td>
               <td className="px-4 py-3 text-right font-bold text-rose-700">{fv(unassignedItem.netProfit)}</td>
-              <td className="px-3 py-3 text-center text-slate-400 text-[10px]">Estrutural</td>
+              <td className="px-3 py-3 text-center text-slate-400 text-[10px]">Sem cliente</td>
               <td className="px-3 py-3 text-center">
                 <button
                   onClick={() => {

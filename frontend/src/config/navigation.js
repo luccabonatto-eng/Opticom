@@ -19,6 +19,7 @@ const FINANCIAL_SUBMENU_IDS = [
   'payroll',
   'approval',
   'statement',
+  'reconciliation',
   'card',
   'expcard',
 ];

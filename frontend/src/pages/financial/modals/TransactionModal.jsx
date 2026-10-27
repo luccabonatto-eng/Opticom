@@ -4,6 +4,7 @@ import { fmt, fmtDate } from '../../../utils/format.js';
 
 const TransactionModal = ({
   addTx,
+  txBusy,
   bankAccounts,
   customers,
   editTxId,
@@ -80,11 +81,13 @@ const TransactionModal = ({
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
         <select
-          value={newTx.customer_id}
-          onChange={(e) => setNewTx((p) => ({ ...p, customer_id: e.target.value }))}
+          aria-label="Destino do lançamento"
+          value={newTx.customer_id || (newTx.allocation === 'general' ? '__general__' : '')}
+          onChange={(e) => setNewTx((p) => ({ ...p, customer_id: e.target.value === '__general__' ? '' : e.target.value, allocation: e.target.value === '__general__' ? 'general' : '' }))}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="">Sem cliente vinculado</option>
+          <option value="">Não classificado</option>
+          <option value="__general__">Geral da empresa (sem rateio)</option>
           {customers.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
@@ -92,7 +95,7 @@ const TransactionModal = ({
           ))}
         </select>
         <p className="text-xs text-gray-400 mt-1">
-          Vincule a um cliente para acompanhar quanto está sendo gasto para atendê-lo.
+          Escolha o cliente para receitas e despesas específicas, ou Geral da empresa para gastos compartilhados, como assistente financeira e aluguel.
         </p>
       </div>
       {newTx.type === 'INCOME' && (
@@ -139,6 +142,11 @@ const TransactionModal = ({
           </select>
         </div>
       </div>
+      {editTxId && newTx.hasPayment && (
+        <label className="block text-sm font-medium text-gray-700">Data da baixa
+          <input aria-label="Data da baixa" type="date" value={newTx.paid_date || ''} onChange={e => setNewTx(p => ({ ...p, paid_date: e.target.value }))} className="block w-full border rounded-lg p-2 mt-1" />
+        </label>
+      )}
       {!editTxId && (
         <div className="border-t border-gray-100 pt-3 space-y-3">
           <div>
@@ -204,6 +212,7 @@ const TransactionModal = ({
           Cancelar
         </button>
         <button
+          disabled={txBusy}
           onClick={addTx}
           className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
         >

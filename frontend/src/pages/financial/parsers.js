@@ -11,7 +11,7 @@ const parseMoney = (s) => {
   return Math.round(reais * 100); // retorna centavos
 };
 
-const parseOFX = (text) => {
+const parseOFX = (text, { strict = false } = {}) => {
   const lines = [];
   // Suporta SGML (sem fechamento) e XML (com fechamento de tag)
   const re = /<STMTTRN[^>]*>([\s\S]*?)<\/STMTTRN>|<STMTTRN>([\s\S]*?)(?=<STMTTRN>|<\/BANKTRANLIST>)/gi;
@@ -25,10 +25,11 @@ const parseOFX = (text) => {
     };
     const dtRaw = g('DTPOSTED');
     const date = dtRaw.length >= 8 ? `${dtRaw.slice(0, 4)}-${dtRaw.slice(4, 6)}-${dtRaw.slice(6, 8)}` : '';
-    const raw = parseMoney(g('TRNAMT'));
-    if (raw === 0 && !g('FITID')) continue;
+    const raw = Math.round(Number(g('TRNAMT')) * 100);
+    if (!strict && raw === 0 && !g('FITID')) continue;
     lines.push({
       id: g('FITID') || String(lines.length),
+      ...(strict ? { bankId: g('FITID') || null } : {}),
       date,
       description: g('MEMO') || g('NAME') || '—',
       amount: Math.abs(raw),
@@ -38,15 +39,15 @@ const parseOFX = (text) => {
   return lines;
 };
 
-const parseCSV = (text) => {
+const parseCSV = (text, { strict = false } = {}) => {
   // Detecta separador: ; ou tab (evita confundir , de milhar/decimal)
-  const sep = text.includes(';') ? ';' : text.includes('\t') ? '\t' : ',';
+  const sep = detectSep(text);
   const rows = text
     .trim()
     .split(/\r?\n/)
-    .map((r) => r.split(sep));
+    .map((r) => splitCSV(r, sep));
   if (rows.length === 0) return [];
-  const hdr = rows[0].map((h) => h.trim().toLowerCase().replace(/['"]/g, ''));
+  const hdr = rows[0].map((h) => semAcento(h).replace(/['"]/g, ''));
   const dI = hdr.findIndex((h) => h.includes('data') || h.includes('date'));
   const nI = hdr.findIndex(
     (h) => h.includes('descri') || h.includes('histor') || h.includes('memo') || h.includes('name'),
@@ -58,10 +59,16 @@ const parseCSV = (text) => {
   );
   const data = dI >= 0 || nI >= 0 ? rows.slice(1) : rows;
   return data
-    .filter((r) => r.length > 1)
+    .filter((r) => strict ? r.some(c => c.trim()) : r.length > 1)
     .map((r, i) => {
       const clean = (s) => (s || '').trim().replace(/^["']|["']$/g, '');
-      const rawAmt = parseMoney(clean(r[aI >= 0 ? aI : 2]));
+      const amountText = clean(r[aI >= 0 ? aI : 2]);
+      if (strict) {
+        const token = amountText.replace(/^R\$\s*/, '').replace(/\s/g, '');
+        const monetary = /^[+-]?(?:\d+(?:[.,]\d{1,2})?|\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?)$/;
+        if (r.length < 3 || !monetary.test(token)) throw new Error(`Valor ou linha inválida no CSV (linha ${i + 2}).`);
+      }
+      const rawAmt = parseMoney(amountText);
       let date = clean(r[dI >= 0 ? dI : 0]);
       const dm = date.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
       if (dm) {
@@ -70,18 +77,18 @@ const parseCSV = (text) => {
       }
       let type = rawAmt < 0 ? 'DEBIT' : 'CREDIT';
       if (tI >= 0) {
-        const t = clean(r[tI]).toUpperCase();
+        const t = semAcento(clean(r[tI])).toUpperCase();
         if (t.includes('DEB') || t === 'D') type = 'DEBIT';
         else if (t.includes('CRE') || t === 'C') type = 'CREDIT';
       }
       return { id: String(i), date, description: clean(r[nI >= 0 ? nI : 1]) || '—', amount: Math.abs(rawAmt), type };
     })
-    .filter((l) => l.amount > 0);
+    .filter((l) => strict || l.amount > 0);
 };
 
-const parseStatement = (text, filename) => {
-  if (filename.toLowerCase().endsWith('.ofx') || text.includes('<STMTTRN>')) return parseOFX(text);
-  return parseCSV(text);
+const parseStatement = (text, filename, options) => {
+  if (filename.toLowerCase().endsWith('.ofx') || text.includes('<STMTTRN>')) return parseOFX(text, options);
+  return parseCSV(text, options);
 };
 
 const splitCSV = (linha, sep) => {

@@ -53,6 +53,9 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+// Extratos persistidos podem conter centenas de movimentos; mantenha o limite
+// maior restrito a configurações, preservando o padrão das demais rotas.
+app.use('/api/settings', express.json({ limit: '2mb' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser()); // Parse cookies (para HttpOnly tokens)

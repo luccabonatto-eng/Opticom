@@ -1,0 +1,4 @@
+# DRE e conciliação — estrutura aprovada
+DRE por cliente considera receitas e despesas diretamente vinculadas. DRE geral soma todos os clientes, receitas/despesas gerais e pendências de classificação, sem rateio nem duplicação. Lançamentos sem cliente não são automaticamente gastos gerais: a classificação é explícita.
+Conciliação em aba própria, por banco e período, importa OFX/CSV, sugere correspondências com valores efetivamente baixados, confirma/desfaz vínculos e permite abrir lançamento faltante. Exibe movimentos sem vínculo, baixas sem extrato e diferenças; saldo líquido igual não basta para declarar conciliação.
+Persistir classificações e extratos/conferências no armazenamento existente de configurações, com gravação condicional para evitar sobrescrever trabalho concorrente. Nenhuma alteração em dados financeiros na confirmação de vínculo. Sem deploy nesta etapa.

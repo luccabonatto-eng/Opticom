@@ -333,6 +333,7 @@ const UsersTab = ({
               { id: 'payroll', label: 'Folha Salarial' },
               { id: 'approval', label: 'Aprovações do Dia' },
               { id: 'statement', label: 'Extrato Bancário' },
+              { id: 'reconciliation', label: 'Conciliação Bancária' },
             ].map((s) => {
               const managerHas = (permissions.MANAGER_fin || []).includes(s.id);
               const techHas = (permissions.TECHNICIAN_fin || []).includes(s.id);
