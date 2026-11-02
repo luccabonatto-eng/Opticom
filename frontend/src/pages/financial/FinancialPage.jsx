@@ -1054,12 +1054,13 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
             projectedFlow={projectedFlow}
             setDateFromCF={setDateFromCF}
             setDateToCF={setDateToCF}
+            setToast={setToast}
             transactions={transactions}
           />
         )}
 
         {tab === 'dre' && (
-          <DreTab financialLoaded={financialLoaded} scopes={scopes} openEditTx={openEditTx}
+          <DreTab financialLoaded={financialLoaded} scopes={scopes} openEditTx={openEditTx} setToast={setToast}
             InfoBtn={InfoBtn}
             customers={customers}
             dreBase={dreBase}

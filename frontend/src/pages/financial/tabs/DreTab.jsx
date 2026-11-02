@@ -5,7 +5,7 @@ import { DEFAULT_ACCOUNTING_CLASSES } from '../../../config/financial.js';
 import { DreConsolidated } from '../dre/DreConsolidated.jsx';
 import { DreCustomers } from '../dre/DreCustomers.jsx';
 import { baixarCSV, csvNum, csvPct } from '../../../utils/csv.js';
-import { enviarWhats } from '../../../utils/whatsapp.js';
+import { copiarWhats } from '../../../utils/whatsapp.js';
 import { fmt } from '../../../utils/format.js';
 import { txPago } from '../calculations.js';
 
@@ -35,6 +35,7 @@ const DreTab = ({
   setDrePeriod,
   setDreTimeScope,
   setDreViewMode,
+  setToast,
   transactions,
   txCatName,
 }) =>
@@ -443,11 +444,13 @@ const DreTab = ({
     // demonstrativo; a por cliente sai como uma linha por cliente.
     const baseLabel =
       dreBase === 'efetivo' ? 'Efetivo (caixa — só o que foi baixado)' : 'Previsto (competência — valor das contas)';
-    const enviarDREWhats = () => {
+    const copiarDREWhats = async () => {
       const pct = (v) => (recBruta > 0 ? ` (${csvPct((v / recBruta) * 100)}%)` : '');
+      const avisar = (ok) =>
+        setToast(ok ? 'Relatório copiado — cole no WhatsApp.' : 'Não foi possível copiar. Use o Exportar CSV.');
       if (dreViewMode === 'company') {
         const r = companyResult(originalScopedTxs, scopes.data, [...incomeCats, ...expenseCats], dreBase);
-        enviarWhats(`Resultado da empresa · ${scopeLabel}`, [
+        const ok = await copiarWhats(`Resultado da empresa · ${scopeLabel}`, [
           `_${baseLabel}_`,
           '',
           `Clientes: ${fmt(r.clients.result)}`,
@@ -459,8 +462,9 @@ const DreTab = ({
             ? `_${r.unassigned.transactions.length} lançamento(s) ainda sem classificação_`
             : null,
         ]);
+        avisar(ok);
       } else if (dreViewMode === 'consolidated') {
-        enviarWhats(`DRE · ${curLabel}`, [
+        const ok = await copiarWhats(`DRE · ${curLabel}`, [
           `_${baseLabel}_`,
           dreCustomerFilter !== 'all' ? `Cliente: ${getCustName(dreCustomerFilter)}` : null,
           '',
@@ -476,10 +480,11 @@ const DreTab = ({
           '',
           `*Resultado líquido: ${fmt(ll)}${pct(ll)}*`,
         ]);
+        avisar(ok);
       } else {
-        // Os maiores primeiro: a mensagem não cabe na URL com a lista inteira.
+        // Os maiores primeiro: lista inteira não se lê na tela do celular.
         const topo = [...activeCustomers].sort((a, b) => b.netProfit - a.netProfit).slice(0, 10);
-        enviarWhats(`DRE por cliente · ${scopeLabel}`, [
+        const ok = await copiarWhats(`DRE por cliente · ${scopeLabel}`, [
           '_Previsto (competência — valor das contas)_',
           '',
           ...topo.map((c) => `${c.name}: ${fmt(c.netProfit)} (margem ${csvPct(c.netMargin)}%)`),
@@ -487,6 +492,7 @@ const DreTab = ({
           '',
           `*Resultado somado: ${fmt(activeCustomers.reduce((t, c) => t + c.netProfit, 0))}*`,
         ]);
+        avisar(ok);
       }
     };
 
@@ -681,9 +687,9 @@ const DreTab = ({
               }
             />}
             {(dreViewMode !== 'company' || scopes.ready) && <BotaoExportar
-              onClick={enviarDREWhats}
-              label="↗ Enviar no WhatsApp"
-              title="Abre o WhatsApp com o resumo do DRE já escrito, pronto para enviar"
+              onClick={copiarDREWhats}
+              label="⧉ Copiar para WhatsApp"
+              title="Copia o resumo do DRE como texto, pronto para colar no WhatsApp"
             />}
           </div>
         </div>

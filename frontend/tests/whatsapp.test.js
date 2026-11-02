@@ -2,7 +2,7 @@
 // testa é o texto que sai e o que fica de fora.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { textoWhats } from '../src/utils/whatsapp.js';
+import { copiarWhats, textoWhats } from '../src/utils/whatsapp.js';
 import { fmt } from '../src/utils/format.js';
 
 test('título vem em negrito do WhatsApp e cada linha em uma linha', () => {
@@ -24,14 +24,22 @@ test('saída de caixa aparece com sinal negativo, não como entrada', () => {
   assert.ok(!fmt(500000).startsWith('-'));
 });
 
-test('a mensagem inteira cabe na URL do wa.me', () => {
-  const linhas = Array.from({ length: 16 }, (_, i) => `Conta muito longa número ${i}: ${fmt(123456789)}`);
-  const url = `https://wa.me/?text=${encodeURIComponent(textoWhats('DRE · Outubro 2026', linhas))}`;
-  assert.ok(url.length < 2000, `URL com ${url.length} caracteres`);
+const comClipboard = (writeText) =>
+  Object.defineProperty(globalThis, 'navigator', { value: { clipboard: { writeText } }, configurable: true });
+
+test('copia o relatório montado para a área de transferência', async () => {
+  let copiado = null;
+  comClipboard(async (t) => {
+    copiado = t;
+  });
+  assert.equal(await copiarWhats('DRE · Outubro 2026', ['Receita bruta: R$ 1,00']), true);
+  assert.equal(copiado, '*DRE · Outubro 2026*\nReceita bruta: R$ 1,00');
 });
 
-test('acento e quebra de linha sobrevivem à codificação da URL', () => {
-  const texto = textoWhats('Resultado da empresa', ['Não classificados: R$ 1,00']);
-  assert.equal(decodeURIComponent(encodeURIComponent(texto)), texto);
-  assert.ok(encodeURIComponent(texto).includes('%0A'), 'a quebra de linha tem de ir codificada');
+// Sem isso a pessoa colaria o conteúdo anterior achando que era o relatório.
+test('navegador que recusa a cópia devolve falso em vez de fingir que copiou', async () => {
+  comClipboard(async () => {
+    throw new Error('NotAllowedError');
+  });
+  assert.equal(await copiarWhats('DRE', ['x']), false);
 });

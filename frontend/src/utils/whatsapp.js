@@ -2,12 +2,16 @@
 // linha é "rótulo: valor". *Asterisco* é o negrito do WhatsApp.
 const textoWhats = (titulo, linhas) => [`*${titulo}*`, ...linhas].filter((l) => l != null).join('\n');
 
-// Abre o WhatsApp com a mensagem pronta; quem envia escolhe o contato.
-// shortcut: wa.me carrega o texto na URL, então relatório muito longo não cabe
-// — por isso as listas são as maiores linhas, não todas. Virar imagem ou PDF
-// se pedirem o relatório inteiro.
-const enviarWhats = (titulo, linhas) => {
-  window.open(`https://wa.me/?text=${encodeURIComponent(textoWhats(titulo, linhas))}`, '_blank', 'noopener');
+// Copia para a área de transferência; quem envia cola na conversa. Devolve se
+// deu certo para quem chamou avisar — navegador antigo ou sem permissão não
+// copia, e um erro silencioso aqui faria a pessoa colar o conteúdo anterior.
+const copiarWhats = async (titulo, linhas) => {
+  try {
+    await navigator.clipboard.writeText(textoWhats(titulo, linhas));
+    return true;
+  } catch {
+    return false;
+  }
 };
 
-export { textoWhats, enviarWhats };
+export { textoWhats, copiarWhats };

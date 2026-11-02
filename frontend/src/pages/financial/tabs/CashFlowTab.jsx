@@ -1,6 +1,6 @@
 import { BotaoExportar } from '../../../components/BotaoExportar.jsx';
 import { baixarCSV, csvNum } from '../../../utils/csv.js';
-import { enviarWhats } from '../../../utils/whatsapp.js';
+import { copiarWhats } from '../../../utils/whatsapp.js';
 import { fmt, fmtDate } from '../../../utils/format.js';
 import { txPago } from '../calculations.js';
 
@@ -17,6 +17,7 @@ const CashFlowTab = ({
   projectedFlow,
   setDateFromCF,
   setDateToCF,
+  setToast,
   transactions,
 }) =>
   (() => {
@@ -145,11 +146,11 @@ const CashFlowTab = ({
       ]);
     };
 
-    const enviarDFCWhats = () => {
+    const copiarDFCWhats = async () => {
       // Só o efetivo, que é o que a pessoa do outro lado quer saber; linha
       // zerada fica fora, como na tabela.
       const L = (rot, k, neg = false) => (EF[k] ? `${rot}: ${fmt(neg ? -EF[k] : EF[k])}` : null);
-      enviarWhats(`Fluxo de Caixa · ${fmtDate(from)} a ${fmtDate(to)}`, [
+      const ok = await copiarWhats(`Fluxo de Caixa · ${fmtDate(from)} a ${fmtDate(to)}`, [
         '_Valores efetivos — o que já foi pago e recebido_',
         '',
         L('Recebimentos de clientes', 'recClientes'),
@@ -169,6 +170,7 @@ const CashFlowTab = ({
         '',
         `_Previsto no período: ${fmt(PV.varLiq)} · gerado em ${new Date().toLocaleString('pt-BR')}_`,
       ]);
+      setToast(ok ? 'Relatório copiado — cole no WhatsApp.' : 'Não foi possível copiar. Use o Exportar CSV.');
     };
 
     const SH = ({ l }) => (
@@ -219,9 +221,9 @@ const CashFlowTab = ({
             title="Baixa o DFC e o detalhe diário do período em CSV (abre no Excel)"
           />
           <BotaoExportar
-            onClick={enviarDFCWhats}
-            label="↗ Enviar no WhatsApp"
-            title="Abre o WhatsApp com o resumo do período já escrito, pronto para enviar"
+            onClick={copiarDFCWhats}
+            label="⧉ Copiar para WhatsApp"
+            title="Copia o resumo do período como texto, pronto para colar no WhatsApp"
           />
         </div>
 
