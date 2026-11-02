@@ -630,16 +630,16 @@ const DreTab = ({
             {/* Seletor de Modo: Por Cliente vs Consolidada */}
             <div className="flex bg-gray-100 p-1 rounded-xl">
               <button
-                onClick={() => setDreViewMode('by_customer')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${dreViewMode === 'by_customer' ? 'bg-white text-purple-700 shadow-sm font-bold' : 'text-gray-600 hover:text-gray-900'}`}
-              >
-                <span>👥</span> DRE por Cliente
-              </button>
-              <button
                 onClick={() => setDreViewMode('consolidated')}
                 className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${dreViewMode === 'consolidated' ? 'bg-white text-blue-700 shadow-sm font-bold' : 'text-gray-600 hover:text-gray-900'}`}
               >
                 <span>📊</span> DRE Consolidada (CPC 26)
+              </button>
+              <button
+                onClick={() => setDreViewMode('by_customer')}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${dreViewMode === 'by_customer' ? 'bg-white text-purple-700 shadow-sm font-bold' : 'text-gray-600 hover:text-gray-900'}`}
+              >
+                <span>👥</span> DRE por Cliente
               </button>
             </div>
 
