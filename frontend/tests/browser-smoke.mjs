@@ -133,7 +133,9 @@ try {
     await check(name);
     if (name === 'Fluxo de Caixa') await exportCsv('DFC', 'Fluxos de Caixa', '1123,45');
     if (name === 'DRE Gerencial') {
-      const customerEntries = page.locator('section').filter({ has: page.getByLabel('Cliente para consultar lançamentos') });
+      const customerEntries = page.locator('details').filter({ has: page.getByLabel('Cliente para consultar lançamentos') });
+      // o painel nasce fechado para não poluir o topo do DRE
+      await customerEntries.locator('summary').click();
       await page.getByLabel('Cliente para consultar lançamentos').selectOption('customer-1');
       await customerEntries.getByRole('heading', { name: 'Receitas (1)', exact: true }).waitFor();
       await customerEntries.getByRole('heading', { name: 'Contas a pagar (1)', exact: true }).waitFor();

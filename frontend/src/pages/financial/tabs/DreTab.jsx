@@ -353,7 +353,6 @@ const DreTab = ({
     const topRevenueCust = activeCustomers.slice().sort((a, b) => b.grossRevenue - a.grossRevenue)[0] || null;
     const lossCustomers = activeCustomers.filter((c) => c.netProfit < 0);
     const lossTotal = lossCustomers.reduce((s, c) => s + Math.abs(c.netProfit), 0);
-    const maxProfitVal = topProfitCust && topProfitCust.netProfit > 0 ? topProfitCust.netProfit : 1;
 
     // Row components para a DRE consolidada
     const HR = ({ l }) => (
@@ -614,36 +613,24 @@ const DreTab = ({
       <div className="space-y-4">
         {/* Barra Superior de Navegação do DRE */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-gray-800">DRE — Demonstração do Resultado</h2>
-              <span className="text-xs bg-purple-100 text-purple-700 font-semibold px-2.5 py-0.5 rounded-full">
-                Controladoria & Custos por Obra
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Analise a saúde financeira global da Opticom e a lucratividade gerada por cada cliente e contrato
-            </p>
-          </div>
+          <h2 className="text-base font-bold text-gray-800">DRE — Demonstração do Resultado</h2>
 
           <div className="flex items-center gap-2.5 flex-wrap">
-            {/* Seletor de Modo: Por Cliente vs Consolidada */}
             <div className="flex bg-gray-100 p-1 rounded-xl">
-              <button
-                onClick={() => setDreViewMode('consolidated')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${dreViewMode === 'consolidated' ? 'bg-white text-blue-700 shadow-sm font-bold' : 'text-gray-600 hover:text-gray-900'}`}
-              >
-                <span>📊</span> DRE Consolidada (CPC 26)
-              </button>
-              <button
-                onClick={() => setDreViewMode('by_customer')}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${dreViewMode === 'by_customer' ? 'bg-white text-purple-700 shadow-sm font-bold' : 'text-gray-600 hover:text-gray-900'}`}
-              >
-                <span>👥</span> DRE por Cliente
-              </button>
+              {[
+                ['company', 'Geral da Empresa'],
+                ['consolidated', 'Consolidada'],
+                ['by_customer', 'Por Cliente'],
+              ].map(([v, l]) => (
+                <button
+                  key={v}
+                  onClick={() => setDreViewMode(v)}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${dreViewMode === v ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+                >
+                  {l}
+                </button>
+              ))}
             </div>
-
-            <button onClick={() => setDreViewMode('company')} className={`px-3 py-2 rounded-lg text-xs font-semibold ${dreViewMode === 'company' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}>DRE Geral da Empresa</button>
             {/* Base: valor das contas x valor efetivamente baixado */}
             <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
               {[
@@ -676,6 +663,18 @@ const DreTab = ({
                 ))}
               </select>
             </div>
+            {dreViewMode !== 'consolidated' && (
+              <select
+                aria-label="Período do DRE"
+                value={dreTimeScope}
+                onChange={(e) => setDreTimeScope(e.target.value)}
+                className="text-xs font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg px-2.5 py-2 focus:outline-none cursor-pointer"
+              >
+                <option value="month">Mês selecionado</option>
+                <option value="year">Ano selecionado</option>
+                <option value="all">Todo o histórico</option>
+              </select>
+            )}
             {(dreViewMode !== 'company' || scopes.ready) && <BotaoExportar
               onClick={exportarDRE}
               title={
@@ -694,17 +693,10 @@ const DreTab = ({
           </div>
         </div>
 
-        {/* ═══════════════════════════════════════════════════════════ */}
-        {/* VISÃO 1: DRE POR CLIENTE                                   */}
-        {/* ═══════════════════════════════════════════════════════════ */}
-        {dreViewMode === 'company' && <>
-          <select aria-label="Período do DRE geral" value={dreTimeScope} onChange={e => setDreTimeScope(e.target.value)} className="border rounded-lg p-2 text-sm"><option value="month">Mês selecionado</option><option value="year">Ano selecionado</option><option value="all">Todo o histórico</option></select>
-          <DreCompany financialLoaded={financialLoaded} transactions={originalScopedTxs} categories={[...incomeCats, ...expenseCats]} scopes={scopes} base={dreBase} openEditTx={openEditTx} customers={customers} />
-        </>}
+        {dreViewMode === 'company' && <DreCompany financialLoaded={financialLoaded} transactions={originalScopedTxs} categories={[...incomeCats, ...expenseCats]} scopes={scopes} base={dreBase} openEditTx={openEditTx} customers={customers} />}
         {dreViewMode === 'by_customer' && (
           <DreCustomers
             activeCustomers={activeCustomers}
-            curM={curM}
             customerMetricsList={customerMetricsList}
             customerScopedTxs={customerScopedTxs}
             displayedCustList={displayedCustList}
@@ -712,11 +704,9 @@ const DreTab = ({
             dreCustSort={dreCustSort}
             dreCustStatusFilter={dreCustStatusFilter}
             dreExpandedCust={dreExpandedCust}
-            dreTimeScope={dreTimeScope}
             fv={fv}
             lossCustomers={lossCustomers}
             lossTotal={lossTotal}
-            maxProfitVal={maxProfitVal}
             overallNetMargin={overallNetMargin}
             scopeLabel={scopeLabel}
             setDreCustSearch={setDreCustSearch}
@@ -724,7 +714,6 @@ const DreTab = ({
             setDreCustStatusFilter={setDreCustStatusFilter}
             setDreCustomerFilter={setDreCustomerFilter}
             setDreExpandedCust={setDreExpandedCust}
-            setDreTimeScope={setDreTimeScope}
             setDreViewMode={setDreViewMode}
             topProfitCust={topProfitCust}
             topRevenueCust={topRevenueCust}
@@ -797,7 +786,6 @@ const DreTab = ({
             resFinLiq={resFinLiq}
             resFinLiqP={resFinLiqP}
             setDreCustomerFilter={setDreCustomerFilter}
-            setDreViewMode={setDreViewMode}
             totOp={totOp}
             totOpP={totOpP}
             unassignedItem={unassignedItem}

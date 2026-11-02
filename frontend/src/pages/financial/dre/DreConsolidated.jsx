@@ -53,94 +53,39 @@ const DreConsolidated = ({
   resFinLiq,
   resFinLiqP,
   setDreCustomerFilter,
-  setDreViewMode,
   totOp,
   totOpP,
   unassignedItem,
   vp,
 }) => (
   <div className="space-y-4">
-    {/* Banner de Filtro Individual por Cliente */}
-    <div className="bg-white rounded-xl border border-gray-200 p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xs">
-      <div className="flex items-center gap-2.5">
-        <span className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
-          📊
-        </span>
-        <div>
-          <div className="flex items-center gap-2">
-            <p className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-              Demonstrativo Formal — Padrão CPC 26
-            </p>
-            {dreCustomerFilter !== 'all' && (
-              <span className="text-[11px] bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-full">
-                Filtro Individual Ativo
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-gray-500">
-            Regime de Competência · Comparativo Mensal ({curLabel} × {prevLabel}) · Valores em R$
-          </p>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-500 font-medium">Filtrar por Cliente:</span>
-        <select
-          value={dreCustomerFilter}
-          onChange={(e) => setDreCustomerFilter(e.target.value)}
-          className="text-xs border border-gray-300 rounded-lg px-3 py-1.5 bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-xs"
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      <span className="text-xs text-gray-500">Filtrar por cliente:</span>
+      <select
+        value={dreCustomerFilter}
+        onChange={(e) => setDreCustomerFilter(e.target.value)}
+        className="text-xs border border-gray-300 rounded-lg px-3 py-1.5 bg-white text-gray-800 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-xs"
+      >
+        <option value="all">Toda a empresa (consolidado)</option>
+        {customerMetricsList
+          .filter((c) => c.hasActivity)
+          .map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name} ({fmt(c.netProfit)} lucro)
+            </option>
+          ))}
+        {unassignedItem.hasActivity && <option value="__sem_cliente__">Lançamentos gerais / sem cliente</option>}
+      </select>
+      {dreCustomerFilter !== 'all' && (
+        <button
+          onClick={() => setDreCustomerFilter('all')}
+          className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1.5 rounded-lg font-medium"
         >
-          <option value="all">🏢 Toda a Empresa (Consolidado)</option>
-          {customerMetricsList
-            .filter((c) => c.hasActivity)
-            .map((c) => (
-              <option key={c.id} value={c.id}>
-                👤 {c.name} ({fmt(c.netProfit)} lucro)
-              </option>
-            ))}
-          {unassignedItem.hasActivity && <option value="__sem_cliente__">🏛️ Lançamentos Gerais / Sem Cliente</option>}
-        </select>
-        {dreCustomerFilter !== 'all' && (
-          <button
-            onClick={() => setDreCustomerFilter('all')}
-            className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1.5 rounded-lg font-medium"
-          >
-            ✕ Limpar
-          </button>
-        )}
-      </div>
+          ✕ Limpar
+        </button>
+      )}
     </div>
 
-    {/* Banner Explicativo quando um cliente específico está filtrado */}
-    {dreCustomerFilter !== 'all' && (
-      <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-xl p-3.5 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">👤</span>
-          <div>
-            <p className="text-xs font-bold text-purple-700 uppercase tracking-wider">Visualizando DRE individual de</p>
-            <p className="text-sm font-extrabold text-gray-900">{getCustName(dreCustomerFilter)}</p>
-            <p className="text-xs text-gray-500">
-              Todas as linhas abaixo (receitas, custos diretos e despesas) refletem exclusivamente os lançamentos deste
-              cliente.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setDreViewMode('by_customer')}
-            className="text-xs font-semibold px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
-          >
-            Ver Comparativo de Clientes →
-          </button>
-          <button
-            onClick={() => setDreCustomerFilter('all')}
-            className="text-xs font-semibold px-3 py-1.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-lg"
-          >
-            ✕ Voltar para Consolidado
-          </button>
-        </div>
-      </div>
-    )}
 
     {/* KPI cards */}
     {hasData && (
@@ -220,66 +165,6 @@ const DreConsolidated = ({
       </div>
     )}
 
-    {/* ── Margens ───────────────────────────────────────── */}
-    {hasData && (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {[
-          { l: 'Margem Bruta', formula: 'Lucro Bruto / Receita Líquida', info: 'mg-bruta', c: lb, p: lbP },
-          { l: 'Margem Operacional', formula: 'EBIT / Receita Líquida', info: 'mg-oper', c: ebit, p: ebitP },
-          { l: 'Margem Líquida', formula: 'Lucro Líquido / Receita Líquida', info: 'mg-liq', c: ll, p: llP },
-        ].map(({ l, formula, info, c, p }) => {
-          const pct = recLiq > 0 ? (c / recLiq) * 100 : null;
-          const pctP = recLiqP > 0 ? (p / recLiqP) * 100 : null;
-          const diff = pct !== null && pctP !== null ? pct - pctP : null;
-          const good = pct === null ? false : pct >= 0;
-          const bar = pct === null ? 0 : Math.min(Math.abs(pct), 100);
-          return (
-            <div
-              key={l}
-              className={`rounded-xl border p-4 ${good ? 'bg-white border-gray-200' : 'bg-red-50 border-red-200'}`}
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{l}</p>
-                    <InfoBtn id={info} />
-                  </div>
-                  <p
-                    className={`text-2xl font-bold mt-0.5 ${pct === null ? 'text-gray-300' : good ? 'text-gray-800' : 'text-red-700'}`}
-                  >
-                    {pct === null ? '—' : `${pct.toFixed(1)}%`}
-                  </p>
-                </div>
-                {pct !== null && (
-                  <span
-                    className={`text-xs font-bold px-2 py-1 rounded-lg mt-0.5 ${good ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
-                  >
-                    {good ? '▲ Positiva' : '▼ Negativa'}
-                  </span>
-                )}
-              </div>
-              {/* barra de progresso */}
-              <div className="h-1.5 rounded-full bg-gray-100 mb-2.5 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all ${good ? 'bg-green-400' : 'bg-red-400'}`}
-                  style={{ width: `${bar}%` }}
-                />
-              </div>
-              <p className="text-xs text-gray-400">{formula}</p>
-              {diff !== null && (
-                <p
-                  className={`text-xs font-medium mt-1 ${diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-500' : 'text-gray-400'}`}
-                >
-                  {diff > 0 ? `▲ +${diff.toFixed(1)} p.p.` : diff < 0 ? `▼ ${diff.toFixed(1)} p.p.` : '= sem variação'}{' '}
-                  vs {prevLabel}
-                  {pctP !== null && <span className="text-gray-400 font-normal"> (era {pctP.toFixed(1)}%)</span>}
-                </p>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    )}
 
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <div className="px-5 py-3.5 border-b border-gray-100 flex flex-wrap gap-3 items-center bg-gray-50">

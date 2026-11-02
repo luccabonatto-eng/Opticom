@@ -8,10 +8,10 @@ export function DreCustomerEntries({ customers, scopeLabel, txCatName }) {
   const customer = customers.find(c => String(c.id) === customerId);
 
   return (
-    <section className="bg-white border border-purple-200 rounded-xl p-4 space-y-4">
+    <details className="bg-white border border-gray-200 rounded-xl p-4 space-y-4">
+      <summary className="cursor-pointer text-sm font-semibold text-gray-800">Ver lançamentos de um cliente</summary>
       <div className="flex flex-wrap items-end gap-3 justify-between">
         <label className="text-sm font-semibold text-gray-800 space-y-1">
-          <span className="block">Ver lançamentos do cliente</span>
           <select aria-label="Cliente para consultar lançamentos" value={customerId}
             onChange={e => setCustomerId(e.target.value)}
             className="block w-full sm:w-80 border border-gray-300 rounded-lg px-3 py-2 bg-white text-sm">
@@ -62,6 +62,6 @@ export function DreCustomerEntries({ customers, scopeLabel, txCatName }) {
           </div>
         </>
       )}
-    </section>
+    </details>
   );
 }

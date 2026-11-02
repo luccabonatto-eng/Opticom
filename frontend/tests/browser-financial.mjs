@@ -29,7 +29,7 @@ try {
  await page.goto(origin);
  await page.locator('aside').getByRole('button',{name:'Financeiro',exact:true}).click();
  await page.getByRole('button',{name:/DRE Gerencial/}).click();
- await page.getByRole('button',{name:'DRE Geral da Empresa',exact:true}).click();
+ await page.getByRole('button',{name:'Geral da Empresa',exact:true}).click();
  await page.getByRole('button',{name:'Marcar geral',exact:true}).waitFor();
  await page.getByRole('button',{name:'Marcar geral',exact:true}).click();
  await page.getByRole('button',{name:'Marcar geral',exact:true}).waitFor({state:'hidden'});

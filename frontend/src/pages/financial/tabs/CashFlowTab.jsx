@@ -229,79 +229,35 @@ const CashFlowTab = ({
 
         <div className="grid grid-cols-4 gap-3">
           {[
-            {
-              l: 'Atividades Operacionais',
-              v: EF.caixaOper,
-              info: 'dfc-oper',
-              sub: `previsto ${sfv(PV.caixaOper)}`,
-              pos: 'bg-green-50 border-green-200 text-green-800',
-              neg: 'bg-red-50 border-red-200 text-red-800',
-            },
-            {
-              l: 'Atividades de Investimento',
-              v: EF.caixaInv,
-              info: 'dfc-inv',
-              sub: `previsto ${sfv(PV.caixaInv)}`,
-              pos: 'bg-blue-50 border-blue-200 text-blue-800',
-              neg: 'bg-orange-50 border-orange-200 text-orange-800',
-            },
-            {
-              l: 'Atividades de Financiamento',
-              v: EF.caixaFin,
-              info: 'dfc-fin',
-              sub: `previsto ${sfv(PV.caixaFin)}`,
-              pos: 'bg-purple-50 border-purple-200 text-purple-800',
-              neg: 'bg-amber-50 border-amber-200 text-amber-800',
-            },
-            {
-              l: 'Variação Líquida de Caixa',
-              v: EF.varLiq,
-              info: 'dfc-var',
-              sub: `previsto ${sfv(PV.varLiq)} · ${cfLabel}`,
-              pos: 'bg-teal-50 border-teal-200 text-teal-800',
-              neg: 'bg-rose-50 border-rose-200 text-rose-800',
-            },
-          ].map((k, i) => {
-            const cls = k.v >= 0 ? k.pos : k.neg;
-            const [bg, bdr, tc] = cls.split(' ');
-            return (
-              <div key={i} className={`${bg} border ${bdr} rounded-xl p-4`}>
-                <div className="flex items-start justify-between gap-1 mb-1">
-                  <p className={`text-xs font-semibold uppercase tracking-wide ${tc}`}>{k.l}</p>
-                  <InfoBtn id={k.info} />
-                </div>
-                <p className={`text-xl font-bold ${tc}`}>{sfv(k.v)}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{k.sub}</p>
+            { l: 'Operacional', v: EF.caixaOper, p: PV.caixaOper, info: 'dfc-oper' },
+            { l: 'Investimento', v: EF.caixaInv, p: PV.caixaInv, info: 'dfc-inv' },
+            { l: 'Financiamento', v: EF.caixaFin, p: PV.caixaFin, info: 'dfc-fin' },
+            { l: 'Variação Líquida', v: EF.varLiq, p: PV.varLiq, info: 'dfc-var' },
+          ].map((k) => (
+            <div key={k.info} className="bg-white border border-gray-200 rounded-xl p-4">
+              <div className="flex items-start justify-between gap-1 mb-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{k.l}</p>
+                <InfoBtn id={k.info} />
               </div>
-            );
-          })}
+              <p className={`text-xl font-bold ${k.v >= 0 ? 'text-green-700' : 'text-red-600'}`}>{sfv(k.v)}</p>
+              <p className="text-xs text-gray-400 mt-0.5">previsto {sfv(k.p)}</p>
+            </div>
+          ))}
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-1.5">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Saldo Inicial do Período</p>
-                <InfoBtn id="dfc-ini" />
-              </div>
-              <p className="text-xs text-gray-400 mt-0.5">Configurado em Configurações → Contas e Saldos</p>
+          <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Saldo Inicial</p>
+              <InfoBtn id="dfc-ini" />
             </div>
             <p className="text-xl font-bold text-gray-700 ml-4">{fmt(saldoInicial)}</p>
           </div>
-          <div
-            className={`border rounded-xl p-4 flex items-center justify-between ${saldoFinal >= 0 ? 'bg-teal-50 border-teal-200' : 'bg-rose-50 border-rose-200'}`}
-          >
-            <div className="flex-1">
-              <div className="flex items-center gap-1.5">
-                <p
-                  className={`text-xs font-semibold uppercase tracking-wide ${saldoFinal >= 0 ? 'text-teal-600' : 'text-rose-600'}`}
-                >
-                  Saldo Final Projetado
-                </p>
-                <InfoBtn id="dfc-fin2" />
-              </div>
-              <p className="text-xs text-gray-400 mt-0.5">Saldo Inicial + Variação Líquida de Caixa</p>
+          <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Saldo Final Projetado</p>
+              <InfoBtn id="dfc-fin2" />
             </div>
-            <p className={`text-xl font-bold ml-4 ${saldoFinal >= 0 ? 'text-teal-800' : 'text-rose-800'}`}>
+            <p className={`text-xl font-bold ml-4 ${saldoFinal >= 0 ? 'text-green-700' : 'text-red-600'}`}>
               {fmt(saldoFinal)}
             </p>
           </div>
@@ -312,7 +268,7 @@ const CashFlowTab = ({
             <thead>
               <tr className="bg-gray-100 border-b-2 border-gray-300">
                 <th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wide">
-                  Demonstração dos Fluxos de Caixa — {cfLabel}
+                  Descrição
                 </th>
                 <th className="px-4 py-2.5 text-right text-xs font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">
                   Previsto
@@ -333,42 +289,16 @@ const CashFlowTab = ({
               {pagImpostos > 0 && <DR l="(-) Impostos Pagos (ISS, PIS, COFINS, IR/CSLL)" k="pagImpostos" neg ind={1} />}
               {pagOutOp > 0 && <DR l="(-) Outros Pagamentos Operacionais" k="pagOutOp" neg ind={1} />}
               {PV.pagCartao > 0 && <DR l="(-) Pagamento de Faturas de Cartão" k="pagCartao" neg ind={1} />}
-              {recClientes === 0 &&
-                pagCSP === 0 &&
-                pagPessoal === 0 &&
-                pagAdmin === 0 &&
-                pagImpostos === 0 &&
-                pagOutOp === 0 && (
-                  <tr className="border-t border-gray-100">
-                    <td colSpan="3" className="px-4 py-3 text-xs text-gray-400 text-center">
-                      Nenhum lançamento operacional — adicione receitas e despesas com as categorias corretas
-                    </td>
-                  </tr>
-                )}
               <DR l="(=) Caixa Líquido das Atividades Operacionais" k="caixaOper" tot />
 
               <SH l="2. Atividades de Investimento" />
               {recAtivos > 0 && <DR l="(+) Recebimentos — Venda de Ativos" k="recAtivos" ind={1} />}
               {pagAtivos > 0 && <DR l="(-) Pagamentos — Compra de Equipamentos / Veículos" k="pagAtivos" neg ind={1} />}
-              {recAtivos === 0 && pagAtivos === 0 && (
-                <tr className="border-t border-gray-100">
-                  <td colSpan="3" className="px-4 py-3 text-xs text-gray-400 text-center">
-                    Nenhum lançamento de investimento no período
-                  </td>
-                </tr>
-              )}
               <DR l="(=) Caixa Líquido das Atividades de Investimento" k="caixaInv" tot />
 
               <SH l="3. Atividades de Financiamento" />
               {recFin > 0 && <DR l="(+) Empréstimos Obtidos / Aportes de Capital" k="recFin" ind={1} />}
               {pagFin > 0 && <DR l="(-) Amortizações, Juros e Encargos Financeiros" k="pagFin" neg ind={1} />}
-              {recFin === 0 && pagFin === 0 && (
-                <tr className="border-t border-gray-100">
-                  <td colSpan="3" className="px-4 py-3 text-xs text-gray-400 text-center">
-                    Nenhum lançamento de financiamento no período
-                  </td>
-                </tr>
-              )}
               <DR l="(=) Caixa Líquido das Atividades de Financiamento" k="caixaFin" tot />
 
               <tr className={`border-t-2 ${varLiq >= 0 ? 'bg-blue-700' : 'bg-red-700'}`}>
@@ -392,14 +322,11 @@ const CashFlowTab = ({
           </table>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="px-5 py-3.5 border-b border-gray-100 flex items-center gap-3">
-            <div className="flex-1">
-              <h3 className="text-sm font-semibold text-gray-800">Detalhe Diário</h3>
-              <p className="text-xs text-gray-400 mt-0.5">Movimentações por dia e saldo acumulado no período</p>
-            </div>
-          </div>
-          <table className="w-full text-sm">
+        <details className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          <summary className="px-5 py-3.5 cursor-pointer text-sm font-semibold text-gray-800">
+            Detalhe Diário <span className="font-normal text-gray-400">({dailyRows.length} dia(s) com movimento)</span>
+          </summary>
+          <table className="w-full text-sm border-t border-gray-100">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 {['Data', 'Entradas', 'Saídas', 'Resultado do Dia', 'Saldo Acumulado'].map((h, i) => (
@@ -416,7 +343,7 @@ const CashFlowTab = ({
               {dailyRows.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="px-4 py-8 text-center text-sm text-gray-400">
-                    Nenhum lançamento no período selecionado — adicione receitas e despesas no módulo Financeiro
+                    Nenhum lançamento no período selecionado
                   </td>
                 </tr>
               ) : (
@@ -445,7 +372,7 @@ const CashFlowTab = ({
               )}
             </tbody>
           </table>
-        </div>
+        </details>
       </div>
     );
   })();
