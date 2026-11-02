@@ -5,6 +5,7 @@ import { DEFAULT_ACCOUNTING_CLASSES } from '../../../config/financial.js';
 import { DreConsolidated } from '../dre/DreConsolidated.jsx';
 import { DreCustomers } from '../dre/DreCustomers.jsx';
 import { baixarCSV, csvNum, csvPct } from '../../../utils/csv.js';
+import { enviarWhats } from '../../../utils/whatsapp.js';
 import { fmt } from '../../../utils/format.js';
 import { txPago } from '../calculations.js';
 
@@ -442,6 +443,53 @@ const DreTab = ({
     // demonstrativo; a por cliente sai como uma linha por cliente.
     const baseLabel =
       dreBase === 'efetivo' ? 'Efetivo (caixa — só o que foi baixado)' : 'Previsto (competência — valor das contas)';
+    const enviarDREWhats = () => {
+      const pct = (v) => (recBruta > 0 ? ` (${csvPct((v / recBruta) * 100)}%)` : '');
+      if (dreViewMode === 'company') {
+        const r = companyResult(originalScopedTxs, scopes.data, [...incomeCats, ...expenseCats], dreBase);
+        enviarWhats(`Resultado da empresa · ${scopeLabel}`, [
+          `_${baseLabel}_`,
+          '',
+          `Clientes: ${fmt(r.clients.result)}`,
+          `Geral da empresa: ${fmt(r.general.result)}`,
+          `Não classificados: ${fmt(r.unassigned.result)}`,
+          '',
+          `*Resultado total: ${fmt(r.total.result)}*`,
+          r.unassigned.transactions.length
+            ? `_${r.unassigned.transactions.length} lançamento(s) ainda sem classificação_`
+            : null,
+        ]);
+      } else if (dreViewMode === 'consolidated') {
+        enviarWhats(`DRE · ${curLabel}`, [
+          `_${baseLabel}_`,
+          dreCustomerFilter !== 'all' ? `Cliente: ${getCustName(dreCustomerFilter)}` : null,
+          '',
+          `Receita bruta: ${fmt(recBruta)}`,
+          ded ? `Deduções: ${fmt(-ded)}` : null,
+          `Receita líquida: ${fmt(recLiq)}`,
+          csp ? `Custo dos serviços: ${fmt(-csp)}` : null,
+          `*Lucro bruto: ${fmt(lb)}${pct(lb)}*`,
+          totOp ? `Despesas operacionais: ${fmt(-totOp)}` : null,
+          `EBITDA: ${fmt(ebitda)}`,
+          resFinLiq ? `Resultado financeiro: ${fmt(resFinLiq)}` : null,
+          ir ? `IR e CSLL: ${fmt(-ir)}` : null,
+          '',
+          `*Resultado líquido: ${fmt(ll)}${pct(ll)}*`,
+        ]);
+      } else {
+        // Os maiores primeiro: a mensagem não cabe na URL com a lista inteira.
+        const topo = [...activeCustomers].sort((a, b) => b.netProfit - a.netProfit).slice(0, 10);
+        enviarWhats(`DRE por cliente · ${scopeLabel}`, [
+          '_Previsto (competência — valor das contas)_',
+          '',
+          ...topo.map((c) => `${c.name}: ${fmt(c.netProfit)} (margem ${csvPct(c.netMargin)}%)`),
+          activeCustomers.length > topo.length ? `_e outros ${activeCustomers.length - topo.length} cliente(s)_` : null,
+          '',
+          `*Resultado somado: ${fmt(activeCustomers.reduce((t, c) => t + c.netProfit, 0))}*`,
+        ]);
+      }
+    };
+
     const exportarDRE = () => {
       const cab = [['Base', baseLabel], ['Gerado em', new Date().toLocaleString('pt-BR')], []];
       if (dreViewMode === 'company') {
@@ -631,6 +679,11 @@ const DreTab = ({
                     ? 'Baixa a DRE consolidada do mês, com comparativo e AV%, em CSV (abre no Excel)'
                     : 'Baixa uma linha por cliente, com receita, custo e margem, em CSV (abre no Excel)'
               }
+            />}
+            {(dreViewMode !== 'company' || scopes.ready) && <BotaoExportar
+              onClick={enviarDREWhats}
+              label="↗ Enviar no WhatsApp"
+              title="Abre o WhatsApp com o resumo do DRE já escrito, pronto para enviar"
             />}
           </div>
         </div>

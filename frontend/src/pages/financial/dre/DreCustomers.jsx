@@ -1,4 +1,5 @@
 import { DreCustomerTable } from './DreCustomerTable.jsx';
+import { DreCustomerEntries } from './DreCustomerEntries.jsx';
 import { fmt } from '../../../utils/format.js';
 import { monthLabel } from '../periods.js';
 
@@ -39,6 +40,7 @@ const DreCustomers = ({
   unassignedItem,
 }) => (
   <div className="space-y-4">
+    <DreCustomerEntries customers={customerMetricsList} scopeLabel={scopeLabel} txCatName={txCatName} />
     {/* Controles de Escopo de Tempo e Resumo */}
     <div className="flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200 rounded-xl p-3.5">
       <div className="flex items-center gap-2">

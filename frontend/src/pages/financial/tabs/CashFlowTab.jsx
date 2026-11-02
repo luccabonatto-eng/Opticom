@@ -1,5 +1,6 @@
 import { BotaoExportar } from '../../../components/BotaoExportar.jsx';
 import { baixarCSV, csvNum } from '../../../utils/csv.js';
+import { enviarWhats } from '../../../utils/whatsapp.js';
 import { fmt, fmtDate } from '../../../utils/format.js';
 import { txPago } from '../calculations.js';
 
@@ -144,6 +145,32 @@ const CashFlowTab = ({
       ]);
     };
 
+    const enviarDFCWhats = () => {
+      // Só o efetivo, que é o que a pessoa do outro lado quer saber; linha
+      // zerada fica fora, como na tabela.
+      const L = (rot, k, neg = false) => (EF[k] ? `${rot}: ${fmt(neg ? -EF[k] : EF[k])}` : null);
+      enviarWhats(`Fluxo de Caixa · ${fmtDate(from)} a ${fmtDate(to)}`, [
+        '_Valores efetivos — o que já foi pago e recebido_',
+        '',
+        L('Recebimentos de clientes', 'recClientes'),
+        L('Custo dos serviços', 'pagCSP', true),
+        L('Pessoal', 'pagPessoal', true),
+        L('Administrativas e comerciais', 'pagAdmin', true),
+        L('Impostos', 'pagImpostos', true),
+        L('Outros operacionais', 'pagOutOp', true),
+        L('Faturas de cartão', 'pagCartao', true),
+        `Caixa operacional: ${fmt(EF.caixaOper)}`,
+        L('Investimento', 'caixaInv'),
+        L('Financiamento', 'caixaFin'),
+        '',
+        `*Variação do período: ${fmt(EF.varLiq)}*`,
+        saldoInicial ? `Saldo inicial: ${fmt(saldoInicial)}` : null,
+        saldoInicial ? `*Saldo final: ${fmt(EF.saldoFinal)}*` : null,
+        '',
+        `_Previsto no período: ${fmt(PV.varLiq)} · gerado em ${new Date().toLocaleString('pt-BR')}_`,
+      ]);
+    };
+
     const SH = ({ l }) => (
       <tr className="bg-gray-100 border-t-2 border-gray-300">
         <td colSpan="3" className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider">
@@ -190,6 +217,11 @@ const CashFlowTab = ({
           <BotaoExportar
             onClick={exportarDFC}
             title="Baixa o DFC e o detalhe diário do período em CSV (abre no Excel)"
+          />
+          <BotaoExportar
+            onClick={enviarDFCWhats}
+            label="↗ Enviar no WhatsApp"
+            title="Abre o WhatsApp com o resumo do período já escrito, pronto para enviar"
           />
         </div>
 

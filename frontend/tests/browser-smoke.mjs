@@ -134,6 +134,14 @@ try {
     await check(name);
     if (name === 'Fluxo de Caixa') await exportCsv('DFC', 'Fluxos de Caixa', '1123,45');
     if (name === 'DRE Gerencial') {
+      const customerEntries = page.locator('section').filter({ has: page.getByLabel('Cliente para consultar lançamentos') });
+      await page.getByLabel('Cliente para consultar lançamentos').selectOption('customer-1');
+      await customerEntries.getByRole('heading', { name: 'Receitas (1)', exact: true }).waitFor();
+      await customerEntries.getByRole('heading', { name: 'Contas a pagar (1)', exact: true }).waitFor();
+      await customerEntries.getByText('Receita de teste', { exact: true }).waitFor();
+      await customerEntries.getByText('Despesa de teste', { exact: true }).waitFor();
+      await page.getByLabel('Cliente para consultar lançamentos').selectOption('');
+      assert.equal(await customerEntries.getByRole('table').count(), 0);
       await exportCsv('DRE por cliente', 'Cliente de teste', '1000,00');
       await page
         .getByRole('button', { name: /Detalhes/ })
