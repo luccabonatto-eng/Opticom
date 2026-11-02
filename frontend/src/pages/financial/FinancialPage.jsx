@@ -1,7 +1,7 @@
 import { useFinancialSetting } from './hooks/useFinancialSetting.js';
 import { ReconciliationTab } from './tabs/ReconciliationTab.jsx';
 import { ApprovalTab } from './tabs/ApprovalTab.jsx';
-import { EXPENSE_CATS_INITIAL_OBJS, INCOME_CATS_INITIAL_OBJS, PAYROLL_INIT } from '../../config/financial.js';
+import { EXPENSE_CATS_INITIAL_OBJS, INCOME_CATS_INITIAL_OBJS } from '../../config/financial.js';
 import { Badge } from '../../components/Badge.jsx';
 import { BulkSettlementModal } from './modals/BulkSettlementModal.jsx';
 import { CardPaymentModal } from './modals/CardPaymentModal.jsx';
@@ -12,7 +12,6 @@ import { DreTab } from './tabs/DreTab.jsx';
 import { FIN_INFO } from './info.js';
 import { ImportTransactionsModal } from './modals/ImportTransactionsModal.jsx';
 import { PayableTab } from './tabs/PayableTab.jsx';
-import { PayrollTab } from './tabs/PayrollTab.jsx';
 import { ReceivableTab } from './tabs/ReceivableTab.jsx';
 import { SettlementModal } from './modals/SettlementModal.jsx';
 import { StatementTab } from './tabs/StatementTab.jsx';
@@ -112,12 +111,11 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
     loadFinancialData();
   }, []);
   const loadFinancialData = async () => {
-    const [txRes, catRes, baRes, pmRes, techRes, custRes] = await Promise.all([
+    const [txRes, catRes, baRes, pmRes, custRes] = await Promise.all([
       api.getAllTransactions(),
       api.getCategories(),
       api.getBankAccounts(),
       api.getPaymentMethods(),
-      api.getAllTechnicians(),
       api.getAllCustomers(),
     ]);
     if (txRes.success) { setTx(txRes.data?.data || txRes.data || []); setFinancialLoaded(true); }
@@ -127,7 +125,6 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
     }
     if (baRes.success) setBankAccounts(baRes.data?.data || baRes.data || []);
     if (pmRes.success) setPayMethods(pmRes.data?.data || pmRes.data || []);
-    if (techRes.success) setPayTechs(techRes.data?.data || techRes.data || []);
     if (custRes.success) setCustomers(custRes.data?.data || custRes.data || []);
     if (!txRes.success) setToast(`Não foi possível carregar os lançamentos: ${txRes.error || 'erro de conexão'}`);
   };
@@ -136,64 +133,6 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
   const [importTab, setImportTab] = useState('arquivo'); // arquivo | colar
   const [importFileName, setImportFileName] = useState('');
   const [importDragging, setImportDragging] = useState(false);
-  // Folha Salarial — estados no topo (hooks não podem ficar dentro de IIFE)
-  // Folha fica no banco (system_settings), não no navegador: salário e CPF não
-  // podem sumir ao limpar o cache nem ficar presos a uma máquina.
-  // shortcut: a folha inteira é um único registro, então duas pessoas editando
-  // ao mesmo tempo — a última salva vence. Virar tabela própria quando mais de
-  // uma pessoa mexer na folha.
-  const [payroll, setPayroll] = useState(PAYROLL_INIT);
-  const [payrollLoaded, setPayrollLoaded] = useState(false);
-  const [payrollRef, setPayrollRef] = useState(() => new Date().toISOString().slice(0, 7));
-  const [payTechs, setPayTechs] = useState([]);
-  useEffect(() => {
-    api.getSetting('payroll').then((r) => {
-      let doBanco = null;
-      if (r.success && r.data?.value) {
-        try {
-          doBanco = JSON.parse(r.data.value);
-        } catch {}
-      }
-      if (doBanco) {
-        setPayroll(doBanco);
-      } else {
-        // Banco vazio: aproveita a folha que ficou no navegador desta máquina.
-        // O efeito de gravação abaixo a envia, migrando sem perder nada.
-        try {
-          const local = localStorage.getItem('opticom_payroll');
-          if (local) setPayroll(JSON.parse(local));
-        } catch {}
-      }
-      setPayrollLoaded(true);
-    });
-  }, []);
-  // Só grava depois de carregar, senão o estado inicial sobrescreve o banco
-  useEffect(() => {
-    if (!payrollLoaded) return;
-    api.setSetting('payroll', JSON.stringify(payroll)).then((r) => {
-      if (!r.success) setToast(`Erro ao salvar a folha: ${r.error}`);
-    });
-  }, [payroll, payrollLoaded]);
-  const [payEmpModal, setPayEmpModal] = useState(null); // funcionário selecionado para ver detalhes
-  const [newPayModal, setNewPayModal] = useState(false);
-  const [editPayModal, setEditPayModal] = useState(null); // funcionário em edição
-  const [editPayForm, setEditPayForm] = useState({});
-  const [payForm, setPayForm] = useState({
-    techId: '',
-    name: '',
-    role: 'Técnico de Campo',
-    cpf: '',
-    admDate: '',
-    base: '',
-    horasExtras: '',
-    adicNoturno: '',
-    periculosidade: '',
-    insalubridade: '',
-    bonus: '',
-    vt: '',
-    vr: '',
-    planoSaude: '',
-  });
   // Extrato Bancário
   const [stmtLines, setStmtLines] = useState([]);
   const [stmtResults, setStmtResults] = useState({});
@@ -204,71 +143,7 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
   const [stmtProgresso, setStmtProgresso] = useState(null); // { feito, total } durante a importação
 
   // abre o modal de edição pré-preenchido com os dados atuais do funcionário
-  const openEditPay = (emp) => {
-    const c = (v) => (v ? (v / 100).toFixed(2) : '');
-    setEditPayForm({
-      name: emp.name,
-      role: emp.role,
-      cpf: emp.cpf || '',
-      admDate: emp.admDate || '',
-      base: c(emp.base),
-      horasExtras: c(emp.horasExtras),
-      adicNoturno: c(emp.adicNoturno),
-      periculosidade: c(emp.periculosidade),
-      insalubridade: c(emp.insalubridade),
-      bonus: c(emp.bonus),
-      vt: c(emp.vt),
-      vr: c(emp.vr),
-      planoSaude: c(emp.planoSaude),
-      dINSS: c(emp.dINSS),
-      dIRRF: c(emp.dIRRF),
-      dVT: c(emp.dVT),
-      dPlano: c(emp.dPlano),
-      inssPatronal: c(emp.inssPatronal),
-      fgts: c(emp.fgts),
-      rat: c(emp.rat),
-      sistemaS: c(emp.sistemaS),
-      prov13: c(emp.prov13),
-      provFerias: c(emp.provFerias),
-      fgtsProv: c(emp.fgtsProv),
-    });
-    setEditPayModal(emp);
-  };
 
-  const saveEditPay = () => {
-    const n = (k, d = 0) => Math.round(parseFloat(editPayForm[k] || d) * 100);
-    const updated = {
-      ...editPayModal,
-      name: editPayForm.name.trim(),
-      role: editPayForm.role,
-      cpf: editPayForm.cpf,
-      admDate: editPayForm.admDate,
-      base: n('base'),
-      horasExtras: n('horasExtras'),
-      adicNoturno: n('adicNoturno'),
-      periculosidade: n('periculosidade'),
-      insalubridade: n('insalubridade'),
-      bonus: n('bonus'),
-      vt: n('vt'),
-      vr: n('vr'),
-      planoSaude: n('planoSaude'),
-      dINSS: n('dINSS'),
-      dIRRF: n('dIRRF'),
-      dVT: n('dVT'),
-      dPlano: n('dPlano'),
-      inssPatronal: n('inssPatronal'),
-      fgts: n('fgts'),
-      rat: n('rat'),
-      sistemaS: n('sistemaS'),
-      prov13: n('prov13'),
-      provFerias: n('provFerias'),
-      fgtsProv: n('fgtsProv'),
-    };
-    setPayroll((prev) => prev.map((p) => (p.id === editPayModal.id ? updated : p)));
-    setPayEmpModal(updated); // atualiza o holerite aberto com os novos dados
-    setEditPayModal(null);
-    setToast(`Dados de ${updated.name} atualizados!`);
-  };
 
   // ── Extrato Bancário — parsers e matching ─────────────────────────────────
   // Converte string monetária → centavos (inteiro), igual à convenção do DB.
@@ -919,7 +794,6 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
     { id: 'payable', label: 'A Pagar', icon: '↓', color: 'text-red-600', bg: 'bg-red-50' },
     { id: 'cashflow', label: 'Fluxo de Caixa', icon: '~', color: 'text-blue-600', bg: 'bg-blue-50' },
     { id: 'dre', label: 'DRE Gerencial', icon: '≡', color: 'text-purple-600', bg: 'bg-purple-50' },
-    { id: 'payroll', label: 'Folha Salarial', icon: '$', color: 'text-cyan-600', bg: 'bg-cyan-50' },
     { id: 'card', label: 'Cartão de Crédito', icon: '▭', color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
     { id: 'expcard', label: 'Cartão de Despesa', icon: '▬', color: 'text-indigo-600', bg: 'bg-indigo-50' },
     { id: 'reconciliation', label: 'Conciliação Bancária', icon: '✓', color: 'text-teal-600', bg: 'bg-teal-50' },
@@ -1087,31 +961,6 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
             setDreViewMode={setDreViewMode}
             transactions={transactions}
             txCatName={txCatName}
-          />
-        )}
-
-        {tab === 'payroll' && (
-          <PayrollTab
-            Boolean={Boolean}
-            editPayForm={editPayForm}
-            editPayModal={editPayModal}
-            newPayModal={newPayModal}
-            openEditPay={openEditPay}
-            payEmpModal={payEmpModal}
-            payForm={payForm}
-            payTechs={payTechs}
-            payroll={payroll}
-            payrollRef={payrollRef}
-            saveEditPay={saveEditPay}
-            setEditPayForm={setEditPayForm}
-            setEditPayModal={setEditPayModal}
-            setNewPayModal={setNewPayModal}
-            setPayEmpModal={setPayEmpModal}
-            setPayForm={setPayForm}
-            setPayTechs={setPayTechs}
-            setPayroll={setPayroll}
-            setPayrollRef={setPayrollRef}
-            setToast={setToast}
           />
         )}
 

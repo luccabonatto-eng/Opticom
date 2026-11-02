@@ -120,7 +120,6 @@ try {
     'A Pagar',
     'Fluxo de Caixa',
     'DRE Gerencial',
-    'Folha Salarial',
     'Aprovações do Dia',
     'Cartão de Crédito',
     'Cartão de Despesa',

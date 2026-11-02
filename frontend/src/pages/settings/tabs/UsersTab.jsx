@@ -330,7 +330,6 @@ const UsersTab = ({
               { id: 'payable', label: 'A Pagar' },
               { id: 'cashflow', label: 'Fluxo de Caixa' },
               { id: 'dre', label: 'DRE Gerencial' },
-              { id: 'payroll', label: 'Folha Salarial' },
               { id: 'approval', label: 'Aprovações do Dia' },
               { id: 'statement', label: 'Extrato Bancário' },
               { id: 'reconciliation', label: 'Conciliação Bancária' },

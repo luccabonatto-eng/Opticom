@@ -16,7 +16,6 @@ const FINANCIAL_SUBMENU_IDS = [
   'payable',
   'cashflow',
   'dre',
-  'payroll',
   'approval',
   'statement',
   'reconciliation',
