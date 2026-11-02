@@ -58,7 +58,7 @@ const DreCustomers = ({
         </div>
       </div>
       {/* Seletor de Escopo de Período */}
-      <div className="flex items-center gap-1 bg-white/80 backdrop-blur-sm p-1 rounded-lg border border-purple-200 text-xs">
+      <div className="flex flex-wrap items-center gap-1 bg-white/80 backdrop-blur-sm p-1 rounded-lg border border-purple-200 text-xs">
         {[
           ['month', `Mês (${monthLabel(curM)})`],
           ['year', `Ano ${curM.slice(0, 4)} (Acumulado)`],
@@ -76,7 +76,7 @@ const DreCustomers = ({
     </div>
 
     {/* Top KPIs da Carteira */}
-    <div className="grid grid-cols-4 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3">
       <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5">
         <div className="flex items-center justify-between mb-1">
           <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wide">🏆 Cliente Mais Lucrativo</p>
@@ -175,7 +175,7 @@ const DreCustomers = ({
     {/* Ranking Visual dos Principais Clientes em Lucro */}
     {activeCustomers.length > 0 && (
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap gap-2 items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wide">
               Ranking Visual de Lucro Líquido por Cliente
@@ -192,7 +192,7 @@ const DreCustomers = ({
               : Math.min(100, Math.round((c.netProfit / maxProfitVal) * 100));
             return (
               <div key={c.id} className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="w-5 text-center font-bold text-gray-400 text-xs">#{i + 1}</span>
                     <span className="font-semibold text-gray-800 truncate">{c.name}</span>
@@ -200,7 +200,7 @@ const DreCustomers = ({
                       ({c.incomeCount} rec / {c.expenseCount} desp)
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex flex-wrap items-center gap-3">
                     <span className="text-gray-400">
                       Receita: <span className="text-gray-700 font-medium">{fmt(c.grossRevenue)}</span>
                     </span>

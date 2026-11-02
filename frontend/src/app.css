@@ -62,3 +62,63 @@ table {
 .grid > * {
   min-width: 0;
 }
+
+/* Keep all eleven DRE metrics readable within the available page width. */
+.dre-customer-summary > thead > tr > th,
+.dre-customer-summary > tbody > tr > td:not([colspan]),
+.dre-customer-summary > tfoot > tr > td {
+  padding: 0.65rem 0.4rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.dre-customer-summary > tbody > tr > td:first-child p {
+  white-space: normal;
+}
+@media (max-width: 1279px) {
+  .dre-customer-summary,
+  .dre-customer-summary > tbody,
+  .dre-customer-summary > tfoot {
+    display: block;
+    width: 100%;
+  }
+  .dre-customer-summary > thead { display: none; }
+  .dre-customer-summary > tbody > tr,
+  .dre-customer-summary > tfoot > tr {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 0.5rem;
+    gap: 0.25rem;
+  }
+  .dre-customer-summary > tbody > tr > td,
+  .dre-customer-summary > tfoot > tr > td {
+    display: block;
+    min-width: 0;
+    text-align: left;
+  }
+  .dre-customer-summary > tbody > tr > td:first-child,
+  .dre-customer-summary > tfoot > tr > td:first-child,
+  .dre-customer-summary td[colspan] { grid-column: 1 / -1; }
+  .dre-customer-summary > tbody > tr > td:not([colspan])::before,
+  .dre-customer-summary > tfoot > tr > td::before {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 500;
+    opacity: 0.75;
+    margin-bottom: 0.25rem;
+  }
+  .dre-customer-summary > :is(tbody, tfoot) > tr > td:nth-child(2)::before { content: 'Lançamentos'; }
+  .dre-customer-summary > :is(tbody, tfoot) > tr > td:nth-child(3)::before { content: 'Receita bruta'; }
+  .dre-customer-summary > :is(tbody, tfoot) > tr > td:nth-child(4)::before { content: 'Deduções'; }
+  .dre-customer-summary > :is(tbody, tfoot) > tr > td:nth-child(5)::before { content: 'Receita líquida'; }
+  .dre-customer-summary > :is(tbody, tfoot) > tr > td:nth-child(6)::before { content: 'Custos (CSP)'; }
+  .dre-customer-summary > :is(tbody, tfoot) > tr > td:nth-child(7)::before { content: 'Lucro bruto'; }
+  .dre-customer-summary > :is(tbody, tfoot) > tr > td:nth-child(8)::before { content: 'Despesas operacionais'; }
+  .dre-customer-summary > :is(tbody, tfoot) > tr > td:nth-child(9)::before { content: 'Lucro líquido'; }
+  .dre-customer-summary > :is(tbody, tfoot) > tr > td:nth-child(10)::before { content: 'Margem líquida'; }
+}
+@media (max-width: 639px) {
+  .dre-customer-summary > tbody > tr,
+  .dre-customer-summary > tfoot > tr {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

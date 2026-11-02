@@ -144,7 +144,7 @@ const DreConsolidated = ({
 
     {/* KPI cards */}
     {hasData && (
-      <div className="grid grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
         {[
           {
             l: 'Receita Líquida',
@@ -222,7 +222,7 @@ const DreConsolidated = ({
 
     {/* ── Margens ───────────────────────────────────────── */}
     {hasData && (
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {[
           { l: 'Margem Bruta', formula: 'Lucro Bruto / Receita Líquida', info: 'mg-bruta', c: lb, p: lbP },
           { l: 'Margem Operacional', formula: 'EBIT / Receita Líquida', info: 'mg-oper', c: ebit, p: ebitP },

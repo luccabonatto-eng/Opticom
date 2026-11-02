@@ -25,7 +25,7 @@ const DreCustomerTable = ({
 }) => (
   <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
     <div className="overflow-x-auto">
-      <table className="w-full text-xs">
+      <table className="dre-customer-summary w-full text-xs">
         <thead className="bg-gray-100 border-b-2 border-gray-300">
           <tr>
             <th className="px-4 py-3 text-left font-bold text-gray-700 uppercase tracking-wide">Cliente / Obra</th>
@@ -244,7 +244,7 @@ const DreCustomerTable = ({
                           </div>
 
                           {/* Mini Cards de Síntese Contábil */}
-                          <div className="grid grid-cols-5 gap-2.5">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-2.5">
                             <div className="bg-blue-50 border border-blue-100 rounded-lg p-2.5 text-center">
                               <p className="text-[11px] text-blue-600 font-semibold uppercase">Receita Bruta</p>
                               <p className="text-sm font-bold text-blue-900 mt-0.5">{fmt(c.grossRevenue)}</p>
