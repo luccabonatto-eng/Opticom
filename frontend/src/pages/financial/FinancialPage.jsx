@@ -2,7 +2,7 @@ import { useFinancialSetting } from './hooks/useFinancialSetting.js';
 import { ReconciliationTab } from './tabs/ReconciliationTab.jsx';
 import { ApprovalTab } from './tabs/ApprovalTab.jsx';
 import { EXPENSE_CATS_INITIAL_OBJS, INCOME_CATS_INITIAL_OBJS } from '../../config/financial.js';
-import { Badge } from '../../components/Badge.jsx';
+import { Badge, STATUS_MAP } from '../../components/Badge.jsx';
 import { BulkSettlementModal } from './modals/BulkSettlementModal.jsx';
 import { CardPaymentModal } from './modals/CardPaymentModal.jsx';
 import { CardsTab } from './tabs/CardsTab.jsx';
@@ -20,6 +20,7 @@ import { TransactionModal } from './modals/TransactionModal.jsx';
 import { TxTable } from './components/TxTable.jsx';
 import { addMeses, hojeISO } from '../../utils/dates.js';
 import { api } from '../../api/client.js';
+import { baixarCSV, csvNum } from '../../utils/csv.js';
 import { fmt, fmtDate } from '../../utils/format.js';
 import { lerPlanilha, parseStatement, semAcento } from './parsers.js';
 import { monthLabel, prevMonth } from './periods.js';
@@ -753,6 +754,34 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
   const txVencido = (t) => calcVencido(t, TODAY);
   const txStatus = (t) => calcStatus(t, TODAY);
 
+  // Exporta a lista já filtrada da aba, com as mesmas colunas da tabela.
+  const exportarTx = (lista, titulo, baixaLabel) =>
+    baixarCSV(`${titulo.replace(/ /g, '_')}_${hojeISO()}.csv`, [
+      [titulo],
+      ['Gerado em', new Date().toLocaleString('pt-BR')],
+      ['Lançamentos', lista.length],
+      [],
+      ['Descrição', 'Categoria', 'Cliente', 'NF', 'Banco', 'F. Pagamento', 'Vencimento', 'Valor (R$)',
+        `${baixaLabel} (R$)`, 'Em aberto (R$)', `Data ${baixaLabel.toLowerCase()}`, 'Status'],
+      ...lista.map((t) => [
+        t.description || t.desc || '',
+        txCatName(t),
+        t.customers?.name || customers.find((c) => c.id === t.customer_id)?.name || '',
+        t.invoice_number || '',
+        bankAccounts.find((b) => b.id === t.bank_account_id)?.name || t.account || '',
+        payMethods.find((m) => m.id === t.payment_method_id)?.name || t.payMethod || '',
+        fmtDate(txDue(t)),
+        csvNum(t.amount),
+        csvNum(txPago(t)),
+        csvNum(txAberto(t)),
+        t.paid_date ? fmtDate(t.paid_date) : '',
+        STATUS_MAP[txStatus(t)]?.[1] || txStatus(t),
+      ]),
+      [],
+      ['Total', '', '', '', '', '', '', csvNum(lista.reduce((s, t) => s + (t.amount || 0), 0)),
+        csvNum(lista.reduce((s, t) => s + txPago(t), 0)), csvNum(lista.reduce((s, t) => s + txAberto(t), 0))],
+    ]);
+
   const receivable = transactions
     .filter(
       (t) =>
@@ -852,6 +881,7 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
       <div className="flex-1 overflow-y-auto p-5 space-y-4">
         {tab === 'receivable' && (
           <ReceivableTab
+            exportarTx={exportarTx}
             DateFilter={DateFilter}
             TxTable={TxTableComponent}
             abrirBaixaLote={abrirBaixaLote}
@@ -884,6 +914,7 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
 
         {tab === 'payable' && (
           <PayableTab
+            exportarTx={exportarTx}
             DateFilter={DateFilter}
             TxTable={TxTableComponent}
             abrirBaixaLote={abrirBaixaLote}

@@ -1,8 +1,10 @@
+import { BotaoExportar } from '../../../components/BotaoExportar.jsx';
 import { Icon } from '../../../components/Icon.jsx';
 import { fmt } from '../../../utils/format.js';
 import { soma, txAberto, txPago } from '../calculations.js';
 
 const PayableTab = ({
+  exportarTx,
   DateFilter,
   TxTable,
   abrirBaixaLote,
@@ -134,6 +136,11 @@ const PayableTab = ({
           >
             ↑ Importar planilha
           </button>
+          <BotaoExportar
+            onClick={() => exportarTx(payable, 'Contas a Pagar', 'Pago')}
+            label="↓ Exportar planilha"
+            title="Baixa os lançamentos filtrados em CSV (abre no Excel)"
+          />
           <button
             onClick={() => {
               setEditTxId(null);

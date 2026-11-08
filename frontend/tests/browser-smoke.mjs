@@ -71,9 +71,9 @@ await page.route('**/*', async (route) => {
   // External logos are unnecessary for this behavioral test.
   return route.abort();
 });
-const exportCsv = async (label, expectedText, expectedAmount) => {
+const exportCsv = async (label, expectedText, expectedAmount, button = /Exportar CSV/) => {
   const downloading = page.waitForEvent('download');
-  await page.getByRole('button', { name: /Exportar CSV/ }).click();
+  await page.getByRole('button', { name: button }).click();
   const download = await downloading;
   const csv = await readFile(await download.path(), 'utf8');
   assert.equal(csv.charCodeAt(0), 0xfeff, `${label}: Excel BOM`);
@@ -102,6 +102,7 @@ try {
   await sidebar.getByRole('button', { name: 'Financeiro', exact: true }).click();
   await page.getByRole('button', { name: 'Novo Recebimento', exact: true }).waitFor();
   await check('Financeiro / A Receber');
+  await exportCsv('A Receber', 'Receita de teste', '1000,00', /Exportar planilha/);
   await page.getByRole('button', { name: 'Novo Recebimento', exact: true }).click();
   await page.getByRole('heading', { name: 'Novo Recebimento', exact: true }).waitFor();
   await check('Modal de lançamento');
@@ -131,6 +132,7 @@ try {
       .first()
       .click();
     await check(name);
+    if (name === 'A Pagar') await exportCsv('A Pagar', 'Despesa de teste', '200,00', /Exportar planilha/);
     if (name === 'Fluxo de Caixa') await exportCsv('DFC', 'Fluxos de Caixa', '1123,45');
     if (name === 'DRE Gerencial') {
       const customerEntries = page.locator('details').filter({ has: page.getByLabel('Cliente para consultar lançamentos') });
