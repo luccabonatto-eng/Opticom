@@ -4,15 +4,24 @@ const shortDate = (value) => value
 
 const DateFilter = ({ from, setFrom, to, setTo, monthNavigation = false, settledLabel, settledOnly, onSettledChange }) => {
   if (monthNavigation) {
+    const singleDay = Boolean(from) && from === to;
+    const iso = (day) => `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
     const moveMonth = (offset) => {
       const anchor = from || to;
       const date = anchor ? new Date(`${anchor}T12:00:00`) : new Date();
+      if (singleDay) {
+        const day = iso(new Date(date.getFullYear(), date.getMonth(), date.getDate() + offset, 12));
+        setFrom(day);
+        setTo(day);
+        return;
+      }
       const first = new Date(date.getFullYear(), date.getMonth() + offset, 1, 12);
       const last = new Date(first.getFullYear(), first.getMonth() + 1, 0, 12);
-      const iso = (day) => `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
       setFrom(iso(first));
       setTo(iso(last));
     };
+    const pickDay = (day) => { setFrom(day); setTo(day); };
+    const stepLabel = (dir) => singleDay ? (dir < 0 ? 'Dia anterior' : 'Próximo dia') : (dir < 0 ? 'Mês anterior' : 'Próximo mês');
     const dateInput = (value, setter, label, boundary) => (
       <label className="relative flex h-8 w-24 items-center justify-center rounded border border-gray-300 bg-gray-50 text-xs text-gray-600 focus-within:ring-2 focus-within:ring-blue-500">
         <span aria-hidden="true">{shortDate(value)}</span>
@@ -27,11 +36,17 @@ const DateFilter = ({ from, setFrom, to, setTo, monthNavigation = false, settled
           Filtrar
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18l-7 8v8l-4-2v-6z" /></svg>
         </span>
-        <button type="button" aria-label="Mês anterior" title="Mês anterior" onClick={() => moveMonth(-1)} className="rounded p-1 text-gray-500 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500">◀</button>
+        <button type="button" aria-label={stepLabel(-1)} title={stepLabel(-1)} onClick={() => moveMonth(-1)} className="rounded p-1 text-gray-500 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500">◀</button>
         {dateInput(from, setFrom, 'Data inicial', { max: to || undefined })}
         <span className="text-xs text-gray-500">a</span>
         {dateInput(to, setTo, 'Data final', { min: from || undefined })}
-        <button type="button" aria-label="Próximo mês" title="Próximo mês" onClick={() => moveMonth(1)} className="rounded p-1 text-gray-500 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500">▶</button>
+        <button type="button" aria-label={stepLabel(1)} title={stepLabel(1)} onClick={() => moveMonth(1)} className="rounded p-1 text-gray-500 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500">▶</button>
+        <label title="Filtrar um dia específico" className={`relative flex h-8 items-center rounded border px-2 text-xs focus-within:ring-2 focus-within:ring-blue-500 ${singleDay ? 'border-blue-300 bg-blue-50 text-blue-700' : 'border-gray-300 bg-gray-50 text-gray-600'}`}>
+          <span aria-hidden="true">Dia</span>
+          <input type="date" aria-label="Dia específico" value={singleDay ? from : ''}
+            onChange={(event) => event.target.value && pickDay(event.target.value)}
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+        </label>
         {settledLabel && (
           <label className="flex cursor-pointer flex-col items-center gap-1 border-l border-gray-200 pl-3 text-[10px] text-gray-500 whitespace-nowrap">
             {settledLabel}
