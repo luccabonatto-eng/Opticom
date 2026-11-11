@@ -13,6 +13,11 @@ const errors = [];
 const assets = [];
 const writes = [];
 let permissionsSetting = null;
+const technicians = [
+  { id: 'tech-1', name: 'Ana Responsável' },
+  { id: 'tech-2', name: 'Bruno Apoio' },
+  { id: 'tech-3', name: 'Carla Apoio' },
+];
 const today = new Date().toISOString().slice(0, 10);
 const customers = [{ id: 'customer-1', name: 'Cliente de teste', type: 'PJ', active: true }];
 const categories = [
@@ -60,10 +65,11 @@ await page.route('**/*', async (route) => {
         expense: categories.filter((c) => c.type === 'EXPENSE'),
       };
     if (endpoint === 'transactions') data = transactions;
+    if (endpoint === 'technicians') data = technicians;
     if (endpoint.startsWith('settings/')) data = { value: endpoint === 'settings/permissions' ? permissionsSetting : null };
     if (request.method() !== 'GET' && request.method() !== 'OPTIONS') {
       writes.push({ endpoint, body: request.postDataJSON() });
-      data = { ...request.postDataJSON(), id: 'created-test' };
+      data = { ...request.postDataJSON(), id: 'created-test', number: 'OS-TESTE' };
     }
     if (endpoint === 'auth/login') data = { token: 'token-teste', user: { id: 'u1', role: 'ADMIN', name: 'Admin teste' } };
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(data) });
@@ -109,6 +115,23 @@ try {
     await page.getByText('Carregando módulo…').waitFor({ state: 'hidden' });
     await check(name);
   }
+  // OS com responsável e técnicos de apoio
+  await sidebar.getByRole('button', { name: 'Ordens de Serviço', exact: true }).click();
+  await page.getByRole('button', { name: 'Nova OS' }).click();
+  const osModal = page.locator('.fixed.inset-0');
+  await osModal.locator('select').first().selectOption('customer-1');
+  await osModal.locator('input[type="date"]').fill(today);
+  await osModal.locator('select').nth(1).selectOption('tech-1');
+  assert.equal(await osModal.getByLabel('Ana Responsável').count(), 0, 'Responsável não aparece como apoio');
+  await osModal.getByLabel('Bruno Apoio').check();
+  await osModal.getByLabel('Carla Apoio').check();
+  await osModal.getByRole('button', { name: 'Criar OS', exact: true }).click();
+  const osWrite = writes.find((w) => w.endpoint === 'orders');
+  assert.equal(osWrite?.body.assigned_technician_id, 'tech-1');
+  assert.deepEqual(osWrite?.body.additional_technicians, ['tech-2', 'tech-3']);
+  await page.getByRole('button', { name: 'Lista', exact: true }).click();
+  await page.getByText('Ana Responsável, Bruno Apoio, Carla Apoio', { exact: true }).waitFor();
+  await check('OS com vários técnicos');
   await sidebar.getByRole('button', { name: 'Financeiro', exact: true }).click();
   await page.getByRole('button', { name: 'Novo Recebimento', exact: true }).waitFor();
   await check('Financeiro / A Receber');

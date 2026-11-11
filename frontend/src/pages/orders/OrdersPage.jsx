@@ -9,6 +9,33 @@ import { api } from '../../api/client.js';
 import { fmt, fmtDate } from '../../utils/format.js';
 import { useEffect, useState } from 'react';
 
+// Equipe da OS além do responsável: marca/desmarca técnicos de apoio.
+const ExtraTechs = ({ technicians, value = [], exclude, onChange }) => {
+  const options = technicians.filter((t) => t.id !== exclude);
+  if (!options.length) return <p className="text-xs text-gray-400">Nenhum outro técnico cadastrado.</p>;
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((t) => {
+        const on = value.includes(t.id);
+        return (
+          <label
+            key={t.id}
+            className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border cursor-pointer select-none ${on ? 'bg-blue-50 border-blue-300 text-blue-700' : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+          >
+            <input
+              type="checkbox"
+              className="accent-blue-600"
+              checked={on}
+              onChange={() => onChange(on ? value.filter((id) => id !== t.id) : [...value, t.id])}
+            />
+            {t.name}
+          </label>
+        );
+      })}
+    </div>
+  );
+};
+
 const OrdersPage = ({ taxRegime = 'REAL' }) => {
   const [view, setView] = useState('kanban');
   const [q, setQ] = useState('');
@@ -47,6 +74,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
     description: '',
     scheduled_date: '',
     assigned_technician_id: '',
+    additional_technicians: [],
     substation: '',
     city: '',
   });
@@ -95,13 +123,23 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
     }
   };
 
-  const assignTech = async (id, assigned_technician_id) => {
-    const result = await api.updateOrder(id, { assigned_technician_id: assigned_technician_id || null });
+  // Quem vira responsável sai da lista de apoio, para não aparecer duas vezes.
+  const updateTeam = async (o, assigned_technician_id, additional_technicians) => {
+    const result = await api.updateOrder(o.id, {
+      assigned_technician_id: assigned_technician_id || null,
+      additional_technicians: additional_technicians.filter((id) => id !== assigned_technician_id),
+    });
     if (result.success) {
-      setOrders((prev) => prev.map((x) => (x.id === id ? result.data : x)));
+      setOrders((prev) => prev.map((x) => (x.id === o.id ? result.data : x)));
       setSelected((prev) => (prev ? result.data : null));
+    } else {
+      setToast(`Erro ao atualizar técnicos: ${result.error}`);
     }
   };
+
+  const techName = (id) => technicians.find((t) => t.id === id)?.name;
+  const teamNames = (o) =>
+    [o.technicians?.name || techName(o.assigned_technician_id) || o.tech, ...(o.additional_technicians || []).map(techName)].filter(Boolean);
 
   const createOS = async () => {
     if (!newOS.customer_id) {
@@ -119,6 +157,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
       status: 'OPEN',
       scheduled_date: newOS.scheduled_date,
       assigned_technician_id: newOS.assigned_technician_id || null,
+      additional_technicians: newOS.additional_technicians.filter((id) => id !== newOS.assigned_technician_id),
       description: newOS.description || null,
       substation: newOS.substation || null,
       city: newOS.city || null,
@@ -133,6 +172,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
         description: '',
         scheduled_date: '',
         assigned_technician_id: '',
+        additional_technicians: [],
         substation: '',
         city: '',
       });
@@ -166,10 +206,11 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
           <Icon name="calendar" className="w-3 h-3" />
           {fmtDate(o.scheduled_date || o.date)}
         </span>
-        {(o.technicians?.name || o.tech) && (
-          <span className="flex items-center gap-1 truncate">
+        {teamNames(o).length > 0 && (
+          <span className="flex items-center gap-1 truncate" title={teamNames(o).join(', ')}>
             <Icon name="user" className="w-3 h-3" />
-            {(o.technicians?.name || o.tech || '').split(' ')[0]}
+            {teamNames(o)[0].split(' ')[0]}
+            {teamNames(o).length > 1 && ` +${teamNames(o).length - 1}`}
           </span>
         )}
       </div>
@@ -263,7 +304,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
                     'Status',
                     'Nota Fiscal',
                     'Agendado',
-                    'Técnico',
+                    'Técnicos',
                     '',
                   ].map((h) => (
                     <th
@@ -300,7 +341,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
                     </td>
                     <td className="px-4 py-3 text-gray-600">{fmtDate(o.scheduled_date || o.date)}</td>
                     <td className="px-4 py-3 text-gray-600">
-                      {o.technicians?.name || o.tech || <span className="text-gray-300">—</span>}
+                      {teamNames(o).join(', ') || <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-4 py-3">
                       <button className="text-xs text-blue-600 hover:underline font-medium">Abrir →</button>
@@ -371,7 +412,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
                   <p className="text-xs text-gray-400 mb-1">Técnico Responsável</p>
                   <select
                     value={selOS.assigned_technician_id || ''}
-                    onChange={(e) => assignTech(selOS.id, e.target.value || null)}
+                    onChange={(e) => updateTeam(selOS, e.target.value || null, selOS.additional_technicians || [])}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Nenhum (não atribuído)</option>
@@ -381,6 +422,15 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
                       </option>
                     ))}
                   </select>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1">Técnicos de apoio</p>
+                  <ExtraTechs
+                    technicians={technicians}
+                    value={selOS.additional_technicians || []}
+                    exclude={selOS.assigned_technician_id}
+                    onChange={(ids) => updateTeam(selOS, selOS.assigned_technician_id, ids)}
+                  />
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Progresso</p>
@@ -517,7 +567,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
             </div>
           ))}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Técnico</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Técnico Responsável</label>
             <select
               value={newOS.assigned_technician_id}
               onChange={(e) => setNewOS((p) => ({ ...p, assigned_technician_id: e.target.value }))}
@@ -530,6 +580,15 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
                 </option>
               ))}
             </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Técnicos de apoio</label>
+            <ExtraTechs
+              technicians={technicians}
+              value={newOS.additional_technicians}
+              exclude={newOS.assigned_technician_id}
+              onChange={(ids) => setNewOS((p) => ({ ...p, additional_technicians: ids }))}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
