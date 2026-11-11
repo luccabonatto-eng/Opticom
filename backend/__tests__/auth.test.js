@@ -175,3 +175,19 @@ describe('Authentication API', () => {
     });
   });
 });
+
+describe('authMiddleware', () => {
+  const protegido = express();
+  protegido.get('/x', require('../src/middleware/auth'), (req, res) => res.json(req.user));
+
+  test('rejeita o antigo token de demonstração', async () => {
+    const res = await request(protegido).get('/x').set('Authorization', 'Bearer demo-preview-opticom-2026');
+    expect(res.statusCode).toBe(401);
+  });
+
+  test('aceita JWT válido', async () => {
+    const res = await request(protegido).get('/x').set('Authorization', `Bearer ${tokenAdmin()}`);
+    expect(res.statusCode).toBe(200);
+    expect(res.body.role).toBe('ADMIN');
+  });
+});

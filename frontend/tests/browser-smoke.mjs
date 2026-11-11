@@ -12,6 +12,7 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
 const errors = [];
 const assets = [];
 const writes = [];
+let permissionsSetting = null;
 const today = new Date().toISOString().slice(0, 10);
 const customers = [{ id: 'customer-1', name: 'Cliente de teste', type: 'PJ', active: true }];
 const categories = [
@@ -59,11 +60,12 @@ await page.route('**/*', async (route) => {
         expense: categories.filter((c) => c.type === 'EXPENSE'),
       };
     if (endpoint === 'transactions') data = transactions;
-    if (endpoint.startsWith('settings/')) data = { value: null };
+    if (endpoint.startsWith('settings/')) data = { value: endpoint === 'settings/permissions' ? permissionsSetting : null };
     if (request.method() !== 'GET' && request.method() !== 'OPTIONS') {
       writes.push({ endpoint, body: request.postDataJSON() });
       data = { ...request.postDataJSON(), id: 'created-test' };
     }
+    if (endpoint === 'auth/login') data = { token: 'token-teste', user: { id: 'u1', role: 'ADMIN', name: 'Admin teste' } };
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(data) });
     return;
   }
@@ -90,7 +92,14 @@ const check = async (label) => {
 };
 try {
   await page.goto(origin);
+  // Sem sessão o sistema abre na tela de login
+  assert.equal(await page.locator('aside').count(), 0, 'Sem login não pode mostrar o sistema');
+  await page.locator('input[type=email]').fill('admin@teste.com');
+  await page.locator('input[type=password]').fill('senha');
+  await page.getByRole('button', { name: 'Entrar no sistema' }).click();
   await page.getByRole('button', { name: 'Dashboard', exact: true }).first().waitFor();
+  assert.equal(await page.evaluate(() => sessionStorage.getItem('opticom_token')), 'token-teste');
+  console.log('OK Login');
   await page.getByText('Carregando módulo…').waitFor({ state: 'hidden' });
   await check('Dashboard');
   assert.ok(!assets.some((a) => a.includes('FinancialPage-')), 'Financeiro must not load before navigation');
@@ -148,6 +157,8 @@ try {
     if (name === 'A Pagar') await exportCsv('A Pagar', 'Despesa de teste', '200,00', /Exportar planilha/);
     if (name === 'Fluxo de Caixa') await exportCsv('DFC', 'Fluxos de Caixa', '1123,45');
     if (name === 'DRE Gerencial') {
+      // o DRE abre na visão Gerencial; o painel por cliente fica em "Por Cliente"
+      await page.locator('main').getByRole('button', { name: 'Por Cliente', exact: true }).click();
       const customerEntries = page.locator('details').filter({ has: page.getByLabel('Cliente para consultar lançamentos') });
       // o painel nasce fechado para não poluir o topo do DRE
       await customerEntries.locator('summary').click();
@@ -183,12 +194,10 @@ try {
     await page.locator('main').getByRole('button', { name, exact: true }).click();
     await check(`Configurações / ${name}`);
   }
+  // Permissões vêm do banco (settings/permissions), não do navegador
+  permissionsSetting = JSON.stringify({ MANAGER: ['dashboard', 'financial'], MANAGER_fin: ['receivable'] });
   await page.evaluate(() => {
     sessionStorage.setItem('opticom_user', JSON.stringify({ role: 'MANAGER', name: 'Gestor teste' }));
-    localStorage.setItem(
-      'opticom_permissions',
-      JSON.stringify({ MANAGER: ['dashboard', 'financial'], MANAGER_fin: ['receivable'] }),
-    );
   });
   await page.reload();
   await sidebar.getByRole('button', { name: 'Financeiro', exact: true }).click();

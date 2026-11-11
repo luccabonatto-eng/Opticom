@@ -25,6 +25,7 @@ await page.route('**/*',async route=>{
  }
  await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
 });
+await page.addInitScript(()=>{ sessionStorage.setItem('opticom_token','token-teste'); sessionStorage.setItem('opticom_user',JSON.stringify({role:'ADMIN',name:'Admin teste'})); });
 try {
  await page.goto(origin);
  await page.locator('aside').getByRole('button',{name:'Financeiro',exact:true}).click();

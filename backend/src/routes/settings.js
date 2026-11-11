@@ -26,6 +26,10 @@ router.get('/:key', async (req, res) => {
 // PUT update a setting — ADMIN/MANAGER
 router.put('/:key', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   try {
+    // As permissões dos perfis definem o que cada um vê — só o ADMIN altera.
+    if (req.params.key === 'permissions' && req.user.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Acesso negado. Role necessário: ADMIN' });
+    }
     const { value } = req.body;
     if (value === undefined) return res.status(400).json({ error: 'value é obrigatório' });
 

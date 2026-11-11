@@ -5,13 +5,9 @@ const API_BASE_URL = window.location.origin.includes('localhost')
   ? 'http://localhost:3001/api'
   : 'https://opticom-backend.vercel.app/api';
 
-// Tela de login está desativada — sem token real, usa o token de demonstração
-// do backend para evitar 401 em loop (que causava refresh contínuo da página).
-const DEMO_TOKEN = 'demo-preview-opticom-2026';
-
 class OpticomAPI {
   constructor() {
-    this.token = sessionStorage.getItem('opticom_token') || DEMO_TOKEN;
+    this.token = sessionStorage.getItem('opticom_token');
     try {
       this.user = JSON.parse(sessionStorage.getItem('opticom_user') || 'null');
     } catch {

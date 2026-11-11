@@ -29,3 +29,12 @@ test('read-only profile cannot save a conference', async () => {
  const res=await request(readOnly).put('/settings/bank_reconciliation_b').send({value:'{}',expectedValue:null});
  expect(res.status).toBe(403);
 });
+test('only ADMIN can change profile permissions', async () => {
+ const manager=express(); manager.use(express.json());
+ manager.use((req,res,next)=>{req.user={role:'MANAGER'};next();});
+ manager.use('/settings',require('../src/routes/settings'));
+ const res=await request(manager).put('/settings/permissions').send({value:'{}'});
+ expect(res.status).toBe(403); expect(db.upsert).not.toHaveBeenCalled();
+ const ok=await request(app).put('/settings/permissions').send({value:'{}'});
+ expect(ok.status).toBe(200);
+});

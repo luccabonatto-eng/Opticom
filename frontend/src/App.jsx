@@ -3,6 +3,7 @@ import { EXPENSE_CATS_INIT, INCOME_CATS_INIT } from './config/financial.js';
 import { DEFAULT_PERMISSIONS } from './config/navigation.js';
 
 import { Header } from './layout/Header.jsx';
+import { LoginPage } from './pages/login/LoginPage.jsx';
 
 import { Sidebar } from './layout/Sidebar.jsx';
 import { TAX_REGIMES } from './config/tax-regimes.js';
@@ -37,25 +38,18 @@ const TechniciansPage = lazy(() =>
 );
 
 function App() {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loggedIn, setLoggedIn] = useState(() => !!sessionStorage.getItem('opticom_token'));
   const [page, setPage] = useState('dashboard');
-  // TEMPORÁRIO: sem login ativo, assume perfil ADMIN para visão completa do sistema
-  const [user, setUser] = useState(() => api.user || { role: 'ADMIN', name: 'Administrador' });
+  const [user, setUser] = useState(() => api.user);
   const [collapsed, setCollapsed] = useState(false);
   // Regime tributário global — propagado por toda a aplicação
   const [taxRegime, setTaxRegime] = useState(() => localStorage.getItem('opticom_taxRegime') || 'REAL');
-  // Permissões por perfil
-  const [permissions, setPermissions] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('opticom_permissions')) || DEFAULT_PERMISSIONS;
-    } catch {
-      return DEFAULT_PERMISSIONS;
-    }
-  });
-  const savePermissions = (p) => {
-    setPermissions(p);
-    localStorage.setItem('opticom_permissions', JSON.stringify(p));
+  // Permissões por perfil — no banco, para valerem em todos os computadores (só ADMIN altera)
+  const [permissions, setPermissions] = useState(DEFAULT_PERMISSIONS);
+  const savePermissions = async (p) => {
+    const r = await api.setSetting('permissions', JSON.stringify(p));
+    if (r.success) setPermissions(p);
+    else console.error('Erro ao salvar permissões:', r.error);
   };
   // Configurações financeiras globais
   const [incomeCats, setIncomeCats] = useState(INCOME_CATS_INIT.map((n) => ({ id: n, name: n })));
@@ -66,7 +60,14 @@ function App() {
   const [payMethods, setPayMethods] = useState([]);
 
   useEffect(() => {
-    if (!api.token) return;
+    if (!loggedIn) return;
+    api.getSetting('permissions').then((r) => {
+      try {
+        if (r.success && r.data?.value) setPermissions(JSON.parse(r.data.value));
+      } catch {
+        // valor inválido no banco: mantém o padrão
+      }
+    });
     api.getBankAccounts().then((r) => {
       if (r.success)
         setBankAccounts(
@@ -96,7 +97,7 @@ function App() {
         if (r.data?.expense) setExpenseCats(r.data.expense);
       }
     });
-  }, []);
+  }, [loggedIn]);
 
   // Sincronizar loggedIn com token em sessionStorage
   // Verificar continuamente para detectar logout automático via 401
@@ -108,17 +109,21 @@ function App() {
       setLoggedIn(isAuthenticated);
     };
 
-    // Check inicial
-    checkAuth();
-    setLoading(false);
-
     // Verificar a cada 500ms - detecta logout automático quando há erro 401
     const interval = setInterval(checkAuth, 500);
     return () => clearInterval(interval);
   }, []);
 
-  // TEMPORÁRIO: tela de login desativada a pedido do usuário — reativar removendo este comentário
-  // if (!loggedIn) return <LoginPage onLogin={()=>{ setUser(api.user); setLoggedIn(true); }}/>;
+  if (!loggedIn)
+    return (
+      <LoginPage
+        onLogin={() => {
+          setUser(api.user);
+          setPage('dashboard');
+          setLoggedIn(true);
+        }}
+      />
+    );
 
   const renderPage = () => {
     const role = user?.role || 'TECHNICIAN';
