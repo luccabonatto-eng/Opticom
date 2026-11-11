@@ -80,6 +80,7 @@ const exportCsv = async (label, expectedText, expectedAmount, button = /Exportar
   assert.ok(csv.includes(expectedText), `${label}: expected exported data`);
   assert.ok(csv.includes(expectedAmount), `${label}: income in reais`);
   console.log(`OK ${label} CSV`);
+  return csv;
 };
 const check = async (label) => {
   await page.waitForTimeout(100);
@@ -116,6 +117,18 @@ try {
   assert.equal(creation?.body.amount, 12345, 'Modal must submit integer cents');
   assert.equal(creation?.body.description, 'Lançamento de verificação');
   const search = page.getByRole('textbox', { name: 'Buscar pela descrição...' });
+  const firstRow = () => page.locator('tbody tr').first().innerText();
+  const byAmount = page.locator('thead').getByRole('button', { name: 'Valor', exact: true });
+  await byAmount.click();
+  assert.match(await firstRow(), /Lançamento de verificação/, 'Valor crescente');
+  await search.fill('e'); // a página re-renderiza a tabela; a ordem tem que continuar
+  assert.match(await firstRow(), /Lançamento de verificação/, 'Ordenação mantida ao filtrar');
+  await byAmount.click();
+  assert.match(await firstRow(), /Receita de teste/, 'Valor decrescente');
+  const sortedCsv = await exportCsv('A Receber ordenado', 'Receita de teste', '1000,00', /Exportar planilha/);
+  assert.ok(sortedCsv.indexOf('Receita de teste') < sortedCsv.indexOf('Lançamento de verificação'), 'Planilha na ordem da tela');
+  await byAmount.click(); // volta à ordem original
+  await check('Ordenação por coluna');
   await search.fill('Receita');
   for (const name of [
     'A Pagar',

@@ -137,7 +137,7 @@ const PayableTab = ({
             ↑ Importar planilha
           </button>
           <BotaoExportar
-            onClick={() => exportarTx(payable, 'Contas a Pagar', 'Pago')}
+            onClick={() => exportarTx('payable', payable, 'Contas a Pagar', 'Pago')}
             label="↓ Exportar planilha"
             title="Baixa os lançamentos filtrados em CSV (abre no Excel)"
           />

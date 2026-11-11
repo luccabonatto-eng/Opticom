@@ -137,7 +137,7 @@ const ReceivableTab = ({
             ↑ Importar planilha
           </button>
           <BotaoExportar
-            onClick={() => exportarTx(receivable, 'Contas a Receber', 'Recebido')}
+            onClick={() => exportarTx('receivable', receivable, 'Contas a Receber', 'Recebido')}
             label="↓ Exportar planilha"
             title="Baixa os lançamentos filtrados em CSV (abre no Excel)"
           />

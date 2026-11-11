@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Badge } from '../../../components/Badge.jsx';
+import { Badge, STATUS_MAP } from '../../../components/Badge.jsx';
 import { fmt, fmtDate } from '../../../utils/format.js';
 
 // Larguras padrão equilibradas
@@ -18,6 +18,53 @@ const ALL_COLUMNS = [
 ];
 
 const DEFAULT_ACTIONS_WIDTH = 120;
+
+// Valor de cada coluna usado na ordenação. A exportação usa o mesmo, para a planilha sair na ordem da tela.
+const txSortValues = ({ customers = [], bankAccounts = [], payMethods = [], txCatName, txStatus, txDue, txPago, txAberto }) => ({
+  description: (t) => t.description || t.desc || '',
+  category: (t) => (txCatName(t) === '—' ? '' : txCatName(t)),
+  customer: (t) => t.customers?.name || customers.find((c) => c.id === t.customer_id)?.name || '',
+  invoice: (t) => t.invoice_number || '',
+  bank: (t) => bankAccounts.find((b) => b.id === t.bank_account_id)?.name || t.account || '',
+  payment_method: (t) => payMethods.find((m) => m.id === t.payment_method_id)?.name || t.payMethod || '',
+  due_date: (t) => txDue(t) || '',
+  amount: (t) => Number(t.amount) || 0,
+  paid: (t) => txPago(t),
+  open: (t) => txAberto(t),
+  status: (t) => STATUS_MAP[txStatus(t)]?.[1] || txStatus(t) || '',
+});
+
+const ordenarTx = (list, sort, values) => {
+  const get = sort && values[sort.col];
+  if (!get) return list;
+  return [...list].sort((x, y) => {
+    const a = get(x);
+    const b = get(y);
+    const vazio = (a === '') - (b === ''); // vazios sempre no fim, nos dois sentidos
+    if (vazio) return vazio;
+    const c = typeof a === 'number' ? a - b : String(a).localeCompare(String(b), 'pt-BR', { numeric: true, sensitivity: 'base' });
+    return sort.dir === 'desc' ? -c : c;
+  });
+};
+
+const lerOrdenacao = (tableId) => {
+  try {
+    return JSON.parse(localStorage.getItem(`opticom_tx_sort_${tableId}`)) || null;
+  } catch (e) {
+    return null;
+  }
+};
+
+// Ordem que a tela está mostrando: a salva, desde que a coluna não esteja oculta.
+const ordemDaTela = (tableId) => {
+  const sort = lerOrdenacao(tableId);
+  try {
+    const cols = JSON.parse(localStorage.getItem(`opticom_tx_cols_${tableId}`));
+    return sort && Array.isArray(cols) && cols.length > 0 && !cols.includes(sort.col) ? null : sort;
+  } catch (e) {
+    return sort;
+  }
+};
 
 const TxTable = ({
   tableId = 'default',
@@ -248,6 +295,23 @@ const TxTable = ({
   };
 
   const renderedCols = applicableColumns.filter((c) => visibleCols.has(c.id));
+
+  const values = txSortValues({ customers, bankAccounts, payMethods, txCatName, txStatus, txDue, txPago, txAberto });
+
+  // Ordenação: clique no título alterna crescente → decrescente → ordem original.
+  // Fica no localStorage como colunas/larguras, porque a tabela é recriada a cada render da página.
+  const sortKey = `opticom_tx_sort_${tableId}`;
+  const [sort, setSort] = useState(() => lerOrdenacao(tableId));
+  const toggleSort = (colId) =>
+    setSort((prev) => {
+      const next = prev?.col !== colId ? { col: colId, dir: 'asc' } : prev.dir === 'asc' ? { col: colId, dir: 'desc' } : null;
+      try {
+        next ? localStorage.setItem(sortKey, JSON.stringify(next)) : localStorage.removeItem(sortKey);
+      } catch (e) {}
+      return next;
+    });
+  const activeSort = sort && visibleCols.has(sort.col) ? sort : null;
+  const rows = ordenarTx(txList, activeSort, values);
   const actionsWidth = widths.actions || DEFAULT_ACTIONS_WIDTH;
   const totalTableWidth = 40 + renderedCols.reduce((sum, col) => sum + (widths[col.id] || col.defaultWidth), 0) + actionsWidth;
 
@@ -372,13 +436,25 @@ const TxTable = ({
               {renderedCols.map((col) => {
                 const label = typeof col.label === 'function' ? col.label({ baixaLabel }) : col.label;
                 const isResizingThis = activeCol === col.id;
+                const sortDir = activeSort?.col === col.id ? activeSort.dir : null;
                 return (
                   <th
                     key={col.id}
+                    aria-sort={sortDir === 'asc' ? 'ascending' : sortDir === 'desc' ? 'descending' : undefined}
                     className="relative px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide select-none group bg-gray-50"
                   >
                     <div className="flex items-center justify-between overflow-hidden pr-2">
-                      <span className="truncate" title={label}>{label}</span>
+                      <button
+                        type="button"
+                        onClick={() => toggleSort(col.id)}
+                        title={`Ordenar por ${label}`}
+                        className="flex items-center gap-1 min-w-0 text-left uppercase tracking-wide hover:text-gray-800"
+                      >
+                        <span className="truncate">{label}</span>
+                        <span aria-hidden="true" className={sortDir ? 'text-blue-600' : 'text-gray-300'}>
+                          {sortDir === 'asc' ? '▲' : sortDir === 'desc' ? '▼' : '↕'}
+                        </span>
+                      </button>
                     </div>
 
                     {/* Alça divisória para redimensionar por arraste */}
@@ -433,7 +509,7 @@ const TxTable = ({
               </tr>
             )}
 
-            {txList.map((t) => {
+            {rows.map((t) => {
               const status = txStatus(t);
               const isSelected = selected.has(t.id);
               const rowBg = isSelected
@@ -482,9 +558,7 @@ const TxTable = ({
                     }
 
                     if (col.id === 'customer') {
-                      const name =
-                        t.customers?.name ||
-                        customers.find((c) => c.id === t.customer_id)?.name;
+                      const name = values.customer(t);
                       return (
                         <td key={col.id} className="px-3 py-2.5 text-xs text-gray-500 overflow-hidden">
                           <span className="truncate block" title={name || '—'}>
@@ -505,9 +579,7 @@ const TxTable = ({
                     }
 
                     if (col.id === 'bank') {
-                      const name =
-                        bankAccounts.find((b) => b.id === t.bank_account_id)?.name ||
-                        t.account;
+                      const name = values.bank(t);
                       return (
                         <td key={col.id} className="px-3 py-2.5 text-xs text-gray-500 overflow-hidden">
                           <span className="truncate block" title={name || '—'}>
@@ -518,9 +590,7 @@ const TxTable = ({
                     }
 
                     if (col.id === 'payment_method') {
-                      const name =
-                        payMethods.find((m) => m.id === t.payment_method_id)?.name ||
-                        t.payMethod;
+                      const name = values.payment_method(t);
                       return (
                         <td key={col.id} className="px-3 py-2.5 text-xs text-gray-500 overflow-hidden">
                           <span className="truncate block" title={name || '—'}>
@@ -633,4 +703,4 @@ const TxTable = ({
   );
 };
 
-export { TxTable };
+export { TxTable, ordemDaTela, ordenarTx, txSortValues };
