@@ -244,6 +244,14 @@ class OpticomAPI {
     return this._fetch(`/products/${id}`, { method: 'DELETE' });
   }
 
+  async getProductMovements(id) {
+    return this._fetch(`/products/${id}/movements`);
+  }
+
+  async createProductMovement(id, movement) {
+    return this._fetch(`/products/${id}/movements`, { method: 'POST', body: JSON.stringify(movement) });
+  }
+
   // === Transações ===
   async getTransactions(filters = {}) {
     const params = new URLSearchParams(filters);

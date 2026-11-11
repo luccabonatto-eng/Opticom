@@ -6,6 +6,8 @@ import { api } from '../../api/client.js';
 import { fmt } from '../../utils/format.js';
 import { useEffect, useState } from 'react';
 
+const fmtDateTime = (d) => new Date(d).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+
 const InventoryPage = () => {
   const [q, setQ] = useState('');
   const [belowMin, setBelowMin] = useState(false);
@@ -29,6 +31,22 @@ const InventoryPage = () => {
     desc: '',
   });
   const [newProdModal, setNewProdModal] = useState(false);
+  const [history, setHistory] = useState(null); // null = carregando
+  const [historyError, setHistoryError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!selected?.id) return;
+    setHistory(null);
+    setHistoryError('');
+    api.getProductMovements(selected.id).then((r) => {
+      if (r.success) setHistory(r.data || []);
+      else {
+        setHistory([]);
+        setHistoryError(r.error || 'Erro ao carregar histórico');
+      }
+    });
+  }, [selected?.id]);
 
   const normalizeProduct = (p) => ({
     ...p,
@@ -89,18 +107,28 @@ const InventoryPage = () => {
   const doAdjust = async () => {
     const target = adjustModal || selected;
     if (!target) return;
-    const qty = parseInt(adjustQty) || 0;
-    const curQty = inventory.find((i) => i.id === target.id)?.qty ?? target.qty ?? 0;
-    const newQty = adjustDir === '+' ? curQty + qty : Math.max(0, curQty - qty);
-    const result = await api.updateProduct(target.id, { quantity: newQty });
-    if (result.success) {
-      const updater = (i) =>
-        i.id !== target.id ? i : { ...i, qty: newQty, quantity: newQty, belowMin: newQty < i.min };
-      setInventory((p) => p.map(updater));
-      setToast(`Estoque de ${target.name} ajustado!`);
-    } else {
-      setToast(result.error || 'Erro ao ajustar estoque');
+    const qty = Number(adjustQty);
+    if (!Number.isInteger(qty) || qty <= 0) {
+      setToast('Informe uma quantidade inteira maior que zero');
+      return;
     }
+    setSaving(true);
+    const result = await api.createProductMovement(target.id, {
+      type: adjustDir === '+' ? 'IN' : 'OUT',
+      quantity: qty,
+      note: adjustNote.trim() || null,
+    });
+    setSaving(false);
+    if (!result.success) {
+      setToast(result.error || 'Erro ao ajustar estoque');
+      return;
+    }
+    // O saldo vem do banco: outro ajuste feito ao mesmo tempo já está somado
+    const newQty = result.data.balance_after;
+    const updater = (i) => (i.id !== target.id ? i : { ...i, qty: newQty, quantity: newQty, belowMin: newQty < i.min });
+    setInventory((p) => p.map(updater));
+    setHistory((h) => [result.data, ...(h || [])]);
+    setToast(`Estoque de ${target.name} ajustado!`);
     setAdjustModal(null);
     setAdjustQty('');
     setAdjustDir('+');
@@ -223,7 +251,7 @@ const InventoryPage = () => {
           </div>
 
           {/* Item Detail / Adjust Modal */}
-          <Modal open={!!selected} onClose={() => setSelected(null)} title={selected?.name || ''} size="md">
+          <Modal open={!!selected} onClose={() => setSelected(null)} title={selected?.name || ''} size="lg">
             {selected && (
               <div className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
@@ -281,14 +309,55 @@ const InventoryPage = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => {
-                      doAdjust();
-                      setSelected(null);
-                    }}
-                    className="mt-3 w-full py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                    onClick={doAdjust}
+                    disabled={saving}
+                    className="mt-3 w-full py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
                   >
-                    Confirmar Ajuste
+                    {saving ? 'Salvando…' : 'Confirmar Ajuste'}
                   </button>
+                </div>
+                <div className="border-t border-gray-100 pt-4">
+                  <p className="text-sm font-semibold text-gray-700 mb-3">Histórico de Movimentação</p>
+                  {history === null ? (
+                    <p className="text-xs text-gray-400">Carregando…</p>
+                  ) : historyError ? (
+                    <p className="text-xs text-red-600">{historyError}</p>
+                  ) : history.length === 0 ? (
+                    <p className="text-xs text-gray-400">Nenhuma movimentação registrada.</p>
+                  ) : (
+                    <div className="max-h-72 overflow-y-auto border border-gray-100 rounded-lg">
+                      <table className="w-full text-xs" aria-label="Histórico de movimentação">
+                        <thead className="bg-gray-50 sticky top-0">
+                          <tr>
+                            {['Data', 'Movimento', 'Qtd', 'Saldo', 'Motivo', 'Usuário'].map((h) => (
+                              <th key={h} className="px-3 py-2 text-left font-semibold text-gray-500">
+                                {h}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {history.map((m) => (
+                            <tr key={m.id}>
+                              <td className="px-3 py-2 whitespace-nowrap text-gray-600">{fmtDateTime(m.created_at)}</td>
+                              <td className="px-3 py-2">
+                                <span className={m.type === 'IN' ? 'text-green-700' : 'text-red-600'}>
+                                  {m.type === 'IN' ? 'Entrada' : 'Saída'}
+                                </span>
+                              </td>
+                              <td className={`px-3 py-2 font-semibold ${m.type === 'IN' ? 'text-green-700' : 'text-red-600'}`}>
+                                {m.type === 'IN' ? '+' : '−'}
+                                {m.quantity}
+                              </td>
+                              <td className="px-3 py-2 font-medium text-gray-800">{m.balance_after}</td>
+                              <td className="px-3 py-2 text-gray-600">{m.note || '—'}</td>
+                              <td className="px-3 py-2 text-gray-500">{m.users?.name || '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

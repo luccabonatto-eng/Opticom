@@ -66,10 +66,15 @@ await page.route('**/*', async (route) => {
       };
     if (endpoint === 'transactions') data = transactions;
     if (endpoint === 'technicians') data = technicians;
+    if (endpoint === 'products') data = [{ id: 'prod-1', name: 'Cabo 25mm', sku: '001', category: 'Cabos', quantity: 50, min_quantity: 0, unit_cost: 15 }];
+    if (endpoint === 'products/prod-1/movements')
+      data = [{ id: 'mov-0', type: 'IN', quantity: 50, balance_after: 50, note: 'Estoque inicial', created_at: `${today}T10:00:00Z`, users: { name: 'Admin teste' } }];
     if (endpoint.startsWith('settings/')) data = { value: endpoint === 'settings/permissions' ? permissionsSetting : null };
     if (request.method() !== 'GET' && request.method() !== 'OPTIONS') {
       writes.push({ endpoint, body: request.postDataJSON() });
       data = { ...request.postDataJSON(), id: 'created-test', number: 'OS-TESTE' };
+      if (endpoint === 'products/prod-1/movements')
+        data = { ...data, balance_after: 47, created_at: new Date().toISOString(), users: { name: 'Admin teste' } };
     }
     if (endpoint === 'auth/login') data = { token: 'token-teste', user: { id: 'u1', role: 'ADMIN', name: 'Admin teste' } };
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(data) });
@@ -115,6 +120,23 @@ try {
     await page.getByText('Carregando módulo…').waitFor({ state: 'hidden' });
     await check(name);
   }
+  // Estoque: histórico do produto e saída registrada pela movimentação
+  await sidebar.getByRole('button', { name: 'Estoque', exact: true }).click();
+  await page.getByText('Cabo 25mm', { exact: true }).click();
+  const historyTable = page.getByRole('table', { name: 'Histórico de movimentação' });
+  await historyTable.getByText('Estoque inicial').waitFor();
+  await page.getByRole('button', { name: /Saída \/ Uso/ }).click();
+  await page.getByPlaceholder('0', { exact: true }).fill('3');
+  await page.getByPlaceholder('Motivo...').fill('OS-TESTE');
+  await page.getByRole('button', { name: 'Confirmar Ajuste' }).click();
+  await historyTable.getByText('OS-TESTE').waitFor();
+  const movWrite = writes.find((w) => w.endpoint === 'products/prod-1/movements');
+  assert.deepEqual(movWrite?.body, { type: 'OUT', quantity: 3, note: 'OS-TESTE' });
+  assert.equal(await historyTable.locator('tbody tr').count(), 2);
+  assert.match(await historyTable.locator('tbody tr').first().innerText(), /Saída\s+−3\s+47/);
+  await check('Histórico do estoque');
+  await page.locator('.fixed.inset-0').getByRole('button', { name: '×' }).click();
+
   // OS com responsável e técnicos de apoio
   await sidebar.getByRole('button', { name: 'Ordens de Serviço', exact: true }).click();
   await page.getByRole('button', { name: 'Nova OS' }).click();
