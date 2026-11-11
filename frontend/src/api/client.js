@@ -43,21 +43,13 @@ class OpticomAPI {
     }
   }
 
+  // /auth/register exige token de ADMIN — por isso passa pelo _fetch autenticado
   async register(name, email, password, role = 'TECHNICIAN') {
-    try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, role }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Erro ao registrar');
-
-      return { success: true, user: data.user };
-    } catch (error) {
-      return { success: false, error: error.message };
-    }
+    const r = await this._fetch('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password, role }),
+    });
+    return r.success ? { success: true, user: r.data.user } : r;
   }
 
   logout() {
