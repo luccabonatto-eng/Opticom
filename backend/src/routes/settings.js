@@ -1,6 +1,7 @@
 const express = require('express');
 const supabase = require('../../config/supabase');
 const checkRole = require('../middleware/rbac');
+const checkPage = require('../middleware/page-access');
 
 const router = express.Router();
 
@@ -23,13 +24,16 @@ router.get('/:key', async (req, res) => {
   }
 });
 
-// PUT update a setting — ADMIN/MANAGER
-router.put('/:key', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+// Página dona de cada configuração: escopos e conciliação são do Financeiro; o resto, de Configurações.
+const pageOf = (key) => (key === 'financial_scopes' || key.startsWith('bank_reconciliation_') ? 'financial' : 'settings');
+
+// PUT update a setting
+router.put('/:key', (req, res, next) => {
+  // As permissões dos perfis definem o que cada um vê — só o ADMIN altera.
+  if (req.params.key === 'permissions') return checkRole('ADMIN')(req, res, next);
+  return checkPage(pageOf(req.params.key))(req, res, next);
+}, async (req, res) => {
   try {
-    // As permissões dos perfis definem o que cada um vê — só o ADMIN altera.
-    if (req.params.key === 'permissions' && req.user.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Acesso negado. Role necessário: ADMIN' });
-    }
     const { value } = req.body;
     if (value === undefined) return res.status(400).json({ error: 'value é obrigatório' });
 

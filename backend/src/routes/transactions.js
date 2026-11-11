@@ -1,6 +1,6 @@
 const express = require('express');
 const supabase = require('../../config/supabase');
-const checkRole = require('../middleware/rbac');
+const checkPage = require('../middleware/page-access');
 
 const router = express.Router();
 
@@ -183,7 +183,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.post('/', checkPage('financial'), async (req, res) => {
   try {
     const {
       type, status, description, amount, amount_paid, due_date, paid_date,
@@ -226,7 +226,7 @@ router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   }
 });
 
-router.put('/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.put('/:id', checkPage('financial'), async (req, res) => {
   try {
     const invalid = validateTransaction(req.body);
     if (invalid) return res.status(400).json({ error: invalid });
@@ -259,7 +259,7 @@ router.put('/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   }
 });
 
-router.delete('/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.delete('/:id', checkPage('financial'), async (req, res) => {
   try {
     const { data: existing } = await supabase
       .from('transactions')

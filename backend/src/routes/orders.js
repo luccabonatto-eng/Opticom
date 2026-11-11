@@ -1,6 +1,6 @@
 const express = require('express');
 const supabase = require('../../config/supabase');
-const checkRole = require('../middleware/rbac');
+const checkPage = require('../middleware/page-access');
 
 const router = express.Router();
 
@@ -58,7 +58,7 @@ router.get('/:id', async (req, res) => {
 // CREATE order
 // Abrir OS é tarefa de escritório. O PUT segue liberado para qualquer autenticado
 // porque o técnico atualiza status/conclusão da própria OS em campo.
-router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.post('/', checkPage('orders'), async (req, res) => {
   try {
     const { customer_id, type, priority, status, assigned_technician_id, scheduled_date, substation, city, description } = req.body;
     if (!customer_id || !type) {
@@ -103,7 +103,7 @@ router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
 });
 
 // UPDATE order
-router.put('/:id', async (req, res) => {
+router.put('/:id', checkPage('orders'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -137,7 +137,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE order - RBAC: apenas ADMIN e MANAGER
-router.delete('/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.delete('/:id', checkPage('orders'), async (req, res) => {
   try {
     const { id } = req.params;
 

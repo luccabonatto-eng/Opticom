@@ -1,6 +1,6 @@
 const express = require('express');
 const supabase = require('../../config/supabase');
-const checkRole = require('../middleware/rbac');
+const checkPage = require('../middleware/page-access');
 
 const router = express.Router();
 
@@ -30,7 +30,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/income', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.post('/income', checkPage('financial', 'settings'), async (req, res) => {
   try {
     const { name, description, accounting_class } = req.body;
     if (!name) return res.status(400).json({ error: 'Nome é obrigatório' });
@@ -43,7 +43,7 @@ router.post('/income', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   }
 });
 
-router.post('/expense', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.post('/expense', checkPage('financial', 'settings'), async (req, res) => {
   try {
     const { name, description, accounting_class } = req.body;
     if (!name) return res.status(400).json({ error: 'Nome é obrigatório' });
@@ -56,7 +56,7 @@ router.post('/expense', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   }
 });
 
-router.put('/income/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.put('/income/:id', checkPage('financial', 'settings'), async (req, res) => {
   try {
     const allowed = {};
     ['name','description','accounting_class'].forEach(f => {
@@ -73,7 +73,7 @@ router.put('/income/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   }
 });
 
-router.put('/expense/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.put('/expense/:id', checkPage('financial', 'settings'), async (req, res) => {
   try {
     const allowed = {};
     ['name','description','accounting_class'].forEach(f => {
@@ -90,7 +90,7 @@ router.put('/expense/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   }
 });
 
-router.delete('/income/:id', checkRole('ADMIN'), async (req, res) => {
+router.delete('/income/:id', checkPage('settings'), async (req, res) => {
   try {
     const { error } = await supabase.from('income_categories').delete().eq('id', req.params.id);
     if (error) throw error;
@@ -100,7 +100,7 @@ router.delete('/income/:id', checkRole('ADMIN'), async (req, res) => {
   }
 });
 
-router.delete('/expense/:id', checkRole('ADMIN'), async (req, res) => {
+router.delete('/expense/:id', checkPage('settings'), async (req, res) => {
   try {
     const { error } = await supabase.from('expense_categories').delete().eq('id', req.params.id);
     if (error) throw error;

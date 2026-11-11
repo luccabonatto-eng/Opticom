@@ -38,3 +38,11 @@ test('only ADMIN can change profile permissions', async () => {
  const ok=await request(app).put('/settings/permissions').send({value:'{}'});
  expect(ok.status).toBe(200);
 });
+test('técnico com Financeiro salva conciliação; sem Configurações não salva dados da empresa', async () => {
+ db.__set({ single: { value: JSON.stringify({ TECHNICIAN: ['financial'] }) } });
+ const tech=express(); tech.use(express.json());
+ tech.use((req,res,next)=>{req.user={role:'TECHNICIAN'};next();});
+ tech.use('/settings',require('../src/routes/settings'));
+ expect((await request(tech).put('/settings/bank_reconciliation_b').send({value:'{}'})).status).toBe(200);
+ expect((await request(tech).put('/settings/company').send({value:'{}'})).status).toBe(403);
+});

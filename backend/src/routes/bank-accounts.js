@@ -1,6 +1,6 @@
 const express = require('express');
 const supabase = require('../../config/supabase');
-const checkRole = require('../middleware/rbac');
+const checkPage = require('../middleware/page-access');
 
 const router = express.Router();
 
@@ -14,7 +14,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.post('/', checkPage('settings'), async (req, res) => {
   try {
     const { name, bank_name, account_number, balance, initial_balance } = req.body;
     if (!name) return res.status(400).json({ error: 'Nome é obrigatório' });
@@ -29,7 +29,7 @@ router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   }
 });
 
-router.put('/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.put('/:id', checkPage('settings'), async (req, res) => {
   try {
     const allowed = {};
     ['name', 'bank_name', 'account_number', 'balance', 'initial_balance'].forEach(f => {
@@ -48,7 +48,7 @@ router.put('/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   }
 });
 
-router.delete('/:id', checkRole('ADMIN'), async (req, res) => {
+router.delete('/:id', checkPage('settings'), async (req, res) => {
   try {
     const { error } = await supabase.from('bank_accounts').delete().eq('id', req.params.id);
     if (error) throw error;

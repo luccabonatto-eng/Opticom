@@ -1,6 +1,6 @@
 const express = require('express');
 const supabase = require('../../config/supabase');
-const checkRole = require('../middleware/rbac');
+const checkPage = require('../middleware/page-access');
 
 const router = express.Router();
 
@@ -44,7 +44,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.post('/', checkPage('inventory'), async (req, res) => {
   try {
     const { name, sku, category, quantity, min_quantity, unit_cost, unit_price, description } = req.body;
 
@@ -72,7 +72,7 @@ router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', checkPage('inventory'), async (req, res) => {
   try {
     // Whitelist explícito - apenas estes campos podem ser atualizados
     const allowedFields = {};
@@ -111,7 +111,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.delete('/:id', checkPage('inventory'), async (req, res) => {
   try {
     const { data: existing } = await supabase
       .from('products')

@@ -1,6 +1,6 @@
 const express = require('express');
 const supabase = require('../../config/supabase');
-const checkRole = require('../middleware/rbac');
+const checkPage = require('../middleware/page-access');
 
 const router = express.Router();
 
@@ -44,7 +44,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.post('/', checkPage('fleet'), async (req, res) => {
   try {
     const { plate, model, year, assigned_technician_id, status } = req.body;
 
@@ -62,7 +62,7 @@ router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
   }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', checkPage('fleet'), async (req, res) => {
   try {
     // Whitelist explícito - apenas estes campos podem ser atualizados
     const allowedFields = {};
@@ -88,7 +88,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-router.delete('/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.delete('/:id', checkPage('fleet'), async (req, res) => {
   try {
     const { data: existing } = await supabase
       .from('vehicles')
@@ -129,7 +129,7 @@ router.get('/:id/maintenance', async (req, res) => {
 });
 
 // POST register maintenance for a vehicle
-router.post('/:id/maintenance', async (req, res) => {
+router.post('/:id/maintenance', checkPage('fleet'), async (req, res) => {
   try {
     const { date, type, description, km, cost, technician_name } = req.body;
 

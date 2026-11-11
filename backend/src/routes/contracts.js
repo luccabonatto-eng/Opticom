@@ -1,6 +1,6 @@
 const express = require('express');
 const supabase = require('../../config/supabase');
-const checkRole = require('../middleware/rbac');
+const checkPage = require('../middleware/page-access');
 
 const router = express.Router();
 
@@ -53,7 +53,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // CREATE contract
-router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.post('/', checkPage('customers'), async (req, res) => {
   try {
     const { customer_id, type, value, start_date, end_date, status, sla_hours } = req.body;
     if (!customer_id || !type || !value) {
@@ -92,7 +92,7 @@ router.post('/', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
 });
 
 // UPDATE contract
-router.put('/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.put('/:id', checkPage('customers'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -136,7 +136,7 @@ router.put('/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
 });
 
 // DELETE contract - RBAC: apenas ADMIN e MANAGER
-router.delete('/:id', checkRole('ADMIN', 'MANAGER'), async (req, res) => {
+router.delete('/:id', checkPage('customers'), async (req, res) => {
   try {
     const { id } = req.params;
 
