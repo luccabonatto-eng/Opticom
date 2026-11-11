@@ -63,7 +63,7 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
   });
   const [drePeriod, setDrePeriod] = useState(() => new Date().toISOString().slice(0, 7));
   const [dreBase, setDreBase] = useState('previsto'); // previsto (competência) | efetivo (caixa)
-  const [dreViewMode, setDreViewMode] = useState('by_customer'); // 'by_customer' ou 'consolidated'
+  const [dreViewMode, setDreViewMode] = useState('gerencial'); // gerencial | company | consolidated | by_customer
   const [dreCustomerFilter, setDreCustomerFilter] = useState('all');
   const [dreCustSearch, setDreCustSearch] = useState('');
   const [dreCustSort, setDreCustSort] = useState('profit_desc');

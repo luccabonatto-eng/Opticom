@@ -34,4 +34,24 @@ const casaBusca = (t, q) => !q || semAcento(t.description || '').includes(semAce
 // Ela trabalha do mais atrasado para o mais recente; a lista vinha ao contrário.
 const porVencimento = (a, b) => (txDue(a) || '').localeCompare(txDue(b) || '');
 
-export { txPago, txAberto, soma, faturaDe, txDue, txVencido, txStatus, casaBusca, porVencimento };
+// Indicadores do DRE gerencial, sempre sobre a receita líquida (centavos).
+// Ponto de equilíbrio: receita líquida que paga os custos fixos. Sem margem de
+// contribuição positiva não existe — vender mais só aumentaria o prejuízo.
+const indicadoresGerenciais = ({ recLiq, mc, fixos, lucro }) => {
+  const pct = (v) => (recLiq > 0 ? (v / recLiq) * 100 : null);
+  const equilibrio = recLiq > 0 && mc > 0 ? Math.round((fixos * recLiq) / mc) : null;
+  return { mcPct: pct(mc), lucroPct: pct(lucro), equilibrio, folga: equilibrio == null ? null : recLiq - equilibrio };
+};
+
+export {
+  txPago,
+  txAberto,
+  soma,
+  faturaDe,
+  txDue,
+  txVencido,
+  txStatus,
+  casaBusca,
+  porVencimento,
+  indicadoresGerenciais,
+};

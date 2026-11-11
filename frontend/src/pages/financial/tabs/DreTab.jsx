@@ -4,10 +4,11 @@ import { BotaoExportar } from '../../../components/BotaoExportar.jsx';
 import { DEFAULT_ACCOUNTING_CLASSES } from '../../../config/financial.js';
 import { DreConsolidated } from '../dre/DreConsolidated.jsx';
 import { DreCustomers } from '../dre/DreCustomers.jsx';
+import { DreGerencial } from '../dre/DreGerencial.jsx';
 import { baixarCSV, csvNum, csvPct } from '../../../utils/csv.js';
 import { copiarWhats } from '../../../utils/whatsapp.js';
 import { fmt } from '../../../utils/format.js';
-import { txPago } from '../calculations.js';
+import { indicadoresGerenciais, txPago } from '../calculations.js';
 
 const DreTab = ({
   scopes, openEditTx, financialLoaded,
@@ -447,7 +448,23 @@ const DreTab = ({
       const pct = (v) => (recBruta > 0 ? ` (${csvPct((v / recBruta) * 100)}%)` : '');
       const avisar = (ok) =>
         setToast(ok ? 'Relatório copiado — cole no WhatsApp.' : 'Não foi possível copiar. Use o Exportar CSV.');
-      if (dreViewMode === 'company') {
+      if (dreViewMode === 'gerencial') {
+        const g = indicadoresGerenciais({ recLiq, mc: lb, fixos: totOp, lucro: ll });
+        const p1 = (v) => (v == null ? '' : ` (${csvPct(v)}%)`);
+        const ok = await copiarWhats(`DRE gerencial · ${curLabel}`, [
+          `_${baseLabel}_`,
+          '',
+          `Receita líquida: ${fmt(recLiq)}`,
+          `Custos variáveis: ${fmt(-csp)}`,
+          `*Margem de contribuição: ${fmt(lb)}${p1(g.mcPct)}*`,
+          `Custos fixos: ${fmt(-totOp)}`,
+          resFinLiq ? `Resultado financeiro: ${fmt(resFinLiq)}` : null,
+          ir ? `IR e CSLL: ${fmt(-ir)}` : null,
+          `*Lucro líquido: ${fmt(ll)}${p1(g.lucroPct)}*`,
+          g.equilibrio != null ? `Ponto de equilíbrio: ${fmt(g.equilibrio)}` : null,
+        ]);
+        avisar(ok);
+      } else if (dreViewMode === 'company') {
         const r = companyResult(originalScopedTxs, scopes.data, [...incomeCats, ...expenseCats], dreBase);
         const ok = await copiarWhats(`Resultado da empresa · ${scopeLabel}`, [
           `_${baseLabel}_`,
@@ -497,7 +514,31 @@ const DreTab = ({
 
     const exportarDRE = () => {
       const cab = [['Base', baseLabel], ['Gerado em', new Date().toLocaleString('pt-BR')], []];
-      if (dreViewMode === 'company') {
+      if (dreViewMode === 'gerencial') {
+        const g = indicadoresGerenciais({ recLiq, mc: lb, fixos: totOp, lucro: ll });
+        const L = (rot, c, p) => [rot, csvNum(c), recLiq > 0 ? csvPct((c / recLiq) * 100) : '', csvNum(p)];
+        const itens = (type, ...cls) => itemsFor(type, ...cls).map(({ n, c, p }) => L(`   ${n}`, type === 'EXPENSE' ? -c : c, type === 'EXPENSE' ? -p : p));
+        baixarCSV(`DRE_gerencial_${curM}.csv`, [
+          ['DRE Gerencial — Resultado da Empresa'],
+          ['Mês', curLabel],
+          ['Comparativo', prevLabel],
+          ...cab,
+          ['Conta', `${curLabel} (R$)`, '% s/ Receita Líquida', `${prevLabel} (R$)`],
+          L('RECEITA BRUTA', recBruta, recBrutaP),
+          L('(-) Impostos sobre a receita', -ded, -dedP),
+          L('(=) RECEITA LÍQUIDA', recLiq, recLiqP),
+          L('(-) Custos variáveis das instalações', -csp, -cspP),
+          ...itens('EXPENSE', 'CSP'),
+          L('(=) MARGEM DE CONTRIBUIÇÃO', lb, lbP),
+          L('(-) Custos fixos', -totOp, -totOpP),
+          ...itens('EXPENSE', 'DESPESA_PESSOAL', 'DESPESA_ADMINISTRATIVA', 'DESPESA_COMERCIAL', 'OUTRAS_DESPESAS'),
+          L('(+/-) Resultado financeiro', resFinLiq, resFinLiqP),
+          L('(-) IR e CSLL', -ir, -irP),
+          L('(=) LUCRO LÍQUIDO', ll, llP),
+          [],
+          ['Ponto de equilíbrio (receita líquida)', g.equilibrio == null ? '' : csvNum(g.equilibrio)],
+        ]);
+      } else if (dreViewMode === 'company') {
         const r = companyResult(originalScopedTxs, scopes.data, [...incomeCats, ...expenseCats], dreBase);
         const L = (rot, k) => [rot, csvNum(r[k].income), csvNum(r[k].expense), csvNum(r[k].result)];
         baixarCSV(`DRE_geral_empresa_${curM}.csv`, [
@@ -618,13 +659,18 @@ const DreTab = ({
           <div className="flex items-center gap-2.5 flex-wrap">
             <div className="flex bg-gray-100 p-1 rounded-xl">
               {[
+                ['gerencial', 'Gerencial'],
                 ['company', 'Geral da Empresa'],
                 ['consolidated', 'Consolidada'],
                 ['by_customer', 'Por Cliente'],
               ].map(([v, l]) => (
                 <button
                   key={v}
-                  onClick={() => setDreViewMode(v)}
+                  onClick={() => {
+                    // a visão gerencial é sempre da empresa inteira
+                    if (v === 'gerencial') setDreCustomerFilter('all');
+                    setDreViewMode(v);
+                  }}
                   className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${dreViewMode === v ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
                 >
                   {l}
@@ -663,7 +709,7 @@ const DreTab = ({
                 ))}
               </select>
             </div>
-            {dreViewMode !== 'consolidated' && (
+            {dreViewMode !== 'consolidated' && dreViewMode !== 'gerencial' && (
               <select
                 aria-label="Período do DRE"
                 value={dreTimeScope}
@@ -678,7 +724,9 @@ const DreTab = ({
             {(dreViewMode !== 'company' || scopes.ready) && <BotaoExportar
               onClick={exportarDRE}
               title={
-                dreViewMode === 'company'
+                dreViewMode === 'gerencial'
+                  ? 'Baixa o resultado gerencial do mês, com margem de contribuição e margem líquida, em CSV (abre no Excel)'
+                  : dreViewMode === 'company'
                   ? 'Baixa o resultado da empresa por origem e a lista do que falta classificar, em CSV (abre no Excel)'
                   : dreViewMode === 'consolidated'
                     ? 'Baixa a DRE consolidada do mês, com comparativo e AV%, em CSV (abre no Excel)'
@@ -693,6 +741,15 @@ const DreTab = ({
           </div>
         </div>
 
+        {dreViewMode === 'gerencial' && (
+          <DreGerencial
+            HR={HR} IR2={IR2} RR={RR} STR={STR} fv={fv} vp={vp} itemsFor={itemsFor} hasData={hasData}
+            curLabel={curLabel} prevLabel={prevLabel}
+            recBruta={recBruta} recBrutaP={recBrutaP} ded={ded} dedP={dedP} recLiq={recLiq} recLiqP={recLiqP}
+            csp={csp} cspP={cspP} lb={lb} lbP={lbP} totOp={totOp} totOpP={totOpP}
+            resFinLiq={resFinLiq} resFinLiqP={resFinLiqP} ir={ir} irP={irP} ll={ll} llP={llP}
+          />
+        )}
         {dreViewMode === 'company' && <DreCompany financialLoaded={financialLoaded} transactions={originalScopedTxs} categories={[...incomeCats, ...expenseCats]} scopes={scopes} base={dreBase} openEditTx={openEditTx} customers={customers} />}
         {dreViewMode === 'by_customer' && (
           <DreCustomers

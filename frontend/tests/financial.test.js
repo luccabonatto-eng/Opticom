@@ -27,3 +27,15 @@ test('datas legadas, competência de cartão e somas mantêm compatibilidade', (
     1000,
   );
 });
+test('DRE gerencial: margens sobre a receita líquida e ponto de equilíbrio', async () => {
+  const { indicadoresGerenciais } = await import('../src/pages/financial/calculations.js');
+  const r = indicadoresGerenciais({ recLiq: 1000000, mc: 400000, fixos: 300000, lucro: 100000 });
+  assert.equal(r.mcPct, 40);
+  assert.equal(r.lucroPct, 10);
+  assert.equal(r.equilibrio, 750000); // 300.000 / 40%
+  assert.equal(r.folga, 250000);
+  // margem de contribuição negativa ou sem receita: não há ponto de equilíbrio
+  assert.equal(indicadoresGerenciais({ recLiq: 1000000, mc: -1, fixos: 300000, lucro: -300001 }).equilibrio, null);
+  const vazio = indicadoresGerenciais({ recLiq: 0, mc: 0, fixos: 5000, lucro: -5000 });
+  assert.deepEqual([vazio.mcPct, vazio.lucroPct, vazio.equilibrio, vazio.folga], [null, null, null, null]);
+});
