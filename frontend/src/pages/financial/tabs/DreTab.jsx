@@ -381,7 +381,7 @@ const DreTab = ({
           <td className={`px-4 py-2 text-xs text-right ${neg ? 'text-red-500' : 'text-gray-700'}`}>{cv}</td>
           <td className="px-4 py-2 text-xs text-gray-300 text-right">—</td>
           <td
-            className={`px-3 py-2 text-xs text-center font-medium ${vl === '—' ? 'text-gray-300' : u === null ? 'text-gray-400' : neg ? (u ? 'text-red-500' : 'text-green-600') : u ? 'text-green-600' : 'text-red-500'}`}
+            className={`px-3 py-2 text-xs text-center font-medium ${vl === '—' ? 'text-gray-300' : u === null ? 'text-gray-500' : neg ? (u ? 'text-red-500' : 'text-green-600') : u ? 'text-green-600' : 'text-red-500'}`}
           >
             {vl}
           </td>
@@ -399,7 +399,7 @@ const DreTab = ({
           <td className={`px-4 py-2.5 text-xs font-semibold text-right ${neg ? 'text-red-600' : 'text-gray-800'}`}>
             {cv}
           </td>
-          <td className="px-4 py-2.5 text-xs text-gray-400 text-right">{base > 0 ? av(c, base) : '—'}</td>
+          <td className="px-4 py-2.5 text-xs text-gray-500 text-right">{base > 0 ? av(c, base) : '—'}</td>
           <td
             className={`px-3 py-2.5 text-xs font-semibold text-center ${vl === '—' ? 'text-gray-300' : u ? 'text-green-600' : 'text-red-500'}`}
           >
@@ -696,7 +696,7 @@ const DreTab = ({
 
             {/* Seletor de Mês */}
             <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-lg px-2.5 py-1.5">
-              <span className="text-xs text-gray-400">Ref:</span>
+              <span className="text-xs text-gray-500">Ref:</span>
               <select
                 value={drePeriod}
                 onChange={(e) => setDrePeriod(e.target.value)}

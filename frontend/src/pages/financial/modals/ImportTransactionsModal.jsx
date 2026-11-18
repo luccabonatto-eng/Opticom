@@ -1,4 +1,5 @@
 import { Modal } from '../../../components/Modal.jsx';
+import { Icon } from '../../../components/Icon.jsx';
 import { fmt, fmtDate } from '../../../utils/format.js';
 
 const ImportTransactionsModal = ({
@@ -40,8 +41,8 @@ const ImportTransactionsModal = ({
         <div className="space-y-4">
           <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
             {[
-              ['arquivo', '📎 Anexar arquivo'],
-              ['colar', '📋 Colar texto'],
+              ['arquivo', 'Anexar arquivo'],
+              ['colar', 'Colar texto'],
             ].map(([v, l]) => (
               <button
                 key={v}
@@ -74,8 +75,8 @@ const ImportTransactionsModal = ({
               }}
               className={`rounded-xl border-2 border-dashed flex flex-col items-center gap-3 py-8 px-6 transition-colors ${importDragging ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50'}`}
             >
-              <div className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-2xl">
-                📄
+              <div className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500">
+                <Icon name="contracts" className="w-6 h-6" />
               </div>
               {importFileName ? (
                 <div className="text-center">
@@ -100,7 +101,7 @@ const ImportTransactionsModal = ({
           ) : (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Cole os dados da planilha aqui:</label>
-              <textarea
+              <textarea aria-label="Cole os dados da planilha aqui:"
                 value={importText}
                 onChange={(e) => {
                   setImportText(e.target.value);
@@ -112,7 +113,7 @@ const ImportTransactionsModal = ({
                 }
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 {qtd} lançamento(s) detectado(s){invalidas > 0 ? ` · ${invalidas} sem valor válido` : ''}
               </p>
             </div>
@@ -127,14 +128,14 @@ const ImportTransactionsModal = ({
                 {validas.slice(0, 3).map((r, i) => (
                   <div key={i} className="flex items-center justify-between gap-2 px-3 py-1.5 text-xs">
                     <span className="text-gray-700 truncate flex-1">{r.description}</span>
-                    <span className="text-gray-400 whitespace-nowrap">{fmtDate(r.due_date)}</span>
+                    <span className="text-gray-500 whitespace-nowrap">{fmtDate(r.due_date)}</span>
                     <span className={`whitespace-nowrap ${r.tipo === 'INCOME' ? 'text-green-600' : 'text-red-500'}`}>
                       {r.tipo === 'INCOME' ? 'entrada' : r.tipo === 'EXPENSE' ? 'saída' : ''}
                     </span>
                     <span className="font-semibold whitespace-nowrap text-gray-800">{fmt(r.amount)}</span>
                   </div>
                 ))}
-                {qtd > 3 && <p className="px-3 py-1.5 text-xs text-gray-400">+ {qtd - 3} linha(s)</p>}
+                {qtd > 3 && <p className="px-3 py-1.5 text-xs text-gray-500">+ {qtd - 3} linha(s)</p>}
               </div>
             </div>
           )}

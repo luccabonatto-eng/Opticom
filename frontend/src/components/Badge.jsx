@@ -15,7 +15,7 @@ const STATUS_MAP = {
   EXPIRED: ['bg-gray-100 text-gray-500', 'Expirado'],
   SUSPENDED: ['bg-yellow-100 text-yellow-700', 'Suspenso'],
   ON_LEAVE: ['bg-amber-100 text-amber-700', 'Afastado'],
-  INACTIVE: ['bg-gray-100 text-gray-400', 'Inativo'],
+  INACTIVE: ['bg-gray-100 text-gray-500', 'Inativo'],
   NEW: ['bg-blue-100 text-blue-700', 'Novo'],
   IN_USE: ['bg-green-100 text-green-700', 'Em Uso'],
   MAINTENANCE: ['bg-yellow-100 text-yellow-700', 'Manutenção'],
@@ -45,11 +45,4 @@ const PriorityBadge = ({ p }) => {
   return <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${cls}`}>{label}</span>;
 };
 
-const PRIORITY_BORDER = {
-  LOW: 'border-l-gray-300',
-  MEDIUM: 'border-l-blue-400',
-  HIGH: 'border-l-orange-500',
-  URGENT: 'border-l-red-600',
-};
-
-export { STATUS_MAP, Badge, PRIORITY_MAP, PriorityBadge, PRIORITY_BORDER };
+export { STATUS_MAP, Badge, PRIORITY_MAP, PriorityBadge };

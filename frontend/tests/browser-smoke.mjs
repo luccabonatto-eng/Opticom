@@ -135,7 +135,7 @@ try {
   assert.equal(await historyTable.locator('tbody tr').count(), 2);
   assert.match(await historyTable.locator('tbody tr').first().innerText(), /Saída\s+−3\s+47/);
   await check('Histórico do estoque');
-  await page.locator('.fixed.inset-0').getByRole('button', { name: '×' }).click();
+  await page.locator('.fixed.inset-0').getByRole('button', { name: 'Fechar janela' }).click();
 
   // OS com responsável e técnicos de apoio
   await sidebar.getByRole('button', { name: 'Ordens de Serviço', exact: true }).click();
@@ -250,6 +250,33 @@ try {
   assert.equal(await sidebar.getByRole('button', { name: 'Configurações', exact: true }).count(), 0);
   assert.equal(await page.getByRole('button', { name: /DRE Gerencial/ }).count(), 0);
   await check('Permissões por perfil e aba financeira');
+  // Esc fecha a janela aberta
+  await page.getByRole('button', { name: 'Novo Recebimento', exact: true }).click();
+  await page.getByRole('dialog').waitFor();
+  await page.keyboard.press('Escape');
+  await page.getByRole('dialog').waitFor({ state: 'hidden' });
+  // Técnico sem acesso ao Financeiro: Dashboard só com a operação
+  permissionsSetting = JSON.stringify({ TECHNICIAN: ['dashboard', 'orders'] });
+  await page.evaluate(() => sessionStorage.setItem('opticom_user', JSON.stringify({ role: 'TECHNICIAN', name: 'Técnico teste' })));
+  await page.reload();
+  await page.getByText('Andamento das OS').waitFor();
+  assert.equal(await page.getByText('Receita Recebida').count(), 0, 'Técnico não vê receita');
+  assert.equal(await page.getByText('Receita vs Despesa').count(), 0, 'Técnico não vê gráfico financeiro');
+  await check('Dashboard do técnico');
+  // Celular: menu vira gaveta aberta pelo ☰
+  await page.setViewportSize({ width: 390, height: 844 });
+  const drawerOff = async () => {
+    await page.waitForTimeout(300); // transição da gaveta
+    const box = await page.locator('aside').boundingBox();
+    return box.x + box.width <= 1;
+  };
+  assert.ok(await drawerOff(), 'Menu fora da tela no celular');
+  await page.getByRole('button', { name: 'Abrir menu' }).click();
+  await page.getByRole('button', { name: 'Ordens de Serviço', exact: true }).click();
+  await page.getByRole('heading', { name: 'Ordens de Serviço' }).waitFor();
+  assert.ok(await drawerOff(), 'Gaveta fecha ao navegar');
+  await check('Menu no celular');
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.screenshot({ path: process.env.SMOKE_SCREENSHOT || join(tmpdir(), 'opticom-smoke.png'), fullPage: true });
   console.log(`PASS: navigation, modals, retained filters and lazy loading; ${writes.length} intercepted writes.`);
 } finally {

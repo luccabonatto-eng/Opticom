@@ -50,9 +50,9 @@ const StatementTab = ({
             <div className="w-16 h-16 rounded-full bg-teal-50 flex items-center justify-center text-3xl">⇅</div>
             <div className="text-center">
               <p className="font-semibold text-gray-800 text-base">Arraste o extrato aqui</p>
-              <p className="text-sm text-gray-400 mt-1">Cada linha vira um lançamento — você só categoriza</p>
+              <p className="text-sm text-gray-500 mt-1">Cada linha vira um lançamento — você só categoriza</p>
             </div>
-            <label className="cursor-pointer bg-teal-600 text-white text-sm font-medium px-6 py-2.5 rounded-lg hover:bg-teal-700 transition-colors">
+            <label className="cursor-pointer bg-blue-600 text-white text-sm font-medium px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors">
               Selecionar arquivo
               <input
                 type="file"
@@ -61,7 +61,7 @@ const StatementTab = ({
                 onChange={(e) => loadStmtFile(e.target.files[0])}
               />
             </label>
-            <p className="text-xs text-gray-400 text-center">
+            <p className="text-xs text-gray-500 text-center">
               Formatos suportados: <strong>OFX</strong> (Bradesco, Itaú, Santander, BB) e <strong>CSV</strong> separado
               por ; , ou tab
             </p>
@@ -74,7 +74,7 @@ const StatementTab = ({
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <p className="font-semibold text-gray-800">{stmtFileName}</p>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-500">
               {stmtLines.length} linhas · {done} importadas · {pending} pendentes
             </p>
           </div>
@@ -94,7 +94,7 @@ const StatementTab = ({
             <button
               onClick={importAllStmt}
               disabled={!!stmtProgresso}
-              className="px-4 py-1.5 bg-teal-600 text-white rounded-lg text-xs font-medium hover:bg-teal-700 disabled:opacity-60 disabled:cursor-wait"
+              className="px-4 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 disabled:opacity-60 disabled:cursor-wait"
             >
               {stmtProgresso
                 ? `Importando ${stmtProgresso.feito} de ${stmtProgresso.total}...`
@@ -116,7 +116,7 @@ const StatementTab = ({
         </div>
 
         {/* KPI bar */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
             { l: 'Entradas', v: fmt(totalC), c: 'text-green-600', bg: 'bg-green-50' },
             { l: 'Saídas', v: fmt(totalD), c: 'text-red-600', bg: 'bg-red-50' },
@@ -159,7 +159,7 @@ const StatementTab = ({
                 if (res.action === 'imported')
                   return (
                     <tr key={line.id} className="bg-green-50">
-                      <td className="px-3 py-2.5 text-xs text-gray-400 whitespace-nowrap">{fmtDate(line.date)}</td>
+                      <td className="px-3 py-2.5 text-xs text-gray-500 whitespace-nowrap">{fmtDate(line.date)}</td>
                       <td className="px-3 py-2.5 text-xs text-gray-500 truncate max-w-xs">{line.description}</td>
                       <td
                         className={`px-3 py-2.5 text-right text-xs font-semibold whitespace-nowrap ${isCredit ? 'text-green-600' : 'text-red-600'}`}
@@ -167,16 +167,16 @@ const StatementTab = ({
                         {isCredit ? '+' : '−'}
                         {fmt(line.amount)}
                       </td>
-                      <td className="px-3 py-2.5 text-xs text-gray-400">
+                      <td className="px-3 py-2.5 text-xs text-gray-500">
                         {cats.find((c) => c.id === catSel)?.name || '—'}
                       </td>
-                      <td className="px-3 py-2.5 text-center text-xs text-green-600 font-medium">✓ Importado</td>
+                      <td className="px-3 py-2.5 text-center text-xs text-green-600 font-medium">Importado</td>
                     </tr>
                   );
                 if (res.action === 'ignore')
                   return (
                     <tr key={line.id} className="opacity-40 bg-gray-50">
-                      <td className="px-3 py-2.5 text-xs text-gray-400 whitespace-nowrap">{fmtDate(line.date)}</td>
+                      <td className="px-3 py-2.5 text-xs text-gray-500 whitespace-nowrap">{fmtDate(line.date)}</td>
                       <td className="px-3 py-2.5 text-xs text-gray-500 truncate max-w-xs">{line.description}</td>
                       <td
                         className={`px-3 py-2.5 text-right text-xs whitespace-nowrap ${isCredit ? 'text-green-600' : 'text-red-600'}`}
@@ -184,7 +184,7 @@ const StatementTab = ({
                         {isCredit ? '+' : '−'}
                         {fmt(line.amount)}
                       </td>
-                      <td colSpan={2} className="px-3 py-2.5 text-center text-xs text-gray-400">
+                      <td colSpan={2} className="px-3 py-2.5 text-center text-xs text-gray-500">
                         Ignorado
                         <button
                           onClick={() => setStmtResults((p) => ({ ...p, [line.id]: {} }))}
@@ -227,13 +227,13 @@ const StatementTab = ({
                         <button
                           onClick={() => importStmtLine(line)}
                           disabled={!catSel}
-                          className="px-2.5 py-1 bg-teal-600 text-white text-xs rounded-lg hover:bg-teal-700 font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="px-2.5 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 font-medium disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           Importar
                         </button>
                         <button
                           onClick={() => ignoreStmt(line.id)}
-                          className="px-2 py-1 border border-gray-200 text-gray-400 text-xs rounded-lg hover:bg-gray-50"
+                          className="px-2 py-1 border border-gray-200 text-gray-500 text-xs rounded-lg hover:bg-gray-50"
                         >
                           —
                         </button>

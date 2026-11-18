@@ -1,3 +1,5 @@
+import { Icon } from '../../../components/Icon.jsx';
+
 const shortDate = (value) => value
   ? new Date(`${value}T12:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace(' de ', ', ').replace('.', '')
   : 'Selecionar';
@@ -32,7 +34,7 @@ const DateFilter = ({ from, setFrom, to, setTo, monthNavigation = false, settled
       </label>
     );
     return (
-      <div role="group" aria-label="Filtrar por vencimento" className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
+      <div role="group" aria-label="Filtrar por vencimento" className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2">
         <span className="flex items-center gap-1 text-sm text-gray-500">
           Filtrar
           <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18l-7 8v8l-4-2v-6z" /></svg>
@@ -57,20 +59,20 @@ const DateFilter = ({ from, setFrom, to, setTo, monthNavigation = false, settled
             </button>
           </label>
         )}
-        {(from || to) && <button type="button" aria-label="Limpar período" title="Limpar período" onClick={() => { setFrom(''); setTo(''); }} className="rounded px-1 text-gray-400 hover:text-red-500">✕</button>}
+        {(from || to) && <button type="button" aria-label="Limpar período" title="Limpar período" onClick={() => { setFrom(''); setTo(''); }} className="rounded px-1 text-gray-500 hover:text-red-500">✕</button>}
       </div>
     );
   }
   return (
   <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5">
-    <span className="text-xs text-gray-400 whitespace-nowrap">De:</span>
+    <span className="text-xs text-gray-500 whitespace-nowrap">De:</span>
     <input
       type="date"
       value={from}
       onChange={(e) => setFrom(e.target.value)}
       className="text-xs border-0 bg-transparent focus:outline-none text-gray-700 w-32"
     />
-    <span className="text-xs text-gray-400">Até:</span>
+    <span className="text-xs text-gray-500">Até:</span>
     <input
       type="date"
       value={to}
@@ -83,9 +85,10 @@ const DateFilter = ({ from, setFrom, to, setTo, monthNavigation = false, settled
           setFrom('');
           setTo('');
         }}
-        className="text-xs text-gray-400 hover:text-red-500 ml-1 font-bold"
+        aria-label="Limpar datas"
+        className="text-gray-500 hover:text-red-600 ml-1 p-0.5"
       >
-        ✕
+        <Icon name="close" className="w-3.5 h-3.5" />
       </button>
     )}
   </div>

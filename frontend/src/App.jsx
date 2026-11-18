@@ -42,6 +42,17 @@ function App() {
   const [page, setPage] = useState('dashboard');
   const [user, setUser] = useState(() => api.user);
   const [collapsed, setCollapsed] = useState(false);
+  const [navOpen, setNavOpen] = useState(false); // gaveta do menu no celular
+  const go = (p) => {
+    setPage(p);
+    setNavOpen(false);
+  };
+  useEffect(() => {
+    if (!navOpen) return;
+    const onKey = (e) => e.key === 'Escape' && setNavOpen(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [navOpen]);
   // Regime tributário global — propagado por toda a aplicação
   const [taxRegime, setTaxRegime] = useState(() => localStorage.getItem('opticom_taxRegime') || 'REAL');
   // Permissões por perfil — no banco, para valerem em todos os computadores (só ADMIN altera)
@@ -140,9 +151,9 @@ function App() {
     }
     switch (page) {
       case 'dashboard':
-        return <DashboardPage setPage={setPage} taxRegime={taxRegime} />;
+        return <DashboardPage setPage={go} taxRegime={taxRegime} canSeeFinancial={canSeeFinancial} />;
       case 'orders':
-        return <OrdersPage taxRegime={taxRegime} />;
+        return <OrdersPage taxRegime={taxRegime} canSeeFinancial={canSeeFinancial} />;
       case 'customers':
         return <CustomersPage setPage={setPage} />;
       case 'contracts':
@@ -183,11 +194,15 @@ function App() {
   };
 
   const regime = TAX_REGIMES[taxRegime];
+  const role = user?.role || 'TECHNICIAN';
+  const canSeeFinancial = role === 'ADMIN' || ((permissions || DEFAULT_PERMISSIONS)[role] || []).includes('financial');
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar
         page={page}
-        setPage={setPage}
+        setPage={go}
+        mobileOpen={navOpen}
+        onClose={() => setNavOpen(false)}
         collapsed={collapsed}
         setCollapsed={setCollapsed}
         user={user}
@@ -200,9 +215,10 @@ function App() {
             api.logout();
             setLoggedIn(false);
           }}
-          setPage={setPage}
-          regime={regime}
+          setPage={go}
+          regime={canSeeFinancial ? regime : null}
           user={user}
+          onMenu={() => setNavOpen(true)}
         />
         <main className="flex-1 overflow-y-auto bg-gray-50">
           <Suspense

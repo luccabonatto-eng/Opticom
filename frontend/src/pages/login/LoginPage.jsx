@@ -71,7 +71,7 @@ const LoginPage = ({ onLogin }) => {
               />
             </div>
             <h2 className="text-2xl font-bold text-gray-800 mb-1">Bem-vindo de volta</h2>
-            <p className="text-sm text-gray-400 mb-6">Faça login para acessar o sistema</p>
+            <p className="text-sm text-gray-500 mb-6">Faça login para acessar o sistema</p>
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mb-4">
                 {error}
@@ -80,7 +80,7 @@ const LoginPage = ({ onLogin }) => {
             <form onSubmit={submit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">E-mail</label>
-                <input
+                <input aria-label="E-mail"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -89,7 +89,7 @@ const LoginPage = ({ onLogin }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Senha</label>
-                <input
+                <input aria-label="Senha"
                   type="password"
                   value={pass}
                   onChange={(e) => setPass(e.target.value)}

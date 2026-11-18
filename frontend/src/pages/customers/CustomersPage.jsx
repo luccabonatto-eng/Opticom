@@ -134,7 +134,7 @@ const CustomersPage = ({ setPage }) => {
     <div className="p-5 space-y-4">
       <div className="flex items-center gap-3">
         <div className="relative">
-          <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -189,13 +189,13 @@ const CustomersPage = ({ setPage }) => {
                 </td>
                 <td className="px-4 py-3">
                   <p className="font-medium text-gray-800">{c.name}</p>
-                  <p className="text-xs text-gray-400">{c.email}</p>
+                  <p className="text-xs text-gray-500">{c.email}</p>
                 </td>
                 <td className="px-4 py-3 font-mono text-xs text-gray-500">{c.doc}</td>
                 <td className="px-4 py-3 text-gray-600">{c.city || '—'}</td>
                 <td className="px-4 py-3 text-center text-gray-700">{c.contracts}</td>
                 <td className="px-4 py-3 text-center">
-                  <span className={`font-semibold ${c.openOS > 0 ? 'text-orange-600' : 'text-gray-400'}`}>
+                  <span className={`font-semibold ${c.openOS > 0 ? 'text-orange-600' : 'text-gray-500'}`}>
                     {c.openOS}
                   </span>
                 </td>
@@ -232,13 +232,13 @@ const CustomersPage = ({ setPage }) => {
                 <LabelField label="Documento" value={sel.doc} />
                 <LabelField label="Cidade" value={sel.city} />
                 <div className="flex items-center gap-2">
-                  <Icon name="phone" className="w-4 h-4 text-gray-400" />
+                  <Icon name="phone" className="w-4 h-4 text-gray-500" />
                   <a href={`tel:${sel.phone}`} className="text-sm text-blue-600">
                     {sel.phone || '—'}
                   </a>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Icon name="mail" className="w-4 h-4 text-gray-400" />
+                  <Icon name="mail" className="w-4 h-4 text-gray-500" />
                   <a href={`mailto:${sel.email}`} className="text-sm text-blue-600">
                     {sel.email || '—'}
                   </a>
@@ -248,17 +248,17 @@ const CustomersPage = ({ setPage }) => {
                 <div className="bg-gray-50 rounded-xl p-4 grid grid-cols-3 gap-3 text-center">
                   <div>
                     <p className="text-xl font-bold text-gray-800">{sel.contracts}</p>
-                    <p className="text-xs text-gray-400">Contratos</p>
+                    <p className="text-xs text-gray-500">Contratos</p>
                   </div>
                   <div>
                     <p className={`text-xl font-bold ${sel.openOS > 0 ? 'text-orange-600' : 'text-gray-800'}`}>
                       {sel.openOS}
                     </p>
-                    <p className="text-xs text-gray-400">OS Abertas</p>
+                    <p className="text-xs text-gray-500">OS Abertas</p>
                   </div>
                   <div>
                     <p className="text-sm font-bold text-gray-800">{fmt(sel.revenue)}</p>
-                    <p className="text-xs text-gray-400">Faturamento</p>
+                    <p className="text-xs text-gray-500">Faturamento</p>
                   </div>
                 </div>
               </div>
@@ -281,7 +281,7 @@ const CustomersPage = ({ setPage }) => {
                 className="px-4 py-2.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-lg text-sm font-semibold flex items-center gap-1.5"
                 title="Ver DRE e rentabilidade financeira deste cliente"
               >
-                <span>📊</span> Ver DRE & Lucro
+                Ver DRE & Lucro
               </button>
               <button
                 onClick={() => toggleActive(sel.id)}
@@ -294,14 +294,14 @@ const CustomersPage = ({ setPage }) => {
                 title="Editar dados do cliente"
                 className="px-4 py-2.5 border border-gray-200 text-gray-600 rounded-lg text-sm hover:bg-gray-50"
               >
-                ✎ Editar
+                Editar
               </button>
               <button
                 onClick={() => excluir(sel)}
                 title="Excluir cliente permanentemente"
                 className="px-4 py-2.5 border border-red-200 text-red-600 rounded-lg text-sm hover:bg-red-50"
               >
-                🗑 Excluir
+                Excluir
               </button>
             </div>
           </div>
@@ -346,7 +346,7 @@ const CustomersPage = ({ setPage }) => {
           ].map((f) => (
             <div key={f.key}>
               <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-              <input
+              <input aria-label={f.label}
                 value={form[f.key]}
                 onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
                 placeholder={f.placeholder}

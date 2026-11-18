@@ -122,3 +122,25 @@ table {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* ── Superfícies do navegador ───────────────────────────────── */
+/* Foco de teclado visível em todo controle que não desenha o próprio anel */
+:focus-visible:not([class*='focus:ring']) {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+/* Placeholder com contraste AA (o padrão do Tailwind, gray-400, fica em 2,5:1) */
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+::selection {
+  background: #bfdbfe;
+  color: #111827;
+}
+/* Valores em tabela alinham dígito com dígito */
+td,
+th {
+  font-variant-numeric: tabular-nums;
+}

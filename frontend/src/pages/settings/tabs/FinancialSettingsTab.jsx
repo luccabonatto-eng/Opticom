@@ -1,4 +1,5 @@
 import { CLASSES_DESPESA, CLASSES_RECEITA } from '../../../config/financial.js';
+import { Icon } from '../../../components/Icon.jsx';
 import { api } from '../../../api/client.js';
 import { fmt } from '../../../utils/format.js';
 
@@ -68,9 +69,9 @@ const FinancialSettingsTab = ({
                         if (r.success) setIncomeCats((p) => p.filter((x) => x.id !== c.id));
                         else setToast(r.error || 'Erro ao remover categoria');
                       }}
-                      className="text-xs text-red-400 hover:text-red-600"
+                      aria-label="Remover" className="text-red-400 hover:text-red-600 p-0.5"
                     >
-                      ✕
+                      <Icon name="close" className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
@@ -109,7 +110,7 @@ const FinancialSettingsTab = ({
                         setNewCat('');
                       } else setToast(r.error || 'Erro ao criar categoria');
                     }}
-                    className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 whitespace-nowrap"
+                    className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 whitespace-nowrap"
                   >
                     + Add
                   </button>
@@ -150,9 +151,9 @@ const FinancialSettingsTab = ({
                         if (r.success) setExpenseCats((p) => p.filter((x) => x.id !== c.id));
                         else setToast(r.error || 'Erro ao remover categoria');
                       }}
-                      className="text-xs text-red-400 hover:text-red-600"
+                      aria-label="Remover" className="text-red-400 hover:text-red-600 p-0.5"
                     >
-                      ✕
+                      <Icon name="close" className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
@@ -206,7 +207,7 @@ const FinancialSettingsTab = ({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-semibold text-gray-800">Contas Bancárias</h3>
-              <p className="text-xs text-gray-400 mt-0.5">
+              <p className="text-xs text-gray-500 mt-0.5">
                 {activeBanks.length} conta(s) ativa(s) · Saldo total:{' '}
                 {fmt(activeBanks.reduce((s, b) => s + b.balance, 0))}
               </p>
@@ -223,7 +224,7 @@ const FinancialSettingsTab = ({
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-gray-800">{b.bank || b.name}</p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-500">
                     Ag. {b.agency} · CC {b.account} · {b.type}
                   </p>
                 </div>
@@ -242,9 +243,9 @@ const FinancialSettingsTab = ({
                     if (r.success) setBankAccounts((p) => p.filter((x) => x.id !== b.id));
                     else setToast(r.error || 'Erro ao remover conta');
                   }}
-                  className="text-xs text-gray-300 hover:text-red-500"
+                  aria-label="Remover" className="text-gray-300 hover:text-red-500 p-0.5"
                 >
-                  ✕
+                  <Icon name="close" className="w-3.5 h-3.5" />
                 </button>
               </div>
             ))}
@@ -259,7 +260,7 @@ const FinancialSettingsTab = ({
               ].map((f) => (
                 <div key={f.key}>
                   <label className="block text-xs text-gray-500 mb-1">{f.label}</label>
-                  <input
+                  <input aria-label={f.label}
                     value={newBank[f.key]}
                     onChange={(e) => setNewBank((p) => ({ ...p, [f.key]: e.target.value }))}
                     placeholder={f.placeholder}
@@ -269,7 +270,7 @@ const FinancialSettingsTab = ({
               ))}
               <div>
                 <label className="block text-xs text-gray-500 mb-1">Tipo</label>
-                <select
+                <select aria-label="Tipo"
                   value={newBank.type}
                   onChange={(e) => setNewBank((p) => ({ ...p, type: e.target.value }))}
                   className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none"
@@ -322,7 +323,7 @@ const FinancialSettingsTab = ({
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-semibold text-gray-800">Formas de Pagamento</h3>
-              <p className="text-xs text-gray-400 mt-0.5">{activePayTotal} forma(s) ativa(s)</p>
+              <p className="text-xs text-gray-500 mt-0.5">{activePayTotal} forma(s) ativa(s)</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 mb-4">
@@ -331,7 +332,7 @@ const FinancialSettingsTab = ({
                 key={m.id}
                 className={`flex items-center justify-between p-3 rounded-xl border ${m.active ? 'border-blue-200 bg-blue-50' : 'border-gray-100 bg-gray-50'}`}
               >
-                <span className={`text-sm font-medium ${m.active ? 'text-blue-800' : 'text-gray-400'}`}>{m.name}</span>
+                <span className={`text-sm font-medium ${m.active ? 'text-blue-800' : 'text-gray-500'}`}>{m.name}</span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() =>
@@ -349,9 +350,9 @@ const FinancialSettingsTab = ({
                       if (r.success) setPayMethods((p) => p.filter((x) => x.id !== m.id));
                       else setToast(r.error || 'Erro ao remover método');
                     }}
-                    className="text-xs text-gray-300 hover:text-red-500"
+                    aria-label="Remover" className="text-gray-300 hover:text-red-500 p-0.5"
                   >
-                    ✕
+                    <Icon name="close" className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>

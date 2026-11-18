@@ -18,12 +18,12 @@ const AccountsTab = ({
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
       <div className="mb-4">
         <h3 className="text-sm font-semibold text-gray-800">Saldo Inicial das Contas Bancárias</h3>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <p className="text-xs text-gray-500 mt-0.5">
           O saldo inicial é usado no DFC para calcular o Saldo Final Projetado de Caixa
         </p>
       </div>
       {bankAccounts.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-6">Nenhuma conta bancária cadastrada</p>
+        <p className="text-sm text-gray-500 text-center py-6">Nenhuma conta bancária cadastrada</p>
       ) : (
         <div className="space-y-3">
           {bankAccounts.map((b) => {
@@ -38,7 +38,7 @@ const AccountsTab = ({
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-semibold text-gray-800">{b.name}</p>
-                  <p className="text-xs text-gray-400">{b.bank_name || '—'}</p>
+                  <p className="text-xs text-gray-500">{b.bank_name || '—'}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-500">R$</span>
@@ -67,14 +67,14 @@ const AccountsTab = ({
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
       <div className="mb-4">
         <h3 className="text-sm font-semibold text-gray-800">Registrar Investimento</h3>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <p className="text-xs text-gray-500 mt-0.5">
           Compra de equipamentos, veículos, infraestrutura — lançado como despesa de Investimento no DFC
         </p>
       </div>
       <div className="grid grid-cols-2 gap-3 mb-3">
         <div className="col-span-2">
           <label className="block text-xs text-gray-500 mb-1">Descrição *</label>
-          <input
+          <input aria-label="Descrição"
             value={newInvest.description}
             onChange={(e) => setNewInvest((p) => ({ ...p, description: e.target.value }))}
             placeholder="Ex: Compra de veículo Fiorino 2024"
@@ -83,7 +83,7 @@ const AccountsTab = ({
         </div>
         <div>
           <label className="block text-xs text-gray-500 mb-1">Valor (R$) *</label>
-          <input
+          <input aria-label="Valor (R$)"
             value={newInvest.amount}
             onChange={(e) => setNewInvest((p) => ({ ...p, amount: e.target.value }))}
             placeholder="0,00"
@@ -92,7 +92,7 @@ const AccountsTab = ({
         </div>
         <div>
           <label className="block text-xs text-gray-500 mb-1">Data *</label>
-          <input
+          <input aria-label="Data"
             type="date"
             value={newInvest.due_date}
             onChange={(e) => setNewInvest((p) => ({ ...p, due_date: e.target.value }))}
@@ -101,7 +101,7 @@ const AccountsTab = ({
         </div>
         <div>
           <label className="block text-xs text-gray-500 mb-1">Conta Bancária</label>
-          <select
+          <select aria-label="Conta Bancária"
             value={newInvest.bank_account_id}
             onChange={(e) => setNewInvest((p) => ({ ...p, bank_account_id: e.target.value }))}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none"
@@ -126,9 +126,9 @@ const AccountsTab = ({
       <div className="mt-5 border-t border-gray-100 pt-4">
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Histórico de Investimentos</p>
         {investLoading ? (
-          <p className="text-sm text-gray-400 text-center py-4">Carregando...</p>
+          <p className="text-sm text-gray-500 text-center py-4">Carregando...</p>
         ) : investList.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-4">Nenhum investimento registrado</p>
+          <p className="text-sm text-gray-500 text-center py-4">Nenhum investimento registrado</p>
         ) : (
           <div className="space-y-2">
             {investList.map((t) => (
@@ -138,7 +138,7 @@ const AccountsTab = ({
               >
                 <div>
                   <p className="text-sm font-medium text-gray-800">{t.description}</p>
-                  <p className="text-xs text-gray-400">{fmtDate(t.due_date)}</p>
+                  <p className="text-xs text-gray-500">{fmtDate(t.due_date)}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-red-700">{fmt(t.amount)}</p>

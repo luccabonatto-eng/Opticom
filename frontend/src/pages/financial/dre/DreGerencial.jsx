@@ -40,7 +40,7 @@ const DreGerencial = ({
     return (
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-12 text-center">
         <p className="text-sm font-medium text-gray-600">Nenhum lançamento encontrado em {curLabel}</p>
-        <p className="text-xs text-gray-400 mt-1">Escolha outro mês em “Ref” ou lance receitas e despesas.</p>
+        <p className="text-xs text-gray-500 mt-1">Escolha outro mês em “Ref” ou lance receitas e despesas.</p>
       </div>
     );
 
@@ -55,7 +55,7 @@ const DreGerencial = ({
               <p className="text-xl font-bold mt-1">{k.v}</p>
               <p className="text-xs text-gray-500 mt-0.5">{k.sub}</p>
               {vl && (
-                <p className={`text-xs mt-1 font-medium ${vl === '—' ? 'text-gray-400' : u ? 'text-green-600' : 'text-red-500'}`}>
+                <p className={`text-xs mt-1 font-medium ${vl === '—' ? 'text-gray-500' : u ? 'text-green-600' : 'text-red-500'}`}>
                   {vl} vs {prevLabel}
                 </p>
               )}
@@ -79,8 +79,8 @@ const DreGerencial = ({
                 {[
                   ['Descrição', 'text-left text-gray-600 px-4'],
                   [curLabel, 'text-right text-blue-700 px-4'],
-                  ['% Rec. Líq.', 'text-right text-gray-400 px-4'],
-                  ['Var%', 'text-center text-gray-400 px-3'],
+                  ['% Rec. Líq.', 'text-right text-gray-500 px-4'],
+                  ['Var%', 'text-center text-gray-500 px-3'],
                   [prevLabel, 'text-right text-gray-500 px-4'],
                 ].map(([t, c]) => (
                   <th key={t} className={`py-2.5 text-xs font-semibold uppercase tracking-wide whitespace-nowrap ${c}`}>

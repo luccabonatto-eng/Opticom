@@ -1,7 +1,9 @@
 import { DEFAULT_PERMISSIONS, MENU } from '../config/navigation.js';
 import { Icon } from '../components/Icon.jsx';
 
-const Sidebar = ({ page, setPage, collapsed, setCollapsed, user, permissions }) => {
+// No celular vira gaveta (mobileOpen); a partir de md fica fixa e pode ser recolhida.
+const Sidebar = ({ page, setPage, collapsed: collapsedDesktop, setCollapsed, user, permissions, mobileOpen, onClose }) => {
+  const collapsed = collapsedDesktop && !mobileOpen;
   const role = user?.role || 'TECHNICIAN';
   const allowed = new Set((permissions || DEFAULT_PERMISSIONS)[role] || DEFAULT_PERMISSIONS[role] || []);
   const visibleMenu = MENU.filter((m) => allowed.has(m.id));
@@ -10,16 +12,21 @@ const Sidebar = ({ page, setPage, collapsed, setCollapsed, user, permissions }) 
   const NavBtn = ({ m }) => (
     <button
       onClick={() => setPage(m.id)}
-      className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-colors ${collapsed ? 'justify-center px-0' : ''} ${page === m.id ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+      aria-current={page === m.id ? 'page' : undefined}
+      className={`w-full flex items-center gap-3 px-4 py-2.5 md:py-2 text-sm transition-colors ${collapsed ? 'justify-center px-0' : ''} ${page === m.id ? 'bg-blue-600 text-white' : 'text-gray-300 hover:text-white hover:bg-gray-800'}`}
       title={m.label}
+      aria-label={collapsed ? m.label : undefined}
     >
       <Icon name={m.icon} className="w-4 h-4 shrink-0" />
       {!collapsed && <span>{m.label}</span>}
     </button>
   );
   return (
+    <>
+    {mobileOpen && <div className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={onClose} aria-hidden="true" />}
     <aside
-      className={`${collapsed ? 'w-14' : 'w-60'} bg-gray-900 text-white flex flex-col h-screen sticky top-0 shrink-0 transition-all duration-200`}
+      aria-label="Menu principal"
+      className={`fixed md:sticky inset-y-0 left-0 top-0 z-40 w-60 ${collapsed ? 'md:w-14' : ''} ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 bg-gray-900 text-white flex flex-col h-screen shrink-0 transition-[transform,width] duration-200`}
     >
       <div
         className={`flex items-center gap-2 px-3 py-3 border-b border-gray-800 ${collapsed ? 'justify-center' : ''}`}
@@ -29,15 +36,17 @@ const Sidebar = ({ page, setPage, collapsed, setCollapsed, user, permissions }) 
             <div className="bg-white rounded-md px-2 py-1.5">
               <img src="/logo-opticom-grande-color.png" alt="Opticom Service" className="h-6 object-contain" />
             </div>
-            <button onClick={() => setCollapsed(true)} className="ml-auto text-gray-500 hover:text-white p-1 shrink-0">
-              <Icon name="chevLeft" className="w-4 h-4" />
+            <button
+              onClick={() => (mobileOpen ? onClose() : setCollapsed(true))}
+              aria-label={mobileOpen ? 'Fechar menu' : 'Recolher menu'}
+              className="ml-auto text-gray-400 hover:text-white p-2 shrink-0"
+            >
+              <Icon name={mobileOpen ? 'close' : 'chevLeft'} className="w-4 h-4" />
             </button>
           </>
         ) : (
-          <button onClick={() => setCollapsed(false)} className="text-gray-400 hover:text-white">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+          <button onClick={() => setCollapsed(false)} aria-label="Expandir menu" className="text-gray-400 hover:text-white p-1">
+            <Icon name="menu" className="w-5 h-5" />
           </button>
         )}
       </div>
@@ -48,7 +57,7 @@ const Sidebar = ({ page, setPage, collapsed, setCollapsed, user, permissions }) 
         {groups.map((g) => (
           <div key={g} className="mt-3">
             {!collapsed && (
-              <p className="px-4 pb-1 text-xs font-semibold text-gray-500 uppercase tracking-widest">{g}</p>
+              <p className="px-4 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-widest">{g}</p>
             )}
             {collapsed && <div className="mx-3 my-1 border-t border-gray-700" />}
             {visibleMenu
@@ -77,6 +86,7 @@ const Sidebar = ({ page, setPage, collapsed, setCollapsed, user, permissions }) 
         )}
       </div>
     </aside>
+    </>
   );
 };
 

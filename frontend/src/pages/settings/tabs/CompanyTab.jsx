@@ -3,7 +3,7 @@ const CompanyTab = ({ company, saveCompany, setCompany }) => (
     <div className="flex items-start justify-between">
       <div>
         <h3 className="text-base font-semibold text-gray-800">Dados da Empresa</h3>
-        <p className="text-xs text-gray-400 mt-0.5">Informações gerais da organização</p>
+        <p className="text-xs text-gray-500 mt-0.5">Informações gerais da organização</p>
       </div>
       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
         Plano {company.plan}
@@ -21,7 +21,7 @@ const CompanyTab = ({ company, saveCompany, setCompany }) => (
       ].map((f) => (
         <div key={f.key} className={f.key === 'address' ? 'col-span-2' : ''}>
           <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-          <input
+          <input aria-label={f.label}
             value={company[f.key]}
             onChange={(e) => setCompany((p) => ({ ...p, [f.key]: e.target.value }))}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

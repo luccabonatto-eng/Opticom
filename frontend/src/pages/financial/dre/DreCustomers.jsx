@@ -1,4 +1,5 @@
 import { DreCustomerTable } from './DreCustomerTable.jsx';
+import { Icon } from '../../../components/Icon.jsx';
 import { DreCustomerEntries } from './DreCustomerEntries.jsx';
 import { fmt } from '../../../utils/format.js';
 
@@ -45,7 +46,7 @@ const DreCustomers = ({
         <p className="text-sm font-bold text-emerald-700">
           {topProfitCust ? fmt(topProfitCust.netProfit) : '—'}
           {topProfitCust && topProfitCust.netRevenue > 0 && (
-            <span className="text-xs font-normal text-gray-400"> · {topProfitCust.netMargin.toFixed(1)}% margem</span>
+            <span className="text-xs font-normal text-gray-500"> · {topProfitCust.netMargin.toFixed(1)}% margem</span>
           )}
         </p>
       </div>
@@ -58,7 +59,7 @@ const DreCustomers = ({
         <p className="text-sm font-bold text-blue-700">
           {topRevenueCust ? fmt(topRevenueCust.grossRevenue) : '—'}
           {topRevenueCust && (
-            <span className="text-xs font-normal text-gray-400"> · {topRevenueCust.incomeCount} fatura(s)</span>
+            <span className="text-xs font-normal text-gray-500"> · {topRevenueCust.incomeCount} fatura(s)</span>
           )}
         </p>
       </div>
@@ -66,7 +67,7 @@ const DreCustomers = ({
       <div className="bg-white border border-gray-200 rounded-xl p-3.5">
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Margem líquida da carteira</p>
         <p className="text-2xl font-bold text-gray-800">{overallNetMargin.toFixed(1)}%</p>
-        <p className="text-xs text-gray-400">{fmt(totalNetProfitAll)} de resultado líquido</p>
+        <p className="text-xs text-gray-500">{fmt(totalNetProfitAll)} de resultado líquido</p>
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl p-3.5">
@@ -77,7 +78,7 @@ const DreCustomers = ({
           {lossCustomers.length > 0 ? `${lossCustomers.length} no vermelho` : '100% no lucro'}
         </p>
         {/* os nomes ficam aqui: antes havia um alerta separado repetindo este cartão */}
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-500">
           {lossCustomers.length > 0
             ? `${fmt(lossTotal)} de prejuízo acumulado · ${lossCustomers.map((c) => c.name).join(', ')}`
             : `Todos os ${activeCustomers.length} clientes ativos geraram lucro`}
@@ -96,7 +97,7 @@ const DreCustomers = ({
             placeholder="Buscar cliente por nome..."
             className="text-xs pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg w-56 focus:outline-none focus:ring-2 focus:ring-purple-400"
           />
-          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">🔍</span>
+          <Icon name="search" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
         </div>
 
         <select
@@ -118,7 +119,7 @@ const DreCustomers = ({
               setDreCustSearch('');
               setDreCustStatusFilter('all');
             }}
-            className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 border border-gray-200 rounded-lg"
+            className="text-xs text-gray-500 hover:text-red-500 px-2 py-1 border border-gray-200 rounded-lg"
           >
             Limpar filtros
           </button>

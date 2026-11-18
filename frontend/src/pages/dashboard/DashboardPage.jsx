@@ -1,7 +1,5 @@
-import { Gauge } from '../../components/Gauge.jsx';
 import { KPI } from '../../components/KPI.jsx';
-import { LineChart } from '../../components/LineChart.jsx';
-import { MONTH_NAMES, PERIOD_DATA } from './constants.js';
+import { MONTH_NAMES } from './constants.js';
 import { Modal } from '../../components/Modal.jsx';
 import { TAX_REGIMES } from '../../config/tax-regimes.js';
 import { Toast } from '../../components/Toast.jsx';
@@ -9,8 +7,8 @@ import { api } from '../../api/client.js';
 import { fmt } from '../../utils/format.js';
 import { useEffect, useState } from 'react';
 
-const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
-  const [period, setPeriod] = useState('month');
+// Sem acesso ao Financeiro (ex.: técnico), o painel mostra só a operação.
+const DashboardPage = ({ setPage, taxRegime = 'REAL', canSeeFinancial = true }) => {
   const [pipelineModal, setPipelineModal] = useState(null);
   const [toast, setToast] = useState(null);
   const [pipelineFrom, setPipelineFrom] = useState('');
@@ -31,11 +29,11 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
   const [allOrders, setAllOrders] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [alerts, setAlerts] = useState([]);
-  const d = PERIOD_DATA[period];
 
+  // O perfil chega logo depois do login: recarrega quando a permissão do Financeiro muda.
   useEffect(() => {
     loadDashboard(dashMonth);
-  }, [dashMonth]);
+  }, [dashMonth, canSeeFinancial]);
 
   const buildWeeklyChart = (txs, month) => {
     if (!month || !txs.length) return [];
@@ -63,7 +61,7 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
       api.getAllOrders(),
       api.getAllCustomers(),
       api.getAllContracts(),
-      api.getAllTransactions(),
+      canSeeFinancial ? api.getAllTransactions() : Promise.resolve({ success: true, data: [] }),
       api.getAllProducts(),
     ]);
     const orders = ordRes.success ? ordRes.data?.data || ordRes.data || [] : [];
@@ -90,7 +88,7 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
       invoicedOrders: ordM.filter((o) => o.status === 'INVOICED').length,
       activeContracts: contracts.filter((c) => c.status === 'ACTIVE').length,
       totalCustomers: customers.length,
-      lowStockItems: products.filter((p) => (p.quantity || 0) <= (p.min_stock || 0) && (p.min_stock || 0) > 0).length,
+      lowStockItems: products.filter((p) => (p.quantity || 0) <= (p.min_quantity || 0) && (p.min_quantity || 0) > 0).length,
       receivedRevenue,
       paidExpense,
       pendingRevenue,
@@ -128,14 +126,14 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
         });
       });
     products
-      .filter((p) => (p.quantity || 0) <= (p.min_stock || 0) && (p.min_stock || 0) > 0)
+      .filter((p) => (p.quantity || 0) <= (p.min_quantity || 0) && (p.min_quantity || 0) > 0)
       .slice(0, 2)
       .forEach((p) => {
         newAlerts.push({
           id: `inv-${p.id}`,
           severity: 'MEDIUM',
           title: 'Estoque crítico',
-          message: `"${p.name}" — ${p.quantity || 0} un. (mín: ${p.min_stock || 0})`,
+          message: `"${p.name}" — ${p.quantity || 0} un. (mín: ${p.min_quantity || 0})`,
           type: 'LOW_STOCK',
         });
       });
@@ -197,7 +195,7 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
             <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
               <div className="flex gap-0.5 w-full justify-center mb-1" style={{ minHeight: 28 }}>
                 {col.a > 0 && (
-                  <span className="text-xs text-blue-600 font-semibold" style={{ fontSize: '10px' }}>
+                  <span className="text-xs text-blue-700 font-semibold tabular-nums">
                     {fmt(col.a).replace('R$\u00a0', '').replace(',00', '')}
                   </span>
                 )}
@@ -228,21 +226,21 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
                   </div>
                 </div>
               </div>
-              <span className="text-xs text-gray-400 mt-1">{col.label}</span>
+              <span className="text-xs text-gray-500 mt-1">{col.label}</span>
             </div>
           ))}
         </div>
         <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-3 gap-2 text-center">
           <div>
-            <p className="text-xs text-gray-400">Total Receita</p>
+            <p className="text-xs text-gray-500">Total Receita</p>
             <p className="text-sm font-bold text-blue-600">{fmt(data.reduce((s, c) => s + c.a, 0))}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-400">Total Despesa</p>
+            <p className="text-xs text-gray-500">Total Despesa</p>
             <p className="text-sm font-bold text-red-500">{fmt(data.reduce((s, c) => s + c.b, 0))}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-400">Lucro</p>
+            <p className="text-xs text-gray-500">Lucro</p>
             <p className="text-sm font-bold text-green-600">{fmt(data.reduce((s, c) => s + (c.a - c.b), 0))}</p>
           </div>
         </div>
@@ -271,11 +269,11 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
     <div className="p-6 space-y-5">
       {/* Header com seletor de mês */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl shadow-sm px-2 py-1">
             <button
               onClick={prevMonthNav}
-              className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+              className="p-1 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -289,15 +287,14 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
             />
             <button
               onClick={nextMonthNav}
-              className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+              className="p-1 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
           </div>
-          <span className="text-sm font-semibold text-gray-600">{dashMonthLabel}</span>
-          {(() => {
+          {canSeeFinancial && (() => {
             const tr = TAX_REGIMES[taxRegime];
             return (
               <div className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${tr.color}`}>
@@ -315,7 +312,8 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
+      {canSeeFinancial && (
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         <KPI
           title="Receita Recebida"
           value={fmt(stats.receivedRevenue)}
@@ -342,49 +340,52 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
           color="blue"
         />
       </div>
+      )}
 
-      <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         <KPI
           title="OS Abertas"
           value={String(stats.openOrders)}
-          sub={`${stats.invoicedOrders} faturadas`}
+          sub="abertas, agendadas ou em campo"
           icon="orders"
           color="orange"
         />
         <KPI
           title="OS Concluídas"
           value={String(stats.completedOrders)}
-          sub={`${stats.activeContracts} contratos ativos`}
+          sub={`${stats.invoicedOrders} já faturadas`}
           icon="orders"
           color="green"
         />
         <KPI
-          title="Clientes Ativos"
-          value={String(stats.totalCustomers)}
-          sub={stats.lowStockItems > 0 ? `${stats.lowStockItems} itens em falta no estoque` : 'estoque OK'}
-          icon="customers"
+          title="Estoque Crítico"
+          value={String(stats.lowStockItems)}
+          sub={stats.lowStockItems > 0 ? 'itens abaixo do mínimo' : 'nenhum item abaixo do mínimo'}
+          icon="inventory"
           color={stats.lowStockItems > 0 ? 'red' : 'blue'}
         />
       </div>
 
       {/* Pipeline */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
+        <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h3 className="text-sm font-semibold text-gray-800">Pipeline de Faturamento — OS</h3>
-            <p className="text-xs text-gray-400 mt-0.5">Clique em qualquer etapa para ver as ordens</p>
+            <h2 className="text-sm font-semibold text-gray-800">Andamento das OS</h2>
+            <p className="text-xs text-gray-500 mt-0.5">Clique em uma etapa para ver as ordens</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-400">De:</span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-gray-500">De:</span>
             <input
               type="date"
+              aria-label="Andamento das OS a partir de"
               value={pipelineFrom}
               onChange={(e) => setPipelineFrom(e.target.value)}
               className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none"
             />
-            <span className="text-xs text-gray-400">Até:</span>
+            <span className="text-xs text-gray-500">Até:</span>
             <input
               type="date"
+              aria-label="Andamento das OS até"
               value={pipelineTo}
               onChange={(e) => setPipelineTo(e.target.value)}
               className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none"
@@ -395,9 +396,9 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
                   setPipelineFrom('');
                   setPipelineTo('');
                 }}
-                className="text-xs text-gray-400 hover:text-red-500 font-bold"
+                className="text-xs text-gray-500 hover:text-red-600 font-medium"
               >
-                ✕
+                Limpar
               </button>
             )}
           </div>
@@ -408,7 +409,6 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
               key: 'open',
               label: 'Abertas',
               count: allOrders.filter((o) => o.status === 'OPEN').length,
-              icon: '📋',
               color: 'text-gray-600',
               bg: 'bg-gray-100',
               bar: 'bg-gray-400',
@@ -418,7 +418,6 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
               key: 'scheduled',
               label: 'Agendadas',
               count: allOrders.filter((o) => o.status === 'SCHEDULED').length,
-              icon: '📅',
               color: 'text-blue-600',
               bg: 'bg-blue-50',
               bar: 'bg-blue-400',
@@ -428,7 +427,6 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
               key: 'progress',
               label: 'Em Andamento',
               count: allOrders.filter((o) => ['IN_TRANSIT', 'IN_PROGRESS'].includes(o.status)).length,
-              icon: '🔧',
               color: 'text-orange-600',
               bg: 'bg-orange-50',
               bar: 'bg-orange-400',
@@ -438,7 +436,6 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
               key: 'completed',
               label: 'Concluídas',
               count: allOrders.filter((o) => o.status === 'COMPLETED').length,
-              icon: '✅',
               color: 'text-green-600',
               bg: 'bg-green-50',
               bar: 'bg-green-500',
@@ -448,7 +445,6 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
               key: 'invoiced',
               label: 'Faturadas',
               count: allOrders.filter((o) => o.status === 'INVOICED').length,
-              icon: '🧾',
               color: 'text-purple-600',
               bg: 'bg-purple-50',
               bar: 'bg-purple-400',
@@ -457,30 +453,22 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
           ];
           const total = allOrders.length || 1;
           return (
-            <div className="grid grid-cols-5 divide-x divide-gray-100">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-px bg-gray-100">
               {stages.map((s, i) => {
                 const pct = Math.round((s.count / total) * 100);
                 return (
                   <button
                     key={i}
                     onClick={() => openPipeline(s.key)}
-                    className="p-5 text-left hover:bg-gray-50 transition-colors group"
+                    className="bg-white p-5 text-left hover:bg-gray-50 transition-colors group"
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div
-                        className={`${s.bg} ${s.color} w-9 h-9 rounded-lg flex items-center justify-center text-base`}
-                      >
-                        {s.icon}
-                      </div>
-                      {i < 4 && <span className="text-gray-200 text-xl mt-0.5">›</span>}
-                    </div>
-                    <p className="text-2xl font-bold text-gray-900">{s.count}</p>
+                    <p className="text-2xl font-bold text-gray-900 tabular-nums">{s.count}</p>
                     <p className="text-xs font-semibold text-gray-600 mt-0.5">{s.label}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">{s.sub}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{s.sub}</p>
                     <div className="mt-3 w-full bg-gray-100 rounded-full h-1.5">
                       <div className={`h-1.5 rounded-full ${s.bar}`} style={{ width: `${pct}%` }} />
                     </div>
-                    <p className="text-xs text-gray-400 mt-1 group-hover:text-blue-500">{pct}% do total →</p>
+                    <p className="text-xs text-gray-500 mt-1 group-hover:text-blue-700">{pct}% do total →</p>
                   </button>
                 );
               })}
@@ -495,9 +483,10 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm text-gray-500">{pipelineModal.data.length} ordens de serviço</p>
               {pipelineModal.data.length === 0 && (
-                <p className="text-sm text-gray-400 italic">Nenhuma OS nesta etapa</p>
+                <p className="text-sm text-gray-500 italic">Nenhuma OS nesta etapa</p>
               )}
             </div>
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
@@ -526,6 +515,7 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
                 ))}
               </tbody>
             </table>
+            </div>
             <div className="mt-4 flex gap-2">
               <button
                 onClick={() => {
@@ -536,26 +526,29 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
               >
                 Ver todas as OS →
               </button>
-              <button
-                onClick={() => {
-                  setPipelineModal(null);
-                  setPage('financial');
-                }}
-                className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
-              >
-                Ir para Financeiro →
-              </button>
+              {canSeeFinancial && (
+                <button
+                  onClick={() => {
+                    setPipelineModal(null);
+                    setPage('financial');
+                  }}
+                  className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                >
+                  Ir para Financeiro →
+                </button>
+              )}
             </div>
           </div>
         )}
       </Modal>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+      <div className={`grid grid-cols-1 gap-5 ${canSeeFinancial ? 'xl:grid-cols-2' : ''}`}>
+      {canSeeFinancial && (
         <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h3 className="text-sm font-semibold text-gray-800">Receita vs Despesa</h3>
-              <p className="text-xs text-gray-400">{dashMonthLabel} — por semana</p>
+              <h2 className="text-sm font-semibold text-gray-800">Receita vs Despesa</h2>
+              <p className="text-xs text-gray-500">{dashMonthLabel} — por semana</p>
             </div>
             <div className="flex items-center gap-3 text-xs text-gray-500">
               <span className="flex items-center gap-1.5">
@@ -568,81 +561,16 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
               </span>
             </div>
           </div>
-          <RevExpChart data={chartData.length > 0 ? chartData : d.chart} />
+          {chartData.some((c) => c.a || c.b) ? (
+            <RevExpChart data={chartData} />
+          ) : (
+            <p className="py-12 text-sm text-gray-500 text-center">Nenhum lançamento com vencimento em {dashMonthLabel}.</p>
+          )}
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col items-center">
-          <div className="flex items-start justify-between w-full mb-2">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-800">Health Score</h3>
-              <p className="text-xs text-gray-400">Saúde financeira geral</p>
-            </div>
-          </div>
-          <Gauge score={72} />
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 w-full mt-1">
-            {[
-              ['Liquidez', '80'],
-              ['Inadimplência', '75'],
-              ['Margem', '65'],
-              ['Tendência', '70'],
-            ].map(([l, s]) => (
-              <div key={l}>
-                <div className="flex justify-between text-xs text-gray-500 mb-0.5">
-                  <span>{l}</span>
-                  <span className="font-medium">{s}</span>
-                </div>
-                <div className="w-full h-1.5 bg-gray-100 rounded-full">
-                  <div className="h-1.5 bg-blue-500 rounded-full" style={{ width: `${s}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-          <div className="mb-3 flex items-start justify-between">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-800">Evolução do Caixa</h3>
-              <p className="text-xs text-gray-400">{d.label}</p>
-            </div>
-            <div
-              className={`text-xs font-bold px-2 py-0.5 rounded-full ${d.cfEnd >= d.cfStart ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
-            >
-              {d.cfEnd >= d.cfStart ? '▲' : '▼'} {Math.abs(((d.cfEnd - d.cfStart) / d.cfStart) * 100).toFixed(1)}%
-            </div>
-          </div>
-          <LineChart data={d.cashFlow} color="#10b981" height={130} />
-          <div className="flex justify-between mt-1 mb-3 text-xs text-gray-400">
-            {d.cfLabels.map((l) => (
-              <span key={l}>{l}</span>
-            ))}
-          </div>
-          <div className="border-t border-gray-100 pt-3 space-y-1">
-            {[
-              { l: 'Saldo Inicial', v: d.cfStart, cls: 'text-gray-700' },
-              { l: 'Saldo Final', v: d.cfEnd, cls: d.cfEnd >= d.cfStart ? 'text-green-600' : 'text-red-600' },
-              {
-                l: 'Variação',
-                v: d.cfEnd - d.cfStart,
-                cls: d.cfEnd >= d.cfStart ? 'text-green-600' : 'text-red-600',
-                showSign: true,
-              },
-              { l: 'Mínimo', v: Math.min(...d.cashFlow.filter((c) => c.v > 0).map((c) => c.v)), cls: 'text-gray-500' },
-              { l: 'Máximo', v: Math.max(...d.cashFlow.map((c) => c.v)), cls: 'text-gray-500' },
-            ].map(({ l, v, cls, showSign }) => (
-              <div key={l} className="flex justify-between text-xs">
-                <span className="text-gray-400">{l}</span>
-                <span className={`font-semibold ${cls}`}>
-                  {showSign && v > 0 ? '+' : ''}
-                  {fmt(v)}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
+      )}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-800">Alertas Ativos</h3>
+          <h2 className="text-sm font-semibold text-gray-800">Alertas Ativos</h2>
           {alerts.length > 0 ? (
             <span className="bg-red-100 text-red-700 text-xs font-bold px-2 py-0.5 rounded-full">{alerts.length}</span>
           ) : (
@@ -650,14 +578,14 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
           )}
         </div>
         {alerts.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-gray-400 text-center">Nenhum alerta pendente</p>
+          <p className="px-5 py-6 text-sm text-gray-500 text-center">Nenhum alerta pendente</p>
         ) : (
           alerts.map((a) => {
             const sev = {
-              HIGH: ['border-l-red-500', 'bg-red-50', '🔴'],
-              MEDIUM: ['border-l-amber-400', 'bg-amber-50', '🟡'],
-              LOW: ['border-l-blue-400', 'bg-blue-50', '🔵'],
-            }[a.severity] || ['border-l-gray-300', 'bg-gray-50', '⚪'];
+              HIGH: ['bg-red-500', 'Alta'],
+              MEDIUM: ['bg-amber-500', 'Média'],
+              LOW: ['bg-blue-500', 'Baixa'],
+            }[a.severity] || ['bg-gray-400', ''];
             const navMap2 = {
               OVERDUE_RECEIVABLE: 'financial',
               OVERDUE_PAYABLE: 'financial',
@@ -667,9 +595,9 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
             return (
               <div
                 key={a.id}
-                className={`flex items-start gap-3 px-5 py-3 border-l-4 ${sev[0]} ${sev[1]} border-b border-gray-50 last:border-b-0`}
+                className="flex items-start gap-3 px-5 py-3 border-b border-gray-100 last:border-b-0"
               >
-                <span className="text-sm mt-0.5">{sev[2]}</span>
+                <span role="img" aria-label={`Prioridade ${sev[1]}`} title={`Prioridade ${sev[1]}`} className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${sev[0]}`} />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-800">{a.title}</p>
                   <p className="text-xs text-gray-500 mt-0.5">{a.message}</p>
@@ -685,8 +613,9 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
           })
         )}
       </div>
+      </div>
       {/* Card Regime Tributário */}
-      {(() => {
+      {canSeeFinancial && (() => {
         const tr = TAX_REGIMES[taxRegime];
         return (
           <div
@@ -695,7 +624,7 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
             <div className="flex items-center gap-2">
               <span className={`w-3 h-3 rounded-full ${tr.dot}`} />
               <div>
-                <p className="text-xs text-gray-400">Regime Tributário Ativo</p>
+                <p className="text-xs text-gray-500">Regime Tributário Ativo</p>
                 <p className="text-sm font-bold text-gray-800">{tr.label}</p>
               </div>
             </div>
@@ -709,37 +638,37 @@ const DashboardPage = ({ setPage, taxRegime = 'REAL' }) => {
             <div className="ml-auto flex items-center gap-4 text-xs">
               {tr.iss && (
                 <div className="text-center">
-                  <p className="text-gray-400">ISS</p>
+                  <p className="text-gray-500">ISS</p>
                   <p className="font-bold text-gray-700">{(tr.iss * 100).toFixed(0)}%</p>
                 </div>
               )}
               {tr.pis && (
                 <div className="text-center">
-                  <p className="text-gray-400">PIS</p>
+                  <p className="text-gray-500">PIS</p>
                   <p className="font-bold text-gray-700">{(tr.pis * 100).toFixed(2)}%</p>
                 </div>
               )}
               {tr.cofins && (
                 <div className="text-center">
-                  <p className="text-gray-400">COFINS</p>
+                  <p className="text-gray-500">COFINS</p>
                   <p className="font-bold text-gray-700">{(tr.cofins * 100).toFixed(2)}%</p>
                 </div>
               )}
               {tr.dasRate && (
                 <div className="text-center">
-                  <p className="text-gray-400">DAS</p>
+                  <p className="text-gray-500">DAS</p>
                   <p className="font-bold text-gray-700">{(tr.dasRate * 100).toFixed(1)}%</p>
                 </div>
               )}
               {tr.irpjRate && (
                 <div className="text-center">
-                  <p className="text-gray-400">IRPJ</p>
+                  <p className="text-gray-500">IRPJ</p>
                   <p className="font-bold text-gray-700">{(tr.irpjRate * 100).toFixed(0)}%+</p>
                 </div>
               )}
               {tr.csllRate && (
                 <div className="text-center">
-                  <p className="text-gray-400">CSLL</p>
+                  <p className="text-gray-500">CSLL</p>
                   <p className="font-bold text-gray-700">{(tr.csllRate * 100).toFixed(0)}%</p>
                 </div>
               )}

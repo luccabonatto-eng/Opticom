@@ -78,7 +78,7 @@ const AuditPage = () => {
       </div>
       <div className="flex items-center gap-3">
         <div className="relative">
-          <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -108,7 +108,7 @@ const AuditPage = () => {
             </option>
           ))}
         </select>
-        <span className="ml-auto text-xs text-gray-400">{filtered.length} eventos</span>
+        <span className="ml-auto text-xs text-gray-500">{filtered.length} eventos</span>
       </div>
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <table className="w-full text-sm">
@@ -124,7 +124,7 @@ const AuditPage = () => {
           <tbody className="divide-y divide-gray-100">
             {loading && (
               <tr>
-                <td colSpan="4" className="px-4 py-10 text-center text-sm text-gray-400">
+                <td colSpan="4" className="px-4 py-10 text-center text-sm text-gray-500">
                   Carregando…
                 </td>
               </tr>
@@ -150,7 +150,7 @@ const AuditPage = () => {
               ))}
             {!loading && filtered.length === 0 && (
               <tr>
-                <td colSpan="4" className="px-4 py-10 text-center text-sm text-gray-400">
+                <td colSpan="4" className="px-4 py-10 text-center text-sm text-gray-500">
                   Nenhum evento registrado ainda. Ações no sistema serão listadas aqui.
                 </td>
               </tr>

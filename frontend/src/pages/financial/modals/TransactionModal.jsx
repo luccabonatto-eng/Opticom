@@ -35,7 +35,7 @@ const TransactionModal = ({
           <button
             key={v}
             onClick={() => setNewTx((p) => ({ ...p, type: v, category_id: '' }))}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${newTx.type === v ? (v === 'INCOME' ? 'bg-green-600 text-white border-green-600' : 'bg-red-600 text-white border-red-600') : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+            className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${newTx.type === v ? (v === 'INCOME' ? 'bg-green-700 text-white border-green-700' : 'bg-red-600 text-white border-red-600') : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
           >
             {l}
           </button>
@@ -54,7 +54,7 @@ const TransactionModal = ({
       ].map((f) => (
         <div key={f.key}>
           <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-          <input
+          <input aria-label={f.label}
             type={f.type}
             value={newTx[f.key]}
             onChange={(e) => setNewTx((p) => ({ ...p, [f.key]: e.target.value }))}
@@ -65,7 +65,7 @@ const TransactionModal = ({
       ))}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-        <select
+        <select aria-label="Categoria"
           value={newTx.category_id}
           onChange={(e) => setNewTx((p) => ({ ...p, category_id: e.target.value }))}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -94,14 +94,14 @@ const TransactionModal = ({
             </option>
           ))}
         </select>
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-gray-500 mt-1">
           Escolha o cliente para receitas e despesas específicas, ou Geral da empresa para gastos compartilhados, como assistente financeira e aluguel.
         </p>
       </div>
       {newTx.type === 'INCOME' && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Nº da Nota Fiscal</label>
-          <input
+          <input aria-label="Nº da Nota Fiscal"
             type="text"
             value={newTx.invoice_number}
             onChange={(e) => setNewTx((p) => ({ ...p, invoice_number: e.target.value }))}
@@ -113,7 +113,7 @@ const TransactionModal = ({
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Conta Bancária</label>
-          <select
+          <select aria-label="Conta Bancária"
             value={newTx.bank_account_id}
             onChange={(e) => setNewTx((p) => ({ ...p, bank_account_id: e.target.value }))}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -128,7 +128,7 @@ const TransactionModal = ({
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Forma de Pagamento</label>
-          <select
+          <select aria-label="Forma de Pagamento"
             value={newTx.payment_method_id}
             onChange={(e) => setNewTx((p) => ({ ...p, payment_method_id: e.target.value }))}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -162,7 +162,7 @@ const TransactionModal = ({
               />
               <span className="text-sm text-gray-500">vez(es)</span>
             </div>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               {(parseInt(newTx.repetir) || 1) > 1
                 ? `Cria ${parseInt(newTx.repetir)} lançamentos de ${newTx.amount ? fmt(Math.round(parseFloat(newTx.amount) * 100)) : 'R$ —'}, um por mês${newTx.due_date ? `, de ${fmtDate(newTx.due_date)} a ${fmtDate(addMeses(newTx.due_date, parseInt(newTx.repetir) - 1))}` : ''}. O valor é o de cada parcela.`
                 : 'Para aluguel, folha, seguro ou conta parcelada — o valor acima é o de cada parcela.'}
@@ -194,7 +194,7 @@ const TransactionModal = ({
                 onChange={(e) => setNewTx((p) => ({ ...p, paid_date: e.target.value }))}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 Entra já quitado, pelo valor cheio. Para valor parcial, lance pendente e use a baixa.
               </p>
             </div>

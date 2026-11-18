@@ -99,7 +99,7 @@ const TechniciansPage = () => {
             <Icon name="technicians" className="w-7 h-7 text-blue-400" />
           </div>
           <p className="text-gray-600 font-medium mb-1">Nenhum técnico cadastrado</p>
-          <p className="text-sm text-gray-400 mb-5">Clique em "Novo Técnico" para adicionar o primeiro.</p>
+          <p className="text-sm text-gray-500 mb-5">Clique em "Novo Técnico" para adicionar o primeiro.</p>
           <button
             onClick={() => setNewModal(true)}
             className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -112,7 +112,11 @@ const TechniciansPage = () => {
         {technicians.map((t) => (
           <div
             key={t.id}
+            role="button"
+            tabIndex={0}
+            aria-label={`Abrir técnico ${t.name}`}
             onClick={() => setSelected(t)}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setSelected(t))}
             className={`bg-white rounded-xl border border-gray-200 shadow-sm p-5 cursor-pointer hover:shadow-md transition-shadow ${t.status !== 'ACTIVE' ? 'opacity-70' : ''}`}
           >
             <div className="flex items-start justify-between">
@@ -141,14 +145,14 @@ const TechniciansPage = () => {
               <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-gray-100">
                 <div className="text-center">
                   <p className="text-xl font-bold text-gray-800">{t.orders || 0}</p>
-                  <p className="text-xs text-gray-400">OS / mês</p>
+                  <p className="text-xs text-gray-500">OS / mês</p>
                 </div>
                 <div className="text-center">
                   <p className="text-xl font-bold text-gray-800">
                     {t.avg_time || t.avgMin || '—'}
-                    <span className="text-sm font-normal text-gray-400">min</span>
+                    <span className="text-sm font-normal text-gray-500">min</span>
                   </p>
-                  <p className="text-xs text-gray-400">Tempo médio</p>
+                  <p className="text-xs text-gray-500">Tempo médio</p>
                 </div>
                 <div className="text-center">
                   <p
@@ -156,7 +160,7 @@ const TechniciansPage = () => {
                   >
                     {t.rework_percentage || t.rework || 0}%
                   </p>
-                  <p className="text-xs text-gray-400">Retrabalho</p>
+                  <p className="text-xs text-gray-500">Retrabalho</p>
                 </div>
               </div>
             )}
@@ -179,20 +183,20 @@ const TechniciansPage = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-2">
-                <Icon name="phone" className="w-4 h-4 text-gray-400" />
+                <Icon name="phone" className="w-4 h-4 text-gray-500" />
                 <a href={`tel:${sel.phone}`} className="text-sm text-blue-600">
                   {sel.phone}
                 </a>
               </div>
               <div className="flex items-center gap-2">
-                <Icon name="mail" className="w-4 h-4 text-gray-400" />
+                <Icon name="mail" className="w-4 h-4 text-gray-500" />
                 <a href={`mailto:${sel.email}`} className="text-sm text-blue-600">
                   {sel.email || '—'}
                 </a>
               </div>
             </div>
             <div>
-              <p className="text-xs text-gray-400 mb-2">Especializações</p>
+              <p className="text-xs text-gray-500 mb-2">Especializações</p>
               <div className="flex flex-wrap gap-2">
                 {(sel.specializations || sel.specs || []).map((s) => (
                   <span
@@ -208,14 +212,14 @@ const TechniciansPage = () => {
               <div className="bg-gray-50 rounded-xl p-4 grid grid-cols-3 gap-4 text-center">
                 <div>
                   <p className="text-2xl font-bold text-gray-800">{sel.orders || 0}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">OS este mês</p>
+                  <p className="text-xs text-gray-500 mt-0.5">OS este mês</p>
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-gray-800">
                     {sel.avg_time || sel.avgMin || '—'}
-                    <span className="text-sm font-normal text-gray-400">min</span>
+                    <span className="text-sm font-normal text-gray-500">min</span>
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">Tempo médio</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Tempo médio</p>
                 </div>
                 <div>
                   <p
@@ -223,7 +227,7 @@ const TechniciansPage = () => {
                   >
                     {sel.rework_percentage || sel.rework || 0}%
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">Retrabalho</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Retrabalho</p>
                 </div>
               </div>
             )}
@@ -262,7 +266,7 @@ const TechniciansPage = () => {
           ].map((f) => (
             <div key={f.key}>
               <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-              <input
+              <input aria-label={f.label}
                 value={form[f.key]}
                 onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
                 placeholder={f.placeholder}

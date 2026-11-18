@@ -25,7 +25,7 @@ export function DreCustomerEntries({ customers, scopeLabel, txCatName }) {
       </div>
       {!customer ? <p className="text-sm text-gray-500">Selecione um cliente para consultar suas receitas e contas a pagar.</p> : (
         <>
-          <h3 className="font-bold text-purple-900">{customer.name}</h3>
+          <h3 className="font-bold text-gray-900">{customer.name}</h3>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {[['INCOME', 'Receitas'], ['EXPENSE', 'Contas a pagar']].map(([type, title]) => {
               const entries = customer.transactions.filter(tx => tx.type === type).sort(porVencimento);

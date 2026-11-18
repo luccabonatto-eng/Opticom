@@ -1,4 +1,4 @@
-import { Badge, PRIORITY_BORDER, PriorityBadge } from '../../components/Badge.jsx';
+import { Badge, PriorityBadge } from '../../components/Badge.jsx';
 import { COLS, STATUS_FLOW } from './constants.js';
 import { Icon } from '../../components/Icon.jsx';
 import { LabelField } from '../../components/LabelField.jsx';
@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 // Equipe da OS além do responsável: marca/desmarca técnicos de apoio.
 const ExtraTechs = ({ technicians, value = [], exclude, onChange }) => {
   const options = technicians.filter((t) => t.id !== exclude);
-  if (!options.length) return <p className="text-xs text-gray-400">Nenhum outro técnico cadastrado.</p>;
+  if (!options.length) return <p className="text-xs text-gray-500">Nenhum outro técnico cadastrado.</p>;
   return (
     <div className="flex flex-wrap gap-1.5">
       {options.map((t) => {
@@ -36,7 +36,7 @@ const ExtraTechs = ({ technicians, value = [], exclude, onChange }) => {
   );
 };
 
-const OrdersPage = ({ taxRegime = 'REAL' }) => {
+const OrdersPage = ({ taxRegime = 'REAL', canSeeFinancial = true }) => {
   const [view, setView] = useState('kanban');
   const [q, setQ] = useState('');
   const [orders, setOrders] = useState([]);
@@ -64,6 +64,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
       setOrders(result.data?.data || result.data || []);
     } else {
       setOrders([]);
+      setToast(`Erro ao carregar as OS: ${result.error}`);
     }
     setLoading(false);
   };
@@ -94,6 +95,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
     } else {
       setToast(`Erro ao avançar OS: ${result.error}`);
     }
+    return result.success;
   };
 
   const requestInvoice = (id) => {
@@ -103,9 +105,10 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
     setNfModal(true);
   };
 
-  const confirmInvoice = () => {
+  const confirmInvoice = async () => {
     if (!nfData.number.trim()) return;
-    advance(pendingInvoice, nfData);
+    // O aviso de sucesso só sai depois que o servidor confirma.
+    if (!(await advance(pendingInvoice, nfData))) return;
     setNfModal(false);
     setPendingInvoice(null);
     setToast(`NF ${nfData.number} vinculada com sucesso!`);
@@ -113,6 +116,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
 
   const cancel = async (id) => {
     const o = orders.find((o) => o.id === id);
+    if (!window.confirm(`Cancelar a OS ${o?.number}? Ela sai do quadro e não pode ser reaberta por aqui.`)) return;
     const result = await api.updateOrder(id, { status: 'CANCELLED' });
     if (result.success) {
       setOrders((prev) => prev.map((x) => (x.id === id ? { ...x, status: 'CANCELLED' } : x)));
@@ -191,9 +195,10 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
   const byStatus = Object.fromEntries(COLS.map((c) => [c.key, filtered.filter((o) => o.status === c.key)]));
 
   const OSCard = ({ o }) => (
-    <div
+    <button
+      type="button"
       onClick={() => setSelected(o)}
-      className={`bg-white rounded-lg p-3 shadow-sm border-l-4 ${PRIORITY_BORDER[o.priority]} cursor-pointer hover:shadow-md transition-shadow`}
+      className="block w-full text-left bg-white rounded-lg p-3 border border-gray-200 cursor-pointer hover:border-gray-300 hover:shadow-sm transition-shadow"
     >
       <div className="flex items-center justify-between gap-1 mb-1">
         <span className="text-xs font-mono font-bold text-gray-600">{o.number}</span>
@@ -201,7 +206,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
       </div>
       <p className="text-sm font-medium text-gray-800 truncate">{o.customers?.name || o.customer}</p>
       <p className="text-xs text-gray-500">{o.type}</p>
-      <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+      <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
         <span className="flex items-center gap-1">
           <Icon name="calendar" className="w-3 h-3" />
           {fmtDate(o.scheduled_date || o.date)}
@@ -215,34 +220,28 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
         )}
       </div>
       {o.nf && (
-        <div className="mt-1.5 text-xs font-mono font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">
-          🧾 NF {o.nf.number}
+        <div className="mt-1.5 text-xs font-mono font-semibold text-purple-800 bg-purple-50 px-2 py-0.5 rounded">
+          NF {o.nf.number}
         </div>
       )}
-    </div>
+    </button>
   );
 
   // Derive current selected from orders state so status stays in sync
   const selOS = selected ? orders.find((o) => o.id === selected.id) || selected : null;
   const flow = selOS ? STATUS_FLOW[selOS.status] : null;
-  const btnColors = {
-    blue: 'bg-blue-600 hover:bg-blue-700',
-    sky: 'bg-sky-600 hover:bg-sky-700',
-    orange: 'bg-orange-600 hover:bg-orange-700',
-    green: 'bg-green-600 hover:bg-green-700',
-    purple: 'bg-purple-600 hover:bg-purple-700',
-  };
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-3 shrink-0">
-        <div className="relative">
-          <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 flex items-center gap-3 flex-wrap shrink-0">
+        <div className="relative w-full sm:w-auto">
+          <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Buscar OS ou cliente..."
-            className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="Buscar OS ou cliente"
+            className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div className="flex bg-gray-100 rounded-lg p-0.5">
@@ -268,9 +267,9 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
       </div>
 
       {view === 'kanban' ? (
-        <div className="flex gap-4 p-5 overflow-x-auto flex-1 items-start">
+        <div className="flex gap-4 p-4 md:p-5 overflow-x-auto flex-1 items-start snap-x snap-mandatory md:snap-none">
           {COLS.map((col) => (
-            <div key={col.key} className="shrink-0 w-60">
+            <div key={col.key} className="shrink-0 w-[85%] sm:w-60 snap-start">
               <div className={`${col.bg} ${col.text} flex items-center justify-between px-3 py-2 rounded-t-lg`}>
                 <span className="text-xs font-semibold">{col.label}</span>
                 <span className="bg-white bg-opacity-60 text-xs font-bold px-1.5 py-0.5 rounded-full">
@@ -282,15 +281,15 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
                   <OSCard key={o.id} o={o} />
                 ))}
                 {(byStatus[col.key]?.length || 0) === 0 && (
-                  <p className="text-center text-xs text-gray-400 py-4">Nenhuma OS</p>
+                  <p className="text-center text-xs text-gray-500 py-4">{loading ? 'Carregando…' : 'Nenhuma OS'}</p>
                 )}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="p-5 overflow-y-auto flex-1">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-4 md:p-5 overflow-y-auto flex-1">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
@@ -363,7 +362,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
               <PriorityBadge p={selOS.priority} />
               <span className="text-sm text-gray-500">{selOS.type}</span>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-3">
                 <LabelField label="Cliente" value={selOS.customers?.name || selOS.customer || '—'} />
                 <LabelField label="Data" value={fmtDate(selOS.scheduled_date || selOS.date)} />
@@ -371,7 +370,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
                 <LabelField label="Subestação" value={selOS.substation || '—'} />
                 <LabelField label="Descrição" value={selOS.description || selOS.desc || '—'} />
                 {/* Painel fiscal */}
-                {(() => {
+                {canSeeFinancial && (() => {
                   const tr = TAX_REGIMES[taxRegime];
                   return (
                     <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
@@ -409,7 +408,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
               </div>
               <div className="space-y-3">
                 <div>
-                  <p className="text-xs text-gray-400 mb-1">Técnico Responsável</p>
+                  <p className="text-xs text-gray-500 mb-1">Técnico Responsável</p>
                   <select
                     value={selOS.assigned_technician_id || ''}
                     onChange={(e) => updateTeam(selOS, e.target.value || null, selOS.additional_technicians || [])}
@@ -424,7 +423,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
                   </select>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-1">Técnicos de apoio</p>
+                  <p className="text-xs text-gray-500 mb-1">Técnicos de apoio</p>
                   <ExtraTechs
                     technicians={technicians}
                     value={selOS.additional_technicians || []}
@@ -452,10 +451,10 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
                       return (
                         <div
                           key={s}
-                          className={`flex items-center gap-2 text-xs ${current ? 'text-blue-700 font-semibold' : done ? 'text-green-600' : 'text-gray-400'}`}
+                          className={`flex items-center gap-2 text-xs ${current ? 'text-blue-700 font-semibold' : done ? 'text-green-600' : 'text-gray-500'}`}
                         >
                           <span
-                            className={`w-4 h-4 rounded-full flex items-center justify-center text-xs ${current ? 'bg-blue-600 text-white' : done ? 'bg-green-500 text-white' : 'bg-gray-200'}`}
+                            className={`w-4 h-4 rounded-full flex items-center justify-center text-xs ${current ? 'bg-blue-600 text-white' : done ? 'bg-green-700 text-white' : 'bg-gray-200'}`}
                           >
                             {done ? '✓' : thisIdx + 1}
                           </span>
@@ -474,9 +473,8 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
                   {selOS.status === 'INVOICED' && selOS.nf ? (
                     <div className="bg-purple-50 border border-purple-200 rounded-xl px-4 py-3 flex items-center gap-4 flex-wrap">
                       <div className="flex items-center gap-2">
-                        <span className="text-purple-600 text-lg">🧾</span>
                         <div>
-                          <p className="text-xs text-purple-400 font-medium uppercase tracking-wide">
+                          <p className="text-xs text-purple-700 font-medium uppercase tracking-wide">
                             Nota Fiscal Emitida
                           </p>
                           <p className="text-sm font-bold text-purple-800">
@@ -492,7 +490,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
                       )}
                     </div>
                   ) : (
-                    <p className="text-sm text-center text-gray-400 py-2">
+                    <p className="text-sm text-center text-gray-500 py-2">
                       {selOS.status === 'INVOICED' ? 'OS finalizada e faturada.' : 'OS cancelada.'}
                     </p>
                   )}
@@ -502,7 +500,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
                   {flow && (
                     <button
                       onClick={() => (selOS.status === 'COMPLETED' ? requestInvoice(selOS.id) : advance(selOS.id))}
-                      className={`flex-1 py-2.5 text-white rounded-lg text-sm font-semibold ${btnColors[flow.color] || 'bg-blue-600 hover:bg-blue-700'}`}
+                      className="flex-1 py-2.5 text-white rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700"
                     >
                       {flow.label} →
                     </button>
@@ -531,7 +529,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Cliente *</label>
-            <select
+            <select aria-label="Cliente"
               value={newOS.customer_id}
               onChange={(e) => setNewOS((p) => ({ ...p, customer_id: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -557,7 +555,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
           ].map((f) => (
             <div key={f.key}>
               <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-              <input
+              <input aria-label={f.label}
                 type={f.type}
                 value={newOS[f.key]}
                 onChange={(e) => setNewOS((p) => ({ ...p, [f.key]: e.target.value }))}
@@ -568,7 +566,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
           ))}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Técnico Responsável</label>
-            <select
+            <select aria-label="Técnico Responsável"
               value={newOS.assigned_technician_id}
               onChange={(e) => setNewOS((p) => ({ ...p, assigned_technician_id: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none"
@@ -593,7 +591,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-              <select
+              <select aria-label="Tipo"
                 value={newOS.type}
                 onChange={(e) => setNewOS((p) => ({ ...p, type: e.target.value }))}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none"
@@ -605,7 +603,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Prioridade</label>
-              <select
+              <select aria-label="Prioridade"
                 value={newOS.priority}
                 onChange={(e) => setNewOS((p) => ({ ...p, priority: e.target.value }))}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none"
@@ -638,7 +636,6 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
       <Modal open={nfModal} onClose={() => setNfModal(false)} title="Emitir Nota Fiscal" size="md">
         <div className="space-y-4">
           <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 flex items-center gap-2">
-            <span className="text-purple-500 text-lg">🧾</span>
             <p className="text-xs text-purple-700 font-medium">
               Informe os dados da NF antes de faturar a OS. O número ficará vinculado permanentemente ao registro.
             </p>
@@ -646,7 +643,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Número da NF *</label>
-              <input
+              <input aria-label="Número da NF"
                 value={nfData.number}
                 onChange={(e) => setNfData((p) => ({ ...p, number: e.target.value }))}
                 placeholder="Ex: 000123"
@@ -655,7 +652,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Série</label>
-              <input
+              <input aria-label="Série"
                 value={nfData.series}
                 onChange={(e) => setNfData((p) => ({ ...p, series: e.target.value }))}
                 placeholder="1"
@@ -666,7 +663,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Data de Emissão</label>
-              <input
+              <input aria-label="Data de Emissão"
                 type="date"
                 value={nfData.date}
                 onChange={(e) => setNfData((p) => ({ ...p, date: e.target.value }))}
@@ -675,7 +672,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Valor da NF (R$)</label>
-              <input
+              <input aria-label="Valor da NF (R$)"
                 type="number"
                 value={nfData.value}
                 onChange={(e) => setNfData((p) => ({ ...p, value: e.target.value }))}
@@ -694,7 +691,7 @@ const OrdersPage = ({ taxRegime = 'REAL' }) => {
             <button
               onClick={confirmInvoice}
               disabled={!nfData.number.trim()}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors ${nfData.number.trim() ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-300 cursor-not-allowed'}`}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold text-white transition-colors ${nfData.number.trim() ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-300 cursor-not-allowed'}`}
             >
               Faturar OS — NF {nfData.number || '—'}
             </button>

@@ -25,7 +25,7 @@ const BulkSettlementModal = ({ bulkSettleModal, confirmBulkSettle, setBulkSettle
             </p>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Data do pagamento/recebimento</label>
-              <input
+              <input aria-label="Data do pagamento/recebimento"
                 type="date"
                 value={data || ''}
                 autoFocus

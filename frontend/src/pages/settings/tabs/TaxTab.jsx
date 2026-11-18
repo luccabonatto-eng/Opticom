@@ -34,7 +34,7 @@ const TaxTab = ({ localStorage, setTaxRegime, setToast, taxRegime }) =>
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
           <div>
             <h3 className="text-base font-semibold text-gray-800">Regime Tributário</h3>
-            <p className="text-xs text-gray-400 mt-0.5">Define como os impostos são calculados em todo o sistema</p>
+            <p className="text-xs text-gray-500 mt-0.5">Define como os impostos são calculados em todo o sistema</p>
           </div>
           <div className="grid grid-cols-3 gap-4">
             {Object.entries(TAX_REGIMES).map(([key, reg]) => (
@@ -49,7 +49,7 @@ const TaxTab = ({ localStorage, setTaxRegime, setToast, taxRegime }) =>
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`w-2.5 h-2.5 rounded-full ${reg.dot}`} />
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${reg.color}`}>{reg.label}</span>
-                  {taxRegime === key && <span className="ml-auto text-blue-600 text-xs font-bold">✓ Ativo</span>}
+                  {taxRegime === key && <span className="ml-auto text-blue-600 text-xs font-bold">Ativo</span>}
                 </div>
                 <p className="text-xs text-gray-500 leading-relaxed">{reg.method}</p>
                 <span className={`inline-block mt-2 text-xs px-2 py-0.5 rounded ${reg.obColor} font-medium`}>
@@ -71,7 +71,7 @@ const TaxTab = ({ localStorage, setTaxRegime, setToast, taxRegime }) =>
               <div key={i} className="flex items-center justify-between py-3">
                 <div>
                   <p className="text-sm font-semibold text-gray-800">{row.label}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{row.sub}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{row.sub}</p>
                 </div>
                 <span className="text-sm font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-lg">{row.val}</span>
               </div>
@@ -83,7 +83,7 @@ const TaxTab = ({ localStorage, setTaxRegime, setToast, taxRegime }) =>
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100">
             <h3 className="text-sm font-semibold text-gray-800">Comparativo entre Regimes — Q1 2026</h3>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-500 mt-0.5">
               Impacto fiscal estimado com base na receita bruta de R$ 48.400.000
             </p>
           </div>

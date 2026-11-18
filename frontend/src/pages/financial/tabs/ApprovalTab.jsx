@@ -71,7 +71,7 @@ const ApprovalTab = ({
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h2 className="text-base font-bold text-gray-800">Aprovações do Dia</h2>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-500 mt-0.5">
               {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })} ·{' '}
               {approvalQueue.length} lançamento(s) aguardando aprovação
             </p>
@@ -86,7 +86,7 @@ const ApprovalTab = ({
             {approvalSel.size > 0 && (
               <button
                 onClick={selNone}
-                className="text-xs text-gray-400 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50"
+                className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50"
               >
                 Limpar
               </button>
@@ -94,17 +94,17 @@ const ApprovalTab = ({
             {approvalSel.size > 0 && (
               <button
                 onClick={approveSelected}
-                className="text-xs bg-violet-600 text-white px-4 py-1.5 rounded-lg hover:bg-violet-700 font-semibold"
+                className="text-xs bg-blue-600 text-white px-4 py-1.5 rounded-lg hover:bg-blue-700 font-semibold"
               >
-                ✓ Aprovar {approvalSel.size} selecionado(s) — {fmt(selExp + selInc)}
+                Aprovar {approvalSel.size} selecionado(s) — {fmt(selExp + selInc)}
               </button>
             )}
           </div>
         </div>
 
-        <div className="grid grid-cols-5 gap-4 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
           {/* Lista de lançamentos — col 3/5 */}
-          <div className="col-span-3 space-y-3">
+          <div className="lg:col-span-3 space-y-3">
             {/* Despesas */}
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="px-4 py-3 bg-red-50 border-b border-red-100 flex items-center justify-between">
@@ -117,7 +117,7 @@ const ApprovalTab = ({
                 <span className="text-sm font-bold text-red-700">{fmt(cfTodayOuts)}</span>
               </div>
               {queueExp.length === 0 ? (
-                <p className="px-4 py-6 text-sm text-gray-400 text-center">Nenhum pagamento pendente para hoje</p>
+                <p className="px-4 py-6 text-sm text-gray-500 text-center">Nenhum pagamento pendente para hoje</p>
               ) : (
                 queueExp.map((t) => (
                   <label
@@ -133,14 +133,14 @@ const ApprovalTab = ({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-800 font-medium truncate">{t.description || t.desc}</p>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-xs text-gray-400">{txCatName(t)}</span>
+                        <span className="text-xs text-gray-500">{txCatName(t)}</span>
                         {(bankAccounts.find((b) => b.id === t.bank_account_id)?.name || t.account) && (
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-gray-500">
                             · {bankAccounts.find((b) => b.id === t.bank_account_id)?.name || t.account}
                           </span>
                         )}
                         {(payMethods.find((m) => m.id === t.payment_method_id)?.name || t.payMethod) && (
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-gray-500">
                             · {payMethods.find((m) => m.id === t.payment_method_id)?.name || t.payMethod}
                           </span>
                         )}
@@ -149,7 +149,7 @@ const ApprovalTab = ({
                         >
                           {txVencido(t) ? 'Vencido' : 'Pendente'}
                         </span>
-                        <span className="text-xs text-gray-400">venc. {fmtDate(txDue(t))}</span>
+                        <span className="text-xs text-gray-500">venc. {fmtDate(txDue(t))}</span>
                       </div>
                     </div>
                     <span
@@ -173,7 +173,7 @@ const ApprovalTab = ({
                 <span className="text-sm font-bold text-green-700">{fmt(cfTodayIns)}</span>
               </div>
               {queueInc.length === 0 ? (
-                <p className="px-4 py-6 text-sm text-gray-400 text-center">Nenhum recebimento pendente para hoje</p>
+                <p className="px-4 py-6 text-sm text-gray-500 text-center">Nenhum recebimento pendente para hoje</p>
               ) : (
                 queueInc.map((t) => (
                   <label
@@ -189,11 +189,11 @@ const ApprovalTab = ({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-800 font-medium truncate">{t.description || t.desc}</p>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-xs text-gray-400">{txCatName(t)}</span>
+                        <span className="text-xs text-gray-500">{txCatName(t)}</span>
                         <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
                           Pendente
                         </span>
-                        <span className="text-xs text-gray-400">venc. {fmtDate(txDue(t))}</span>
+                        <span className="text-xs text-gray-500">venc. {fmtDate(txDue(t))}</span>
                       </div>
                     </div>
                     <span
@@ -208,7 +208,7 @@ const ApprovalTab = ({
           </div>
 
           {/* Painel de simulação — col 2/5 */}
-          <div className="col-span-2 space-y-3 sticky top-0">
+          <div className="lg:col-span-2 space-y-3 lg:sticky top-0">
             {/* Impacto no Caixa */}
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
               <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
@@ -262,7 +262,7 @@ const ApprovalTab = ({
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
               <h3 className="text-sm font-bold text-gray-800 mb-3">Impacto no DRE</h3>
               {approvalSel.size === 0 ? (
-                <p className="text-xs text-gray-400 text-center py-2">Selecione lançamentos para simular</p>
+                <p className="text-xs text-gray-500 text-center py-2">Selecione lançamentos para simular</p>
               ) : (
                 <div className="space-y-0 text-xs">
                   <div className="flex justify-between py-2 border-b border-gray-100">
@@ -279,7 +279,7 @@ const ApprovalTab = ({
                   </div>
                   <div className="flex justify-between py-2 border-b border-gray-100">
                     <span className="text-gray-500">Impacto no resultado</span>
-                    <span className={`font-semibold ${selExp > 0 ? 'text-red-600' : 'text-gray-400'}`}>
+                    <span className={`font-semibold ${selExp > 0 ? 'text-red-600' : 'text-gray-500'}`}>
                       {selExp > 0 ? '−' + fmt(selExp) : '—'}
                     </span>
                   </div>
@@ -297,8 +297,8 @@ const ApprovalTab = ({
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="py-1.5 text-left text-gray-400 font-medium"></th>
-                    <th className="py-1.5 text-right text-gray-400 font-medium">Sem aprovação</th>
+                    <th className="py-1.5 text-left text-gray-500 font-medium"></th>
+                    <th className="py-1.5 text-right text-gray-500 font-medium">Sem aprovação</th>
                     <th className="py-1.5 text-right text-violet-600 font-bold">Com aprovação</th>
                   </tr>
                 </thead>

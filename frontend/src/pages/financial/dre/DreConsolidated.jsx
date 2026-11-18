@@ -1,4 +1,5 @@
 import { fmt } from '../../../utils/format.js';
+import { Icon } from '../../../components/Icon.jsx';
 
 const DreConsolidated = ({
   HR,
@@ -81,7 +82,7 @@ const DreConsolidated = ({
           onClick={() => setDreCustomerFilter('all')}
           className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1.5 rounded-lg font-medium"
         >
-          ✕ Limpar
+          Limpar
         </button>
       )}
     </div>
@@ -150,12 +151,12 @@ const DreConsolidated = ({
               </div>
               <p className={`text-base font-bold ${k.tc}`}>{fv(k.c)}</p>
               {k.mg && (
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-500 mt-0.5">
                   Margem: <span className={`font-semibold ${k.tc}`}>{k.mg}</span>
                 </p>
               )}
               <p
-                className={`text-xs mt-1 font-medium ${vl === '—' ? 'text-gray-400' : u ? 'text-green-600' : 'text-red-500'}`}
+                className={`text-xs mt-1 font-medium ${vl === '—' ? 'text-gray-500' : u ? 'text-green-600' : 'text-red-500'}`}
               >
                 {vl} vs {prevLabel}
               </p>
@@ -172,18 +173,18 @@ const DreConsolidated = ({
           <h3 className="text-sm font-bold text-gray-800">
             DRE — Demonstração do Resultado {dreCustomerFilter !== 'all' ? `· ${getCustName(dreCustomerFilter)}` : ''}
           </h3>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-xs text-gray-500 mt-0.5">
             {curLabel} × {prevLabel} · Regime de Competência · CPC 26 · Valores em R$
           </p>
         </div>
       </div>
       {!hasData ? (
         <div className="px-5 py-12 text-center">
-          <p className="text-4xl mb-3">📋</p>
+          <Icon name="orders" className="w-10 h-10 mx-auto mb-3 text-gray-300" />
           <p className="text-sm font-medium text-gray-600">
             Nenhum lançamento encontrado em {curLabel} {dreCustomerFilter !== 'all' ? 'para este cliente' : ''}
           </p>
-          <p className="text-xs text-gray-400 mt-1">Adicione receitas e despesas vinculadas para gerar os números</p>
+          <p className="text-xs text-gray-500 mt-1">Adicione receitas e despesas vinculadas para gerar os números</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -196,10 +197,10 @@ const DreConsolidated = ({
                 <th className="px-4 py-2.5 text-right text-xs font-semibold text-blue-700 uppercase tracking-wide whitespace-nowrap">
                   {curLabel}
                 </th>
-                <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                   AV%
                 </th>
-                <th className="px-3 py-2.5 text-center text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-3 py-2.5 text-center text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                   Var%
                 </th>
                 <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
@@ -215,7 +216,7 @@ const DreConsolidated = ({
               ))}
               {recBruta === 0 && (
                 <tr className="border-t border-gray-100">
-                  <td colSpan="5" className="px-4 py-2 text-xs text-gray-400 pl-8">
+                  <td colSpan="5" className="px-4 py-2 text-xs text-gray-500 pl-8">
                     Nenhuma receita neste período
                   </td>
                 </tr>

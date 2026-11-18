@@ -185,7 +185,7 @@ const FleetPage = () => {
               <LabelField label="Próx. Revisão" value={fmtDate(sel.nextService)} />
             </div>
             <div>
-              <p className="text-xs text-gray-400 mb-1">Odômetro (km)</p>
+              <p className="text-xs text-gray-500 mb-1">Odômetro (km)</p>
               <div className="flex gap-2">
                 <input
                   type="number"
@@ -202,7 +202,7 @@ const FleetPage = () => {
               </div>
             </div>
             <div>
-              <p className="text-xs text-gray-400 mb-2">Alterar Status</p>
+              <p className="text-xs text-gray-500 mb-2">Alterar Status</p>
               <div className="flex gap-2">
                 {['AVAILABLE', 'IN_USE', 'MAINTENANCE'].map((s) => (
                   <button
@@ -218,11 +218,11 @@ const FleetPage = () => {
             <div className="border-t border-gray-100 pt-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-semibold text-gray-700">Histórico de Manutenção</p>
-                <span className="text-xs text-gray-400">{maintenance.length} registro(s)</span>
+                <span className="text-xs text-gray-500">{maintenance.length} registro(s)</span>
               </div>
               <div className="space-y-2 max-h-40 overflow-y-auto mb-3">
                 {maintenance.length === 0 ? (
-                  <p className="text-xs text-gray-400 text-center py-2">Nenhum registro ainda</p>
+                  <p className="text-xs text-gray-500 text-center py-2">Nenhum registro ainda</p>
                 ) : (
                   maintenance.map((m) => (
                     <div key={m.id} className="bg-gray-50 rounded-lg p-2.5 text-xs">
@@ -232,12 +232,12 @@ const FleetPage = () => {
                         >
                           {m.type}
                         </span>
-                        <span className="text-gray-400">
+                        <span className="text-gray-500">
                           {fmtDate(m.date)} · {m.km?.toLocaleString('pt-BR')} km
                         </span>
                       </div>
                       <p className="text-gray-700 mt-0.5">{m.description || m.desc}</p>
-                      <div className="flex justify-between mt-0.5 text-gray-400">
+                      <div className="flex justify-between mt-0.5 text-gray-500">
                         <span>Técnico: {m.technician_name || m.tech || '—'}</span>
                         <span className="font-medium text-gray-600">{fmt(m.cost)}</span>
                       </div>
@@ -249,8 +249,8 @@ const FleetPage = () => {
                 <p className="text-xs font-semibold text-gray-600">Registrar Manutenção</p>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-xs text-gray-400">Data</label>
-                    <input
+                    <label className="text-xs text-gray-500">Data</label>
+                    <input aria-label="Data"
                       type="date"
                       value={maintForm.date}
                       onChange={(e) => setMaintForm((p) => ({ ...p, date: e.target.value }))}
@@ -258,8 +258,8 @@ const FleetPage = () => {
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400">Tipo</label>
-                    <select
+                    <label className="text-xs text-gray-500">Tipo</label>
+                    <select aria-label="Tipo"
                       value={maintForm.type}
                       onChange={(e) => setMaintForm((p) => ({ ...p, type: e.target.value }))}
                       className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none bg-white"
@@ -270,8 +270,8 @@ const FleetPage = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400">KM atual</label>
-                    <input
+                    <label className="text-xs text-gray-500">KM atual</label>
+                    <input aria-label="KM atual"
                       type="number"
                       value={maintForm.km}
                       onChange={(e) => setMaintForm((p) => ({ ...p, km: e.target.value }))}
@@ -280,8 +280,8 @@ const FleetPage = () => {
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400">Custo (R$)</label>
-                    <input
+                    <label className="text-xs text-gray-500">Custo (R$)</label>
+                    <input aria-label="Custo (R$)"
                       type="number"
                       step="0.01"
                       value={maintForm.cost}
@@ -292,8 +292,8 @@ const FleetPage = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400">Descrição</label>
-                  <input
+                  <label className="text-xs text-gray-500">Descrição</label>
+                  <input aria-label="Descrição"
                     value={maintForm.desc}
                     onChange={(e) => setMaintForm((p) => ({ ...p, desc: e.target.value }))}
                     className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none bg-white"
@@ -301,8 +301,8 @@ const FleetPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400">Técnico</label>
-                  <select
+                  <label className="text-xs text-gray-500">Técnico</label>
+                  <select aria-label="Técnico"
                     value={maintForm.tech}
                     onChange={(e) => setMaintForm((p) => ({ ...p, tech: e.target.value }))}
                     className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none bg-white"
@@ -365,7 +365,7 @@ const FleetPage = () => {
           ].map((f) => (
             <div key={f.key}>
               <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-              <input
+              <input aria-label={f.label}
                 type={f.type || 'text'}
                 value={form[f.key]}
                 onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
@@ -376,7 +376,7 @@ const FleetPage = () => {
           ))}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Responsável</label>
-            <select
+            <select aria-label="Responsável"
               value={form.assigned_technician_id}
               onChange={(e) => setForm((p) => ({ ...p, assigned_technician_id: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none"

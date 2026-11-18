@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Badge, STATUS_MAP } from '../../../components/Badge.jsx';
+import { Icon } from '../../../components/Icon.jsx';
 import { fmt, fmtDate } from '../../../utils/format.js';
 
 // Larguras padrão equilibradas
@@ -17,7 +18,9 @@ const ALL_COLUMNS = [
   { id: 'status', label: 'Status', defaultWidth: 95, minWidth: 75 },
 ];
 
-const DEFAULT_ACTIONS_WIDTH = 120;
+const DEFAULT_ACTIONS_WIDTH = 170; // cabe Baixar + estornar + editar + excluir
+// Ocultas até o usuário ligar no seletor de colunas: abrem espaço para Valor e Baixar.
+const HIDDEN_BY_DEFAULT = ['bank', 'payment_method'];
 
 // Valor de cada coluna usado na ordenação. A exportação usa o mesmo, para a planilha sair na ordem da tela.
 const txSortValues = ({ customers = [], bankAccounts = [], payMethods = [], txCatName, txStatus, txDue, txPago, txAberto }) => ({
@@ -89,6 +92,7 @@ const TxTable = ({
   deleteTx,
 }) => {
   const applicableColumns = ALL_COLUMNS.filter((c) => !c.onlyIf || c.onlyIf({ showNF, baixaLabel }));
+  const defaultVisible = () => new Set(applicableColumns.filter((c) => !HIDDEN_BY_DEFAULT.includes(c.id)).map((c) => c.id));
 
   const defaultWidthsMap = applicableColumns.reduce(
     (acc, col) => {
@@ -111,7 +115,7 @@ const TxTable = ({
     } catch (e) {
       console.warn('Erro ao carregar colunas da tabela ' + tableId, e);
     }
-    return new Set(applicableColumns.map((c) => c.id));
+    return defaultVisible();
   });
 
   // Largura de colunas salva individualmente por tabela
@@ -139,10 +143,10 @@ const TxTable = ({
         if (Array.isArray(arr) && arr.length > 0) {
           setVisibleCols(new Set(arr));
         } else {
-          setVisibleCols(new Set(applicableColumns.map((c) => c.id)));
+          setVisibleCols(defaultVisible());
         }
       } else {
-        setVisibleCols(new Set(applicableColumns.map((c) => c.id)));
+        setVisibleCols(defaultVisible());
       }
 
       const savedWidths = localStorage.getItem(`opticom_tx_widths_${tableId}`);
@@ -290,7 +294,7 @@ const TxTable = ({
       localStorage.removeItem(`opticom_tx_widths_${tableId}`);
       localStorage.removeItem(`opticom_tx_cols_${tableId}`);
     } catch (e) {}
-    setVisibleCols(new Set(applicableColumns.map((c) => c.id)));
+    setVisibleCols(defaultVisible());
     setWidths(defaultWidthsMap);
   };
 
@@ -476,7 +480,7 @@ const TxTable = ({
                 );
               })}
 
-              <th className="relative px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide select-none group bg-gray-50">
+              <th className="sticky right-0 z-10 px-3 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wide select-none group bg-gray-50 shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]">
                 {/* Alça divisória para a coluna de ações */}
                 <div
                   onMouseDown={(e) => handleMouseDown('actions', e)}
@@ -502,7 +506,7 @@ const TxTable = ({
               <tr>
                 <td
                   colSpan={renderedCols.length + 2}
-                  className="px-4 py-12 text-center text-sm text-gray-400"
+                  className="px-4 py-12 text-center text-sm text-gray-500"
                 >
                   Nenhum lançamento encontrado
                 </td>
@@ -517,9 +521,9 @@ const TxTable = ({
                 : status === 'OVERDUE'
                 ? 'bg-red-50'
                 : status === 'PARTIAL'
-                ? 'bg-sky-50/40'
+                ? 'bg-[#f9fdff]'
                 : status === 'PAID' || status === 'RECEIVED'
-                ? 'bg-green-50/30'
+                ? 'bg-[#fbfefc]'
                 : 'bg-white';
 
               return (
@@ -650,8 +654,8 @@ const TxTable = ({
                     return <td key={col.id} />;
                   })}
 
-                  {/* Coluna Ações */}
-                  <td className="px-3 py-2.5 overflow-hidden">
+                  {/* Coluna Ações: fixa à direita para o Baixar nunca sair da tela */}
+                  <td className="sticky right-0 bg-inherit px-3 py-2.5 overflow-hidden shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.15)]">
                     <div className="flex items-center justify-end gap-1.5">
                       {txAberto(t) > 0 && onSettle && (
                         <button
@@ -666,9 +670,9 @@ const TxTable = ({
                           onClick={() => estornarBaixa(t)}
                           title="Estornar baixa"
                           aria-label={`Estornar baixa de ${t.description || ''}`}
-                          className="text-xs text-gray-500 hover:text-amber-600 border border-gray-200 rounded-lg px-2 py-1 hover:bg-amber-50"
+                          className="text-gray-500 hover:text-amber-700 border border-gray-200 rounded-lg p-1.5 hover:bg-amber-50"
                         >
-                          ↺
+                          <Icon name="undo" className="w-3.5 h-3.5" />
                         </button>
                       )}
                       {openEditTx && (
@@ -676,9 +680,9 @@ const TxTable = ({
                           onClick={() => openEditTx(t)}
                           title="Editar lançamento"
                           aria-label={`Editar lançamento ${t.description || ''}`}
-                          className="text-xs text-gray-500 hover:text-blue-600 border border-gray-200 rounded-lg px-2 py-1 hover:bg-blue-50"
+                          className="text-gray-500 hover:text-blue-700 border border-gray-200 rounded-lg p-1.5 hover:bg-blue-50"
                         >
-                          ✎
+                          <Icon name="edit" className="w-3.5 h-3.5" />
                         </button>
                       )}
                       {deleteTx && (
@@ -686,9 +690,9 @@ const TxTable = ({
                           onClick={() => deleteTx(t.id)}
                           title="Excluir lançamento"
                           aria-label={`Excluir lançamento ${t.description || ''}`}
-                          className="text-xs text-gray-500 hover:text-red-600 border border-gray-200 rounded-lg px-2 py-1 hover:bg-red-50"
+                          className="text-gray-500 hover:text-red-700 border border-gray-200 rounded-lg p-1.5 hover:bg-red-50"
                         >
-                          🗑
+                          <Icon name="trash" className="w-3.5 h-3.5" />
                         </button>
                       )}
                     </div>

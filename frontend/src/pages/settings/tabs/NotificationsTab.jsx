@@ -2,7 +2,7 @@ const NotificationsTab = ({ notif, saveNotif, setNotif }) => (
   <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
     <div>
       <h3 className="text-base font-semibold text-gray-800">Preferências de Notificação</h3>
-      <p className="text-xs text-gray-400 mt-0.5">Controle como e quando você recebe alertas</p>
+      <p className="text-xs text-gray-500 mt-0.5">Controle como e quando você recebe alertas</p>
     </div>
     <div className="space-y-1">
       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Canal</p>
@@ -12,14 +12,17 @@ const NotificationsTab = ({ notif, saveNotif, setNotif }) => (
       ].map(([k, l]) => (
         <label key={k} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer">
           <span className="text-sm text-gray-700">{l}</span>
-          <div
+          <button
+            type="button"
+            role="switch"
+            aria-checked={!!notif[k]}
             onClick={() => setNotif((p) => ({ ...p, [k]: !p[k] }))}
-            className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer ${notif[k] ? 'bg-blue-600' : 'bg-gray-200'}`}
+            className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer ${notif[k] ? 'bg-blue-600' : 'bg-gray-300'}`}
           >
-            <div
-              className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${notif[k] ? 'translate-x-5' : 'translate-x-0.5'}`}
+            <span
+              className={`absolute top-0.5 left-0 w-4 h-4 bg-white rounded-full shadow transition-transform ${notif[k] ? 'translate-x-5' : 'translate-x-0.5'}`}
             />
-          </div>
+          </button>
         </label>
       ))}
     </div>
@@ -33,14 +36,17 @@ const NotificationsTab = ({ notif, saveNotif, setNotif }) => (
       ].map(([k, l]) => (
         <label key={k} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer">
           <span className="text-sm text-gray-700">{l}</span>
-          <div
+          <button
+            type="button"
+            role="switch"
+            aria-checked={!!notif[k]}
             onClick={() => setNotif((p) => ({ ...p, [k]: !p[k] }))}
-            className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer ${notif[k] ? 'bg-blue-600' : 'bg-gray-200'}`}
+            className={`relative w-10 h-5 rounded-full transition-colors cursor-pointer ${notif[k] ? 'bg-blue-600' : 'bg-gray-300'}`}
           >
-            <div
-              className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${notif[k] ? 'translate-x-5' : 'translate-x-0.5'}`}
+            <span
+              className={`absolute top-0.5 left-0 w-4 h-4 bg-white rounded-full shadow transition-transform ${notif[k] ? 'translate-x-5' : 'translate-x-0.5'}`}
             />
-          </div>
+          </button>
         </label>
       ))}
     </div>

@@ -44,7 +44,7 @@ const ReceivableTab = ({
     const hasFilter = dateFromR || dateToR || statusR !== 'all' || catR !== 'all' || custR !== 'all' || qR;
     return (
       <div className="space-y-4">
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
           <div
             className={`border rounded-xl p-4 ${hasFilter ? 'bg-blue-50 border-blue-200' : 'bg-green-50 border-green-100'}`}
           >
@@ -54,12 +54,12 @@ const ReceivableTab = ({
               {hasFilter ? 'Total Filtrado' : 'Total Receitas'}
             </p>
             <p className={`text-2xl font-bold mt-1 ${hasFilter ? 'text-blue-700' : 'text-green-700'}`}>{fmt(rTot)}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{receivable.length} lançamento(s)</p>
+            <p className="text-xs text-gray-500 mt-0.5">{receivable.length} lançamento(s)</p>
           </div>
           <div className="bg-green-50 border border-green-100 rounded-xl p-4">
             <p className="text-xs font-medium text-green-600 uppercase tracking-wide">Recebido</p>
             <p className="text-2xl font-bold text-green-700 mt-1">{fmt(rReceived)}</p>
-            <p className="text-xs text-gray-400 mt-0.5">de {fmt(rTot)} previsto</p>
+            <p className="text-xs text-gray-500 mt-0.5">de {fmt(rTot)} previsto</p>
           </div>
           <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
             <p className="text-xs font-medium text-amber-600 uppercase tracking-wide">Pendentes</p>
@@ -125,7 +125,7 @@ const ReceivableTab = ({
                 setCustR('all');
                 setQR('');
               }}
-              className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 border border-gray-200 rounded-lg"
+              className="text-xs text-gray-500 hover:text-red-500 px-2 py-1 border border-gray-200 rounded-lg"
             >
               Limpar filtros
             </button>
@@ -161,7 +161,7 @@ const ReceivableTab = ({
               });
               setNewTxModal(true);
             }}
-            className="ml-auto flex items-center gap-1.5 bg-green-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-green-700"
+            className="ml-auto flex items-center gap-1.5 bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700"
           >
             <Icon name="plus" className="w-4 h-4" /> Novo Recebimento
           </button>
@@ -173,13 +173,13 @@ const ReceivableTab = ({
               onClick={() => abrirBaixaLote([...selR], setSelR)}
               className="flex items-center gap-1.5 bg-blue-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-blue-700"
             >
-              ✓ Dar baixa
+              Dar baixa
             </button>
             <button
               onClick={() => bulkDeleteTx([...selR], setSelR)}
               className="flex items-center gap-1.5 bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-lg hover:bg-red-700"
             >
-              🗑 Excluir selecionados
+              Excluir selecionados
             </button>
             <button onClick={() => setSelR(new Set())} className="text-xs text-blue-600 hover:underline ml-auto">
               Limpar seleção

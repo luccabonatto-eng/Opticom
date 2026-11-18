@@ -36,10 +36,12 @@ const ICON_PATHS = {
   shield:
     'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
   download: 'M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4',
+  undo: 'M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3',
+  menu: 'M4 6h16M4 12h16M4 18h16',
 };
 
 const Icon = ({ name, className = 'w-5 h-5' }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true" focusable="false">
     <path strokeLinecap="round" strokeLinejoin="round" d={ICON_PATHS[name] || ''} />
   </svg>
 );

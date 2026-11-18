@@ -2,7 +2,7 @@ const SlaTab = ({ saveSla, setSla, sla }) => (
   <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
     <div>
       <h3 className="text-base font-semibold text-gray-800">Configuração de SLA</h3>
-      <p className="text-xs text-gray-400 mt-0.5">Tempo máximo de atendimento por prioridade</p>
+      <p className="text-xs text-gray-500 mt-0.5">Tempo máximo de atendimento por prioridade</p>
     </div>
     <div className="space-y-4">
       {[
@@ -14,7 +14,7 @@ const SlaTab = ({ saveSla, setSla, sla }) => (
         <div key={k} className="flex items-center gap-4">
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-800">{l}</p>
-            <p className="text-xs text-gray-400">{sub}</p>
+            <p className="text-xs text-gray-500">{sub}</p>
           </div>
           <div className="flex items-center gap-2">
             <input

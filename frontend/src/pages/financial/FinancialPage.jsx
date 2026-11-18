@@ -1,4 +1,5 @@
 import { useFinancialSetting } from './hooks/useFinancialSetting.js';
+import { Icon } from '../../components/Icon.jsx';
 import { ReconciliationTab } from './tabs/ReconciliationTab.jsx';
 import { ApprovalTab } from './tabs/ApprovalTab.jsx';
 import { EXPENSE_CATS_INITIAL_OBJS, INCOME_CATS_INITIAL_OBJS } from '../../config/financial.js';
@@ -240,7 +241,7 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
         e.stopPropagation();
         setInfoOpen(id);
       }}
-      className="flex-shrink-0 w-5 h-5 rounded-full bg-white/60 hover:bg-white border border-gray-300 text-gray-400 hover:text-blue-600 hover:border-blue-400 flex items-center justify-center transition-colors text-xs font-bold leading-none"
+      className="flex-shrink-0 w-5 h-5 rounded-full bg-white/60 hover:bg-white border border-gray-300 text-gray-500 hover:text-blue-600 hover:border-blue-400 flex items-center justify-center transition-colors text-xs font-bold leading-none"
       title="Saiba mais"
     >
       ⓘ
@@ -263,9 +264,10 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
             <h3 className="text-base font-bold text-gray-800">{info.title}</h3>
             <button
               onClick={() => setInfoOpen(null)}
-              className="text-gray-400 hover:text-gray-600 text-lg leading-none mt-0.5"
+              aria-label="Fechar explicação"
+              className="text-gray-500 hover:text-gray-700 mt-0.5 p-0.5"
             >
-              ✕
+              <Icon name="close" className="w-4 h-4" />
             </button>
           </div>
           <p className="text-sm text-gray-600 leading-relaxed">{info.desc}</p>
@@ -817,19 +819,16 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
     {
       id: 'approval',
       label: 'Aprovações do Dia',
-      icon: '✓',
-      color: 'text-violet-600',
-      bg: 'bg-violet-50',
       badge: approvalQueue.length,
     },
-    { id: 'receivable', label: 'A Receber', icon: '↑', color: 'text-green-600', bg: 'bg-green-50' },
-    { id: 'payable', label: 'A Pagar', icon: '↓', color: 'text-red-600', bg: 'bg-red-50' },
-    { id: 'cashflow', label: 'Fluxo de Caixa', icon: '~', color: 'text-blue-600', bg: 'bg-blue-50' },
-    { id: 'dre', label: 'DRE Gerencial', icon: '≡', color: 'text-purple-600', bg: 'bg-purple-50' },
-    { id: 'card', label: 'Cartão de Crédito', icon: '▭', color: 'text-fuchsia-600', bg: 'bg-fuchsia-50' },
-    { id: 'expcard', label: 'Cartão de Despesa', icon: '▬', color: 'text-indigo-600', bg: 'bg-indigo-50' },
-    { id: 'reconciliation', label: 'Conciliação Bancária', icon: '✓', color: 'text-teal-600', bg: 'bg-teal-50' },
-    { id: 'statement', label: 'Extrato Bancário', icon: '⇅', color: 'text-teal-600', bg: 'bg-teal-50' },
+    { id: 'receivable', label: 'A Receber' },
+    { id: 'payable', label: 'A Pagar' },
+    { id: 'cashflow', label: 'Fluxo de Caixa' },
+    { id: 'dre', label: 'DRE Gerencial' },
+    { id: 'card', label: 'Cartão de Crédito' },
+    { id: 'expcard', label: 'Cartão de Despesa' },
+    { id: 'reconciliation', label: 'Conciliação Bancária' },
+    { id: 'statement', label: 'Extrato Bancário' },
   ];
   const allowedFinSet = finPerms ? new Set(finPerms) : null;
   const MENU_ITEMS = allowedFinSet ? ALL_MENU_ITEMS.filter((m) => allowedFinSet.has(m.id)) : ALL_MENU_ITEMS;
@@ -838,12 +837,12 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
   }, [finPerms]);
 
   return (
-    <div className="flex h-full overflow-hidden">
-      {/* Side menu */}
-      <div className="w-52 shrink-0 bg-white border-r border-gray-200 flex flex-col py-3">
-        <div className="px-4 pb-3 border-b border-gray-100 mb-2">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Financeiro</p>
-        </div>
+    <div className="flex flex-col lg:flex-row h-full overflow-hidden">
+      {/* Menu do Financeiro: abas roláveis no topo em telas menores, lateral a partir de lg */}
+      <nav
+        aria-label="Seções do Financeiro"
+        className="lg:w-52 shrink-0 bg-white border-b lg:border-b-0 lg:border-r border-gray-200 flex lg:flex-col gap-1 lg:gap-0 px-2 lg:px-0 py-2 lg:py-3 overflow-x-auto lg:overflow-x-visible"
+      >
         {MENU_ITEMS.map((m) => (
           <button
             key={m.id}
@@ -851,37 +850,33 @@ const FinancialPage = ({ taxRegime = 'REAL', finPerms }) => {
               setTab(m.id);
               setCardFiltro('all');
             }}
-            className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors mx-2 rounded-lg ${tab === m.id ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+            aria-current={tab === m.id ? 'page' : undefined}
+            className={`flex items-center gap-2 px-3 lg:px-4 py-2 lg:py-2.5 text-sm whitespace-nowrap transition-colors lg:mx-2 rounded-lg ${tab === m.id ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-50'}`}
           >
-            <span
-              className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold shrink-0 ${tab === m.id ? 'bg-white/20 text-white' : m.color + ' ' + m.bg}`}
-            >
-              {m.icon}
-            </span>
             <span className="flex-1 text-left">{m.label}</span>
             {m.badge > 0 && (
               <span
-                className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${tab === m.id ? 'bg-white/25 text-white' : 'bg-red-500 text-white'}`}
+                className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${tab === m.id ? 'bg-white/25 text-white' : 'bg-red-600 text-white'}`}
               >
                 {m.badge}
               </span>
             )}
           </button>
         ))}
-        <div className="mt-auto px-4 pt-3 border-t border-gray-100 space-y-2">
+        <div className="hidden lg:block mt-auto px-4 pt-3 border-t border-gray-100 space-y-2">
           <div className="bg-green-50 rounded-lg p-3">
-            <p className="text-xs text-green-600">A Receber</p>
-            <p className="text-sm font-bold text-green-700">{fmt(pendingIn)}</p>
+            <p className="text-xs text-green-800">A Receber</p>
+            <p className="text-sm font-bold text-green-800 tabular-nums">{fmt(pendingIn)}</p>
           </div>
           <div className="bg-red-50 rounded-lg p-3">
-            <p className="text-xs text-red-600">A Pagar</p>
-            <p className="text-sm font-bold text-red-700">{fmt(pendingOut)}</p>
+            <p className="text-xs text-red-800">A Pagar</p>
+            <p className="text-sm font-bold text-red-800 tabular-nums">{fmt(pendingOut)}</p>
           </div>
         </div>
-      </div>
+      </nav>
 
       {/* Main content */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 lg:p-5 space-y-4">
         {tab === 'receivable' && (
           <ReceivableTab
             exportarTx={exportarTx}

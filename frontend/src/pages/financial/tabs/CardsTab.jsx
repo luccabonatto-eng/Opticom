@@ -149,7 +149,7 @@ const CardsTab = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-white border border-gray-200 rounded-xl p-4">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Faturas em aberto</p>
             <p className={`text-2xl font-bold mt-1 ${C.val}`}>{emAberto.length}</p>
@@ -169,7 +169,7 @@ const CardsTab = ({
         {lista.length === 0 && (
           <div className="bg-white border border-gray-200 rounded-xl py-12 text-center">
             <p className="text-sm text-gray-500">Nenhum gasto neste tipo de cartão ainda.</p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               Lance a despesa normalmente escolhendo uma forma de pagamento com{' '}
               {abaDespesa ? '"cartão" e "despesa"' : '"cartão"'} no nome.
             </p>
@@ -186,7 +186,7 @@ const CardsTab = ({
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-gray-400">Acumulado</p>
+                <p className="text-xs text-gray-500">Acumulado</p>
                 <p className="text-lg font-bold text-gray-800">{fmt(f.total)}</p>
               </div>
               {f.aberto > 0 ? (
@@ -208,7 +208,7 @@ const CardsTab = ({
                   return (
                     <div className="text-right">
                       <span className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-xs font-semibold">
-                        ✓ Paga
+                        Paga
                       </span>
                       {pg && (
                         <p className="text-xs text-gray-500 mt-1">
@@ -242,9 +242,10 @@ const CardsTab = ({
                       <button
                         onClick={() => openEditTx(t)}
                         title="Editar compra"
-                        className="text-xs text-gray-400 hover:text-blue-600"
+                        aria-label="Editar compra"
+                        className="text-gray-500 hover:text-blue-700 p-0.5"
                       >
-                        ✎
+                        <Icon name="edit" className="w-3.5 h-3.5" />
                       </button>
                     </td>
                   </tr>

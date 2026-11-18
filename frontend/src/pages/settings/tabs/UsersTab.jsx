@@ -129,7 +129,7 @@ const UsersTab = ({
         ].map((f) => (
           <div key={f.key}>
             <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-            <input
+            <input aria-label={f.label}
               type={f.type}
               value={inviteForm[f.key]}
               onChange={(e) => setInviteForm((p) => ({ ...p, [f.key]: e.target.value }))}
@@ -140,7 +140,7 @@ const UsersTab = ({
         ))}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Perfil</label>
-          <select
+          <select aria-label="Perfil"
             value={inviteForm.role}
             onChange={(e) => setInviteForm((p) => ({ ...p, role: e.target.value }))}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none"
@@ -172,7 +172,7 @@ const UsersTab = ({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-            <input
+            <input aria-label="Nome"
               value={editUserModal.name}
               onChange={(e) => setEditUserModal((p) => ({ ...p, name: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -180,16 +180,16 @@ const UsersTab = ({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-            <input
+            <input aria-label="E-mail"
               value={editUserModal.email}
               disabled
-              className="w-full border border-gray-100 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-400 cursor-not-allowed"
+              className="w-full border border-gray-100 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-500 cursor-not-allowed"
             />
-            <p className="text-xs text-gray-400 mt-1">O e-mail não pode ser alterado por aqui</p>
+            <p className="text-xs text-gray-500 mt-1">O e-mail não pode ser alterado por aqui</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Perfil</label>
-            <select
+            <select aria-label="Perfil"
               value={editUserModal.role}
               onChange={(e) => setEditUserModal((p) => ({ ...p, role: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none"
@@ -201,7 +201,7 @@ const UsersTab = ({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nova senha <span className="text-gray-400 font-normal">(opcional)</span>
+              Nova senha <span className="text-gray-500 font-normal">(opcional)</span>
             </label>
             <input
               type="password"
@@ -234,7 +234,7 @@ const UsersTab = ({
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-sm font-semibold text-gray-800">Permissões por Perfil</h3>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-xs text-gray-500 mt-0.5">
             Defina quais módulos cada perfil pode acessar. Administrador tem acesso total.
           </p>
         </div>
@@ -250,7 +250,7 @@ const UsersTab = ({
           <thead>
             <tr className="border-b border-gray-200">
               <th className="pb-2 text-left text-xs font-semibold text-gray-500 w-48">Módulo</th>
-              <th className="pb-2 text-center text-xs font-semibold text-gray-400 w-28">
+              <th className="pb-2 text-center text-xs font-semibold text-gray-500 w-28">
                 ADMIN
                 <br />
                 <span className="text-xs font-normal text-gray-300">sempre total</span>
@@ -306,7 +306,7 @@ const UsersTab = ({
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
       <div className="mb-4">
         <h3 className="text-sm font-semibold text-gray-800">Submenus do Financeiro</h3>
-        <p className="text-xs text-gray-400 mt-0.5">
+        <p className="text-xs text-gray-500 mt-0.5">
           Controle quais abas do módulo Financeiro cada perfil pode visualizar. Administrador sempre tem acesso total.
         </p>
       </div>
@@ -315,7 +315,7 @@ const UsersTab = ({
           <thead>
             <tr className="border-b border-gray-200">
               <th className="pb-2 text-left text-xs font-semibold text-gray-500 w-48">Submenu</th>
-              <th className="pb-2 text-center text-xs font-semibold text-gray-400 w-28">
+              <th className="pb-2 text-center text-xs font-semibold text-gray-500 w-28">
                 ADMIN
                 <br />
                 <span className="text-xs font-normal text-gray-300">sempre total</span>

@@ -115,7 +115,7 @@ const ContractsPage = ({ taxRegime = 'REAL' }) => {
       </div>
       <div className="flex items-center gap-3">
         <div className="relative">
-          <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
@@ -189,35 +189,35 @@ const ContractsPage = ({ taxRegime = 'REAL' }) => {
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <div>
-                      <p className="text-gray-400">Valor Bruto/Ciclo</p>
+                      <p className="text-gray-500">Valor Bruto/Ciclo</p>
                       <p className="font-semibold text-gray-800 mt-0.5">{fmt(sel.value)}</p>
                     </div>
                     {iss && (
                       <div>
-                        <p className="text-gray-400">ISS ({(tr.iss * 100).toFixed(0)}%)</p>
+                        <p className="text-gray-500">ISS ({(tr.iss * 100).toFixed(0)}%)</p>
                         <p className="font-semibold text-red-600 mt-0.5">({fmt(iss)})</p>
                       </div>
                     )}
                     {tr.pis && (
                       <div>
-                        <p className="text-gray-400">PIS ({(tr.pis * 100).toFixed(2)}%)</p>
+                        <p className="text-gray-500">PIS ({(tr.pis * 100).toFixed(2)}%)</p>
                         <p className="font-semibold text-red-600 mt-0.5">({fmt(Math.round(sel.value * tr.pis))})</p>
                       </div>
                     )}
                     {tr.cofins && (
                       <div>
-                        <p className="text-gray-400">COFINS ({(tr.cofins * 100).toFixed(2)}%)</p>
+                        <p className="text-gray-500">COFINS ({(tr.cofins * 100).toFixed(2)}%)</p>
                         <p className="font-semibold text-red-600 mt-0.5">({fmt(Math.round(sel.value * tr.cofins))})</p>
                       </div>
                     )}
                     {tr.dasRate && (
                       <div>
-                        <p className="text-gray-400">DAS ({(tr.dasRate * 100).toFixed(1)}%)</p>
+                        <p className="text-gray-500">DAS ({(tr.dasRate * 100).toFixed(1)}%)</p>
                         <p className="font-semibold text-red-600 mt-0.5">({fmt(Math.round(sel.value * tr.dasRate))})</p>
                       </div>
                     )}
                     <div>
-                      <p className="text-gray-400">Valor Líquido Est.</p>
+                      <p className="text-gray-500">Valor Líquido Est.</p>
                       <p className="font-bold text-green-700 mt-0.5">
                         {fmt(
                           sel.value -
@@ -244,7 +244,7 @@ const ContractsPage = ({ taxRegime = 'REAL' }) => {
               {sel.status === 'SUSPENDED' && (
                 <button
                   onClick={() => activate(sel.id)}
-                  className="flex-1 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                  className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
                 >
                   Reativar
                 </button>
@@ -292,7 +292,7 @@ const ContractsPage = ({ taxRegime = 'REAL' }) => {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Cliente *</label>
-            <select
+            <select aria-label="Cliente"
               value={form.customer_id}
               onChange={(e) => setForm((p) => ({ ...p, customer_id: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -311,7 +311,7 @@ const ContractsPage = ({ taxRegime = 'REAL' }) => {
           ].map((f) => (
             <div key={f.key}>
               <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-              <input
+              <input aria-label={f.label}
                 type={f.type || 'text'}
                 value={form[f.key]}
                 onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
@@ -322,7 +322,7 @@ const ContractsPage = ({ taxRegime = 'REAL' }) => {
           ))}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-            <select
+            <select aria-label="Tipo"
               value={form.type}
               onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none"
@@ -336,7 +336,7 @@ const ContractsPage = ({ taxRegime = 'REAL' }) => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Início *</label>
-              <input
+              <input aria-label="Início"
                 type="date"
                 value={form.start_date}
                 onChange={(e) => setForm((p) => ({ ...p, start_date: e.target.value }))}
@@ -345,7 +345,7 @@ const ContractsPage = ({ taxRegime = 'REAL' }) => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Encerramento *</label>
-              <input
+              <input aria-label="Encerramento"
                 type="date"
                 value={form.end_date}
                 onChange={(e) => setForm((p) => ({ ...p, end_date: e.target.value }))}

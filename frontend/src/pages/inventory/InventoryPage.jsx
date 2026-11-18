@@ -156,7 +156,7 @@ const InventoryPage = () => {
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -218,7 +218,7 @@ const InventoryPage = () => {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1.5">
                         <span className={`font-bold ${i.belowMin ? 'text-red-600' : 'text-gray-800'}`}>{i.qty}</span>
-                        <span className="text-xs text-gray-400">/ {i.min}</span>
+                        <span className="text-xs text-gray-500">/ {i.min}</span>
                       </div>
                       <div className="w-16 bg-gray-100 rounded-full h-1 mt-1">
                         <div
@@ -233,7 +233,7 @@ const InventoryPage = () => {
                     <td className="px-4 py-3">
                       {i.belowMin ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700 font-medium">
-                          ⚠ Crítico
+                          Crítico
                         </span>
                       ) : (
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700 font-medium">
@@ -260,11 +260,11 @@ const InventoryPage = () => {
                   <LabelField label="Custo Unit." value={fmt(selected.cost)} />
                   <LabelField label="Localização" value={selected.loc} />
                   <div>
-                    <p className="text-xs text-gray-400 mb-0.5">Quantidade Atual</p>
+                    <p className="text-xs text-gray-500 mb-0.5">Quantidade Atual</p>
                     <p className={`text-2xl font-bold ${selected.belowMin ? 'text-red-600' : 'text-gray-800'}`}>
                       {inventory.find((i) => i.id === selected.id)?.qty ?? selected.qty}
                     </p>
-                    <p className="text-xs text-gray-400">Mínimo: {selected.min}</p>
+                    <p className="text-xs text-gray-500">Mínimo: {selected.min}</p>
                   </div>
                   <LabelField
                     label="Valor Total"
@@ -281,7 +281,8 @@ const InventoryPage = () => {
                       <button
                         key={d}
                         onClick={() => setAdjustDir(d)}
-                        className={`flex-1 py-2 rounded-lg text-sm font-medium border ${adjustDir === d ? (d === '+' ? 'bg-green-600 text-white border-green-600' : 'bg-red-600 text-white border-red-600') : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                        aria-pressed={adjustDir === d}
+                        className={`flex-1 py-2 rounded-lg text-sm font-medium border ${adjustDir === d ? (d === '+' ? 'bg-green-700 text-white border-green-700' : 'bg-red-600 text-white border-red-600') : 'border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                       >
                         {d} {l}
                       </button>
@@ -290,7 +291,7 @@ const InventoryPage = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs text-gray-500 mb-1">Quantidade</label>
-                      <input
+                      <input aria-label="Quantidade"
                         type="number"
                         value={adjustQty}
                         onChange={(e) => setAdjustQty(e.target.value)}
@@ -300,7 +301,7 @@ const InventoryPage = () => {
                     </div>
                     <div>
                       <label className="block text-xs text-gray-500 mb-1">Observação</label>
-                      <input
+                      <input aria-label="Observação"
                         value={adjustNote}
                         onChange={(e) => setAdjustNote(e.target.value)}
                         placeholder="Motivo..."
@@ -319,11 +320,11 @@ const InventoryPage = () => {
                 <div className="border-t border-gray-100 pt-4">
                   <p className="text-sm font-semibold text-gray-700 mb-3">Histórico de Movimentação</p>
                   {history === null ? (
-                    <p className="text-xs text-gray-400">Carregando…</p>
+                    <p className="text-xs text-gray-500">Carregando…</p>
                   ) : historyError ? (
                     <p className="text-xs text-red-600">{historyError}</p>
                   ) : history.length === 0 ? (
-                    <p className="text-xs text-gray-400">Nenhuma movimentação registrada.</p>
+                    <p className="text-xs text-gray-500">Nenhuma movimentação registrada.</p>
                   ) : (
                     <div className="max-h-72 overflow-y-auto border border-gray-100 rounded-lg">
                       <table className="w-full text-xs" aria-label="Histórico de movimentação">
@@ -373,7 +374,7 @@ const InventoryPage = () => {
               ].map((f) => (
                 <div key={f.key}>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-                  <input
+                  <input aria-label={f.label}
                     value={form[f.key]}
                     onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
                     placeholder={f.placeholder}
@@ -383,7 +384,7 @@ const InventoryPage = () => {
               ))}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-                <select
+                <select aria-label="Categoria"
                   value={form.cat}
                   onChange={(e) => setForm((p) => ({ ...p, cat: e.target.value }))}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none"
@@ -401,7 +402,7 @@ const InventoryPage = () => {
                 ].map((f) => (
                   <div key={f.key}>
                     <label className="block text-sm font-medium text-gray-700 mb-1">{f.label}</label>
-                    <input
+                    <input aria-label={f.label}
                       type="number"
                       value={form[f.key]}
                       onChange={(e) => setForm((p) => ({ ...p, [f.key]: e.target.value }))}
@@ -465,7 +466,7 @@ const InventoryPage = () => {
                     <td className="px-4 py-3 text-xs text-gray-500">{p.cat}</td>
                     <td className="px-4 py-3 text-xs text-gray-500">{p.unit}</td>
                     <td className="px-4 py-3 text-gray-700">{fmt(p.costRef)}</td>
-                    <td className="px-4 py-3 text-xs text-gray-400 max-w-xs truncate">{p.desc}</td>
+                    <td className="px-4 py-3 text-xs text-gray-500 max-w-xs truncate">{p.desc}</td>
                     <td className="px-4 py-3">
                       <button
                         onClick={async () => {
@@ -495,7 +496,7 @@ const InventoryPage = () => {
               ].map((f) => (
                 <div key={f.k}>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{f.l}</label>
-                  <input
+                  <input aria-label={f.l}
                     type={f.type || 'text'}
                     value={prodForm[f.k]}
                     onChange={(e) => setProdForm((p) => ({ ...p, [f.k]: e.target.value }))}
@@ -507,7 +508,7 @@ const InventoryPage = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-                  <select
+                  <select aria-label="Categoria"
                     value={prodForm.cat}
                     onChange={(e) => setProdForm((p) => ({ ...p, cat: e.target.value }))}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none"
@@ -519,7 +520,7 @@ const InventoryPage = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Unidade</label>
-                  <select
+                  <select aria-label="Unidade"
                     value={prodForm.unit}
                     onChange={(e) => setProdForm((p) => ({ ...p, unit: e.target.value }))}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none"

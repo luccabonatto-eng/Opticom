@@ -197,7 +197,7 @@ const CashFlowTab = ({
       return (
         <tr className={bg}>
           <td className={`px-4 py-2.5 ${tw} ${pl}`}>{l}</td>
-          <td className={`px-4 py-2.5 text-right whitespace-nowrap text-sm text-gray-400`}>{fv(v)}</td>
+          <td className={`px-4 py-2.5 text-right whitespace-nowrap text-sm text-gray-500`}>{fv(v)}</td>
           <td className={`px-4 py-2.5 text-right whitespace-nowrap text-sm ${cor(ve)}`}>{fv(ve)}</td>
         </tr>
       );
@@ -208,7 +208,7 @@ const CashFlowTab = ({
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex-1">
             <h2 className="text-sm font-bold text-gray-800">DFC — Demonstração dos Fluxos de Caixa</h2>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-500">
               Método Direto · CPC 03 · Previsto = valor das contas · Efetivo = o que foi baixado
             </p>
           </div>
@@ -227,7 +227,7 @@ const CashFlowTab = ({
           />
         </div>
 
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
             { l: 'Operacional', v: EF.caixaOper, p: PV.caixaOper, info: 'dfc-oper' },
             { l: 'Investimento', v: EF.caixaInv, p: PV.caixaInv, info: 'dfc-inv' },
@@ -240,7 +240,7 @@ const CashFlowTab = ({
                 <InfoBtn id={k.info} />
               </div>
               <p className={`text-xl font-bold ${k.v >= 0 ? 'text-green-700' : 'text-red-600'}`}>{sfv(k.v)}</p>
-              <p className="text-xs text-gray-400 mt-0.5">previsto {sfv(k.p)}</p>
+              <p className="text-xs text-gray-500 mt-0.5">previsto {sfv(k.p)}</p>
             </div>
           ))}
         </div>
@@ -270,7 +270,7 @@ const CashFlowTab = ({
                 <th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600 uppercase tracking-wide">
                   Descrição
                 </th>
-                <th className="px-4 py-2.5 text-right text-xs font-bold text-gray-400 uppercase tracking-wide whitespace-nowrap">
+                <th className="px-4 py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                   Previsto
                 </th>
                 <th className="px-4 py-2.5 text-right text-xs font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">
@@ -309,7 +309,7 @@ const CashFlowTab = ({
               {saldoInicial > 0 && (
                 <tr className="bg-gray-50 border-t border-gray-200">
                   <td className="px-4 py-2.5 text-sm text-gray-500 pl-6">(+) Saldo Inicial das Contas</td>
-                  <td className="px-4 py-2.5 text-right text-sm text-gray-400">{fmt(saldoInicial)}</td>
+                  <td className="px-4 py-2.5 text-right text-sm text-gray-500">{fmt(saldoInicial)}</td>
                   <td className="px-4 py-2.5 text-right text-sm text-gray-700 font-medium">{fmt(saldoInicial)}</td>
                 </tr>
               )}
@@ -324,7 +324,7 @@ const CashFlowTab = ({
 
         <details className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <summary className="px-5 py-3.5 cursor-pointer text-sm font-semibold text-gray-800">
-            Detalhe Diário <span className="font-normal text-gray-400">({dailyRows.length} dia(s) com movimento)</span>
+            Detalhe Diário <span className="font-normal text-gray-500">({dailyRows.length} dia(s) com movimento)</span>
           </summary>
           <table className="w-full text-sm border-t border-gray-100">
             <thead className="bg-gray-50 border-b border-gray-200">
@@ -342,7 +342,7 @@ const CashFlowTab = ({
             <tbody className="divide-y divide-gray-100">
               {dailyRows.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="px-4 py-8 text-center text-sm text-gray-400">
+                  <td colSpan="5" className="px-4 py-8 text-center text-sm text-gray-500">
                     Nenhum lançamento no período selecionado
                   </td>
                 </tr>

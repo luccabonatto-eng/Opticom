@@ -1,4 +1,5 @@
 import { Badge } from '../../../components/Badge.jsx';
+import { Icon } from '../../../components/Icon.jsx';
 import React from 'react';
 import { fmt, fmtDate } from '../../../utils/format.js';
 import { txDue } from '../calculations.js';
@@ -56,14 +57,14 @@ const DreCustomerTable = ({
             <th className="px-3 py-3 text-center font-bold text-gray-700 uppercase tracking-wide whitespace-nowrap">
               Margem Líq.
             </th>
-            <th className="px-3 py-3 text-center font-semibold text-gray-400 uppercase tracking-wide">Ações</th>
+            <th className="px-3 py-3 text-center font-semibold text-gray-500 uppercase tracking-wide">Ações</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {displayedCustList.length === 0 ? (
             <tr>
-              <td colSpan="11" className="px-4 py-10 text-center text-gray-400">
-                <p className="text-2xl mb-1">🔍</p>
+              <td colSpan="11" className="px-4 py-10 text-center text-gray-500">
+                <Icon name="search" className="w-6 h-6 mx-auto mb-1 text-gray-400" />
                 <p className="text-sm font-medium">Nenhum cliente encontrado com os filtros aplicados</p>
               </td>
             </tr>
@@ -77,6 +78,14 @@ const DreCustomerTable = ({
                 <React.Fragment key={c.id}>
                   <tr
                     onClick={() => setDreExpandedCust(isExp ? null : c.id)}
+                    tabIndex={0}
+                    aria-expanded={isExp}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setDreExpandedCust(isExp ? null : c.id);
+                      }
+                    }}
                     className={`hover:bg-purple-50/40 cursor-pointer transition-colors ${isExp ? 'bg-purple-50/60' : isLoss ? 'bg-rose-50/30' : noData ? 'opacity-60 bg-gray-50/30' : ''}`}
                   >
                     {/* Cliente */}
@@ -91,7 +100,7 @@ const DreCustomerTable = ({
                             <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.2 rounded font-mono">
                               {c.type || 'PJ'}
                             </span>
-                            {c.city && <span className="text-[10px] text-gray-400 truncate">{c.city}</span>}
+                            {c.city && <span className="text-[10px] text-gray-500 truncate">{c.city}</span>}
                           </div>
                         </div>
                       </div>
@@ -138,7 +147,7 @@ const DreCustomerTable = ({
                             {fv(c.grossProfit)}
                           </span>
                           {c.netRevenue > 0 && (
-                            <p className="text-[10px] text-gray-400">{c.grossMargin.toFixed(0)}% mg</p>
+                            <p className="text-[10px] text-gray-500">{c.grossMargin.toFixed(0)}% mg</p>
                           )}
                         </div>
                       ) : (
@@ -186,7 +195,7 @@ const DreCustomerTable = ({
                         <button
                           onClick={() => setDreExpandedCust(isExp ? null : c.id)}
                           title={isExp ? 'Ocultar detalhes' : 'Ver detalhes de receitas e custos deste cliente'}
-                          className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${isExp ? 'bg-purple-600 text-white' : 'bg-gray-100 hover:bg-purple-100 text-gray-700'}`}
+                          className={`px-2 py-1 rounded text-xs font-semibold transition-colors ${isExp ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-purple-100 text-gray-700'}`}
                         >
                           {isExp ? 'Ocultar ▴' : 'Detalhes ▾'}
                         </button>
@@ -211,14 +220,14 @@ const DreCustomerTable = ({
                         <div className="bg-white rounded-xl border border-purple-200 shadow-xs p-4 space-y-4">
                           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3">
                             <div className="flex items-center gap-2">
-                              <span className="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center text-xs font-bold">
-                                👤
+                              <span className="w-7 h-7 rounded-lg bg-purple-700 text-white flex items-center justify-center">
+                                <Icon name="user" className="w-4 h-4" />
                               </span>
                               <div>
                                 <h4 className="font-bold text-sm text-gray-900">
                                   {c.name} — Extrato Gerencial de Obra/Cliente
                                 </h4>
-                                <p className="text-xs text-gray-400">
+                                <p className="text-xs text-gray-500">
                                   Detalhamento dos lançamentos que formam o resultado no período:{' '}
                                   <span className="font-semibold text-purple-700">{scopeLabel}</span>
                                 </p>
@@ -230,15 +239,15 @@ const DreCustomerTable = ({
                                   setDreCustomerFilter(String(c.id));
                                   setDreViewMode('consolidated');
                                 }}
-                                className="text-xs font-semibold bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-xs"
+                                className="text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg flex items-center gap-1 shadow-xs"
                               >
-                                <span>📊</span> Ver DRE Formal CPC 26 deste Cliente
+                                Ver DRE Formal CPC 26 deste Cliente
                               </button>
                               <button
                                 onClick={() => setDreExpandedCust(null)}
                                 className="text-xs text-gray-500 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-2.5 py-1.5 rounded-lg"
                               >
-                                ✕ Fechar
+                                Fechar
                               </button>
                             </div>
                           </div>
@@ -267,7 +276,7 @@ const DreCustomerTable = ({
                               <p className="text-sm font-bold text-gray-800 mt-0.5">
                                 {fmt(c.opExpenses + c.deductions)}
                               </p>
-                              <p className="text-[10px] text-gray-400">Outras despesas</p>
+                              <p className="text-[10px] text-gray-500">Outras despesas</p>
                             </div>
                             <div
                               className={`${isLoss ? 'bg-rose-50 border-rose-200' : 'bg-emerald-50 border-emerald-200'} border rounded-lg p-2.5 text-center`}
@@ -297,7 +306,7 @@ const DreCustomerTable = ({
                                 Gastos e Receitas por Categoria
                               </p>
                               {c.catBreakdown.length === 0 ? (
-                                <p className="text-xs text-gray-400 py-4 text-center">Nenhuma categoria movimentada</p>
+                                <p className="text-xs text-gray-500 py-4 text-center">Nenhuma categoria movimentada</p>
                               ) : (
                                 <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
                                   {c.catBreakdown.map((cat, idx) => (
@@ -307,7 +316,7 @@ const DreCustomerTable = ({
                                     >
                                       <div className="min-w-0 pr-2">
                                         <p className="font-semibold text-gray-800 truncate">{cat.name}</p>
-                                        <span className="text-[10px] text-gray-400">
+                                        <span className="text-[10px] text-gray-500">
                                           {cat.cls} · {cat.count}x
                                         </span>
                                       </div>
@@ -329,17 +338,17 @@ const DreCustomerTable = ({
                                 <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">
                                   Extrato Individual de Lançamentos ({c.transactions.length})
                                 </p>
-                                <span className="text-xs text-gray-400">Ordenado por data</span>
+                                <span className="text-xs text-gray-500">Ordenado por data</span>
                               </div>
                               {c.transactions.length === 0 ? (
-                                <p className="text-xs text-gray-400 py-6 text-center">
+                                <p className="text-xs text-gray-500 py-6 text-center">
                                   Nenhum lançamento vinculado neste período
                                 </p>
                               ) : (
                                 <div className="overflow-x-auto max-h-56 overflow-y-auto">
                                   <table className="w-full text-xs">
                                     <thead>
-                                      <tr className="border-b border-gray-200 text-gray-400 text-[10px] uppercase">
+                                      <tr className="border-b border-gray-200 text-gray-500 text-[10px] uppercase">
                                         <th className="text-left pb-1.5 font-semibold">Vencimento</th>
                                         <th className="text-left pb-1.5 font-semibold">Descrição</th>
                                         <th className="text-left pb-1.5 font-semibold">Categoria</th>
@@ -440,17 +449,17 @@ const DreCustomerTable = ({
 
         {/* Linha de Totais da Carteira */}
         <tfoot>
-          <tr className="bg-gradient-to-r from-purple-900 to-indigo-950 text-white font-bold text-xs border-t-2 border-purple-950">
+          <tr className="bg-gray-900 text-white font-bold text-xs border-t-2 border-gray-900">
             <td className="px-4 py-3.5">TOTAL DA EMPRESA (CLIENTES + GERAL)</td>
-            <td className="px-3 py-3.5 text-center text-purple-200">{customerScopedTxs.length} lançamento(s)</td>
-            <td className="px-3 py-3.5 text-right text-purple-100 font-extrabold">{fmt(totalGrossRevenue)}</td>
-            <td className="px-3 py-3.5 text-right text-purple-300">
+            <td className="px-3 py-3.5 text-center text-gray-300">{customerScopedTxs.length} lançamento(s)</td>
+            <td className="px-3 py-3.5 text-right text-gray-300 font-extrabold">{fmt(totalGrossRevenue)}</td>
+            <td className="px-3 py-3.5 text-right text-gray-300">
               {totalDeductions > 0 ? `(${fmt(totalDeductions)})` : '—'}
             </td>
             <td className="px-3 py-3.5 text-right text-white font-extrabold">{fmt(totalNetRevenue)}</td>
-            <td className="px-3 py-3.5 text-right text-purple-300">{totalCsp > 0 ? `(${fmt(totalCsp)})` : '—'}</td>
+            <td className="px-3 py-3.5 text-right text-gray-300">{totalCsp > 0 ? `(${fmt(totalCsp)})` : '—'}</td>
             <td className="px-3 py-3.5 text-right text-emerald-300 font-extrabold">{fmt(totalGrossProfit)}</td>
-            <td className="px-3 py-3.5 text-right text-purple-300">
+            <td className="px-3 py-3.5 text-right text-gray-300">
               {totalOpExpenses > 0 ? `(${fmt(totalOpExpenses)})` : '—'}
             </td>
             <td className="px-4 py-3.5 text-right text-sm font-black text-emerald-300">{fv(totalNetProfitAll)}</td>

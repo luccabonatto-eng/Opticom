@@ -21,7 +21,7 @@ const CardPaymentModal = ({ faturaModal, monthLabel, pagarFatura, setFaturaModal
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Valor da fatura (R$)</label>
-              <input
+              <input aria-label="Valor da fatura (R$)"
                 type="number"
                 step="0.01"
                 autoFocus
@@ -37,14 +37,14 @@ const CardPaymentModal = ({ faturaModal, monthLabel, pagarFatura, setFaturaModal
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Data do pagamento</label>
-              <input
+              <input aria-label="Data do pagamento"
                 type="date"
                 value={faturaModal.vencimento}
                 onChange={(e) => setFaturaModal((p) => ({ ...p, vencimento: e.target.value }))}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
               />
             </div>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-500">
               Cria uma saída de caixa no valor da fatura e dá baixa nas compras. As despesas já estão no DRE desde a
               compra, então não serão contadas de novo.
             </p>
@@ -57,7 +57,7 @@ const CardPaymentModal = ({ faturaModal, monthLabel, pagarFatura, setFaturaModal
               </button>
               <button
                 onClick={pagarFatura}
-                className="flex-1 py-2.5 bg-fuchsia-600 text-white rounded-lg text-sm font-medium hover:bg-fuchsia-700"
+                className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
               >
                 Confirmar pagamento
               </button>
