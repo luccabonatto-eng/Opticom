@@ -1,6 +1,7 @@
 import { Icon } from '../../components/Icon.jsx';
 import { Toast } from '../../components/Toast.jsx';
 import { api } from '../../api/client.js';
+import { DEMO } from '../../api/demo.js';
 import { fmtDate } from '../../utils/format.js';
 import { hojeISO } from '../../utils/dates.js';
 import { useState } from 'react';
@@ -146,8 +147,9 @@ const KitTab = ({ products, tools, setTools, techs, kits, setKits, onProductMove
   return (
     <div className="space-y-4">
       <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-        Os produtos saem do estoque de verdade. As ferramentas e a lista de saídas ainda são protótipo (somem ao
-        recarregar).
+        {DEMO
+          ? 'Demonstração: nada aqui é salvo no banco. Os produtos são de exemplo.'
+          : 'Os produtos saem do estoque de verdade. As ferramentas e a lista de saídas ainda são protótipo (somem ao recarregar).'}
       </p>
 
       <div className="grid lg:grid-cols-5 gap-4">

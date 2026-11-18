@@ -1,12 +1,18 @@
 // API Client para Opticom ERP
 // Gerencia autenticação e requisições HTTP
 
+import { DEMO, DEMO_USER, demoFetch } from './demo.js';
+
 const API_BASE_URL = window.location.origin.includes('localhost')
   ? 'http://localhost:3001/api'
   : 'https://opticom-backend.vercel.app/api';
 
 class OpticomAPI {
   constructor() {
+    if (DEMO) {
+      sessionStorage.setItem('opticom_token', 'demo');
+      sessionStorage.setItem('opticom_user', JSON.stringify(DEMO_USER));
+    }
     this.token = sessionStorage.getItem('opticom_token');
     try {
       this.user = JSON.parse(sessionStorage.getItem('opticom_user') || 'null');
@@ -77,6 +83,7 @@ class OpticomAPI {
 
   // === Requisições Autenticadas ===
   async _fetch(endpoint, options = {}) {
+    if (DEMO) return demoFetch(endpoint, options);
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers,
