@@ -39,6 +39,22 @@ class OpticomAPI {
     }
   }
 
+  // Só no `vite dev` (localhost): entra como ADMIN sem digitar senha
+  async devLogin() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/dev-login`, { method: 'POST' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'dev-login indisponível');
+      this.token = data.token;
+      this.user = data.user;
+      sessionStorage.setItem('opticom_token', data.token);
+      sessionStorage.setItem('opticom_user', JSON.stringify(data.user));
+      return { success: true, user: data.user };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
   // /auth/register exige token de ADMIN — por isso passa pelo _fetch autenticado
   async register(name, email, password, role = 'TECHNICIAN') {
     const r = await this._fetch('/auth/register', {

@@ -140,6 +140,26 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Login automático para testes no localhost. Só existe fora de produção/Vercel
+// e só responde a quem chama da própria máquina.
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  router.post('/dev-login', async (req, res) => {
+    if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) {
+      return res.status(403).json({ error: 'Somente localhost' });
+    }
+    const { data: user } = await supabase
+      .from('users')
+      .select('id, name, email, role')
+      .eq('role', 'ADMIN')
+      .eq('status', 'ACTIVE')
+      .limit(1)
+      .maybeSingle();
+    if (!user) return res.status(404).json({ error: 'Nenhum ADMIN ativo no banco' });
+    const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '24h' });
+    res.json({ token, user });
+  });
+}
+
 // Refresh token
 router.post('/refresh', async (req, res) => {
   try {

@@ -47,6 +47,15 @@ function App() {
     setPage(p);
     setNavOpen(false);
   };
+  // Testes no localhost: pula a tela de login (import.meta.env.DEV some no build de produção)
+  useEffect(() => {
+    if (!import.meta.env.DEV || loggedIn) return;
+    api.devLogin().then((r) => {
+      if (!r.success) return console.warn('Login automático falhou:', r.error);
+      setUser(api.user);
+      setLoggedIn(true);
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!navOpen) return;
     const onKey = (e) => e.key === 'Escape' && setNavOpen(false);

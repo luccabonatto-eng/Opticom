@@ -2,6 +2,9 @@ import { Icon } from '../../components/Icon.jsx';
 import { LabelField } from '../../components/LabelField.jsx';
 import { Modal } from '../../components/Modal.jsx';
 import { Toast } from '../../components/Toast.jsx';
+import { KitTab } from './KitTab.jsx';
+import { ToolsTab, TOOLS_SEED } from './ToolsTab.jsx';
+import { BOXES_SEED } from './BoxesView.jsx';
 import { api } from '../../api/client.js';
 import { fmt } from '../../utils/format.js';
 import { useEffect, useState } from 'react';
@@ -34,6 +37,18 @@ const InventoryPage = () => {
   const [history, setHistory] = useState(null); // null = carregando
   const [historyError, setHistoryError] = useState('');
   const [saving, setSaving] = useState(false);
+  // Ferramentas e técnicos ficam aqui porque as abas Ferramentas e Saída p/ Técnico usam os mesmos
+  const [tools, setTools] = useState(TOOLS_SEED);
+  const [techs, setTechs] = useState(['Carlos Souza', 'Ana Lima', 'Pedro Alves']);
+  const [boxes, setBoxes] = useState(BOXES_SEED);
+  const [kits, setKits] = useState([]); // shortcut: saídas só em memória, criar tabela quando aprovar o fluxo
+
+  useEffect(() => {
+    api.getTechnicians().then((r) => {
+      const names = (r.data?.data || r.data || []).map((t) => t.name).filter(Boolean);
+      if (r.success && names.length) setTechs(names);
+    });
+  }, []);
 
   useEffect(() => {
     if (!selected?.id) return;
@@ -150,7 +165,34 @@ const InventoryPage = () => {
         >
           Catálogo de Produtos
         </button>
+        <button
+          onClick={() => setInvTab('tools')}
+          className={`px-5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${invTab === 'tools' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+        >
+          Ferramentas
+        </button>
+        <button
+          onClick={() => setInvTab('kit')}
+          className={`px-5 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${invTab === 'kit' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+        >
+          Saída p/ Técnico
+        </button>
       </div>
+
+      {invTab === 'tools' && <ToolsTab tools={tools} setTools={setTools} techs={techs} boxes={boxes} setBoxes={setBoxes} />}
+      {invTab === 'kit' && (
+        <KitTab
+          products={inventory}
+          tools={tools}
+          setTools={setTools}
+          techs={techs}
+          kits={kits}
+          setKits={setKits}
+          onProductMoved={(id, qty) =>
+            setInventory((p) => p.map((i) => (i.id !== id ? i : { ...i, qty, quantity: qty, belowMin: qty < i.min })))
+          }
+        />
+      )}
 
       {invTab === 'items' && (
         <div className="space-y-4">
