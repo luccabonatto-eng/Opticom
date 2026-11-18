@@ -1,5 +1,5 @@
-import { Badge, PriorityBadge } from '../../components/Badge.jsx';
-import { COLS, STATUS_FLOW } from './constants.js';
+import { Badge, PriorityBadge, STATUS_MAP } from '../../components/Badge.jsx';
+import { COLS, STATUS_FLOW, STEPS } from './constants.js';
 import { Icon } from '../../components/Icon.jsx';
 import { LabelField } from '../../components/LabelField.jsx';
 import { Modal } from '../../components/Modal.jsx';
@@ -7,6 +7,7 @@ import { TAX_REGIMES } from '../../config/tax-regimes.js';
 import { Toast } from '../../components/Toast.jsx';
 import { api } from '../../api/client.js';
 import { fmt, fmtDate } from '../../utils/format.js';
+import { hojeISO } from '../../utils/dates.js';
 import { useEffect, useState } from 'react';
 
 // Equipe da OS além do responsável: marca/desmarca técnicos de apoio.
@@ -83,19 +84,45 @@ const OrdersPage = ({ taxRegime = 'REAL', canSeeFinancial = true }) => {
   const [nfData, setNfData] = useState({ number: '', series: '1', date: '', value: '' });
   const [pendingInvoice, setPendingInvoice] = useState(null);
 
+  const [reschedule, setReschedule] = useState(null); // data em edição, null = fechado
+  useEffect(() => setReschedule(null), [selected?.id]);
+
+  // Grava a mudança e usa a OS que o servidor devolve (ele carimba início/fim/retrabalho).
+  const saveOrder = async (id, changes, okMsg) => {
+    const result = await api.updateOrder(id, changes);
+    if (result.success) {
+      setOrders((prev) => prev.map((x) => (x.id === id ? result.data : x)));
+      setToast(okMsg);
+    } else {
+      setToast(`Erro ao atualizar OS: ${result.error}`);
+    }
+    return result.success;
+  };
+
   const advance = async (id, nf) => {
     const o = orders.find((o) => o.id === id);
     const flow = STATUS_FLOW[o?.status];
     if (!flow) return;
-    const result = await api.updateOrder(id, { status: flow.next, ...(nf ? { nf } : {}) });
-    if (result.success) {
-      setOrders((prev) => prev.map((x) => (x.id === id ? { ...x, status: flow.next, ...(nf ? { nf } : {}) } : x)));
-      setSelected((prev) => (prev ? { ...prev, status: flow.next, ...(nf ? { nf } : {}) } : null));
-      setToast(`OS ${o.number}: ${flow.label} concluído!`);
-    } else {
-      setToast(`Erro ao avançar OS: ${result.error}`);
-    }
-    return result.success;
+    return saveOrder(id, { status: flow.next, ...(nf ? { nf } : {}) }, `OS ${o.number}: ${flow.label} concluído!`);
+  };
+
+  const goBack = async (o) => {
+    const prev = STEPS[STEPS.indexOf(o.status) - 1];
+    const label = STATUS_MAP[prev][1];
+    const warn =
+      o.status === 'INVOICED'
+        ? `Desfazer o faturamento da OS ${o.number}? A NF ${o.nf?.number || ''} será desvinculada.`
+        : o.status === 'COMPLETED'
+          ? `Reabrir a OS ${o.number}? Ela volta para "${label}" e conta como retrabalho dos técnicos.`
+          : null;
+    if (warn && !window.confirm(warn)) return;
+    await saveOrder(o.id, { status: prev }, `OS ${o.number} voltou para ${label}.`);
+  };
+
+  const confirmReschedule = async (o) => {
+    if (!reschedule) return;
+    if (await saveOrder(o.id, { scheduled_date: reschedule, status: 'SCHEDULED' }, `OS ${o.number} reagendada para ${fmtDate(reschedule)}.`))
+      setReschedule(null);
   };
 
   const requestInvoice = (id) => {
@@ -117,14 +144,7 @@ const OrdersPage = ({ taxRegime = 'REAL', canSeeFinancial = true }) => {
   const cancel = async (id) => {
     const o = orders.find((o) => o.id === id);
     if (!window.confirm(`Cancelar a OS ${o?.number}? Ela sai do quadro e não pode ser reaberta por aqui.`)) return;
-    const result = await api.updateOrder(id, { status: 'CANCELLED' });
-    if (result.success) {
-      setOrders((prev) => prev.map((x) => (x.id === id ? { ...x, status: 'CANCELLED' } : x)));
-      setToast(`OS ${o?.number} cancelada.`);
-      setSelected(null);
-    } else {
-      setToast(`Erro ao cancelar OS: ${result.error}`);
-    }
+    if (await saveOrder(id, { status: 'CANCELLED' }, `OS ${o?.number} cancelada.`)) setSelected(null);
   };
 
   // Quem vira responsável sai da lista de apoio, para não aparecer duas vezes.
@@ -434,7 +454,7 @@ const OrdersPage = ({ taxRegime = 'REAL', canSeeFinancial = true }) => {
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Progresso</p>
                   <div className="space-y-2">
-                    {['OPEN', 'SCHEDULED', 'IN_TRANSIT', 'IN_PROGRESS', 'COMPLETED', 'INVOICED'].map((s) => {
+                    {STEPS.map((s) => {
                       const sMap = {
                         OPEN: 'Aberta',
                         SCHEDULED: 'Agendada',
@@ -443,9 +463,8 @@ const OrdersPage = ({ taxRegime = 'REAL', canSeeFinancial = true }) => {
                         COMPLETED: 'Concluída',
                         INVOICED: 'Faturada',
                       };
-                      const steps = ['OPEN', 'SCHEDULED', 'IN_TRANSIT', 'IN_PROGRESS', 'COMPLETED', 'INVOICED'];
-                      const currentIdx = steps.indexOf(selOS.status);
-                      const thisIdx = steps.indexOf(s);
+                      const currentIdx = STEPS.indexOf(selOS.status);
+                      const thisIdx = STEPS.indexOf(s);
                       const done = thisIdx < currentIdx,
                         current = s === selOS.status;
                       return (
@@ -467,50 +486,86 @@ const OrdersPage = ({ taxRegime = 'REAL', canSeeFinancial = true }) => {
                 </div>
               </div>
             </div>
-            <div className="flex gap-2 pt-2 border-t border-gray-100">
-              {selOS.status === 'CANCELLED' || selOS.status === 'INVOICED' ? (
-                <div className="flex-1">
-                  {selOS.status === 'INVOICED' && selOS.nf ? (
-                    <div className="bg-purple-50 border border-purple-200 rounded-xl px-4 py-3 flex items-center gap-4 flex-wrap">
-                      <div className="flex items-center gap-2">
-                        <div>
-                          <p className="text-xs text-purple-700 font-medium uppercase tracking-wide">
-                            Nota Fiscal Emitida
-                          </p>
-                          <p className="text-sm font-bold text-purple-800">
-                            NF {selOS.nf.number} · Série {selOS.nf.series}
-                          </p>
-                        </div>
-                      </div>
-                      {selOS.nf.date && <p className="text-xs text-purple-600">Emissão: {fmtDate(selOS.nf.date)}</p>}
-                      {selOS.nf.value && (
-                        <p className="text-xs font-semibold text-purple-700">
-                          Valor: {fmt(Math.round(parseFloat(selOS.nf.value) * 100))}
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-center text-gray-500 py-2">
-                      {selOS.status === 'INVOICED' ? 'OS finalizada e faturada.' : 'OS cancelada.'}
-                    </p>
-                  )}
+            {selOS.status === 'INVOICED' && selOS.nf && (
+              <div className="bg-purple-50 border border-purple-200 rounded-xl px-4 py-3 flex items-center gap-4 flex-wrap">
+                <div>
+                  <p className="text-xs text-purple-700 font-medium uppercase tracking-wide">Nota Fiscal Emitida</p>
+                  <p className="text-sm font-bold text-purple-800">
+                    NF {selOS.nf.number} · Série {selOS.nf.series}
+                  </p>
                 </div>
+                {selOS.nf.date && <p className="text-xs text-purple-600">Emissão: {fmtDate(selOS.nf.date)}</p>}
+                {selOS.nf.value && (
+                  <p className="text-xs font-semibold text-purple-700">
+                    Valor: {fmt(Math.round(parseFloat(selOS.nf.value) * 100))}
+                  </p>
+                )}
+              </div>
+            )}
+            {reschedule !== null && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-end gap-2 flex-wrap">
+                <div className="flex-1 min-w-[10rem]">
+                  <label className="block text-xs font-medium text-blue-800 mb-1">Nova data agendada</label>
+                  <input
+                    type="date"
+                    aria-label="Nova data agendada"
+                    value={reschedule}
+                    onChange={(e) => setReschedule(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <button
+                  onClick={() => confirmReschedule(selOS)}
+                  disabled={!reschedule}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300"
+                >
+                  Confirmar
+                </button>
+                <button
+                  onClick={() => setReschedule(null)}
+                  className="px-4 py-2 border border-gray-200 bg-white rounded-lg text-sm text-gray-600 hover:bg-gray-50"
+                >
+                  Desistir
+                </button>
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-gray-100">
+              {selOS.status === 'CANCELLED' ? (
+                <p className="flex-1 text-sm text-center text-gray-500 py-2">OS cancelada.</p>
               ) : (
                 <>
+                  {STEPS.indexOf(selOS.status) > 0 && (
+                    <button
+                      onClick={() => goBack(selOS)}
+                      className="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-50"
+                    >
+                      ← Voltar p/ {STATUS_MAP[STEPS[STEPS.indexOf(selOS.status) - 1]][1]}
+                    </button>
+                  )}
                   {flow && (
                     <button
                       onClick={() => (selOS.status === 'COMPLETED' ? requestInvoice(selOS.id) : advance(selOS.id))}
-                      className="flex-1 py-2.5 text-white rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700"
+                      className="flex-1 py-2.5 px-4 text-white rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-700"
                     >
                       {flow.label} →
                     </button>
                   )}
-                  <button
-                    onClick={() => cancel(selOS.id)}
-                    className="px-4 py-2.5 border border-red-200 text-red-600 rounded-lg text-sm hover:bg-red-50"
-                  >
-                    Cancelar OS
-                  </button>
+                  {STEPS.indexOf(selOS.status) <= STEPS.indexOf('IN_PROGRESS') && (
+                    <button
+                      onClick={() => setReschedule(selOS.scheduled_date || hojeISO())}
+                      className="px-4 py-2.5 border border-blue-200 text-blue-700 rounded-lg text-sm hover:bg-blue-50"
+                    >
+                      Reagendar
+                    </button>
+                  )}
+                  {selOS.status !== 'INVOICED' && (
+                    <button
+                      onClick={() => cancel(selOS.id)}
+                      className="px-4 py-2.5 border border-red-200 text-red-600 rounded-lg text-sm hover:bg-red-50"
+                    >
+                      Cancelar OS
+                    </button>
+                  )}
                 </>
               )}
               <button

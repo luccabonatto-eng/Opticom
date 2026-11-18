@@ -15,4 +15,7 @@ const COLS = [
   { key: 'INVOICED', label: 'Faturadas', bg: 'bg-purple-100', text: 'text-purple-700' },
 ];
 
-export { STATUS_FLOW, COLS };
+// Ordem das etapas: base para avançar e voltar.
+const STEPS = ['OPEN', 'SCHEDULED', 'IN_TRANSIT', 'IN_PROGRESS', 'COMPLETED', 'INVOICED'];
+
+export { STATUS_FLOW, COLS, STEPS };

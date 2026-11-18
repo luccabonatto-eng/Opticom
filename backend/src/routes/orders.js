@@ -4,6 +4,28 @@ const checkPage = require('../middleware/page-access');
 
 const router = express.Router();
 
+const STATUSES = ['OPEN', 'SCHEDULED', 'IN_TRANSIT', 'IN_PROGRESS', 'COMPLETED', 'INVOICED', 'CANCELLED'];
+const DONE = ['COMPLETED', 'INVOICED'];
+
+// Campos derivados da troca de etapa (para frente ou para trás): base das métricas do técnico.
+const transitionFields = (prev, next, now = new Date()) => {
+  if (!next || next === prev.status) return {};
+  const f = {};
+  if (['OPEN', 'SCHEDULED', 'IN_TRANSIT'].includes(next)) f.started_at = null;
+  if (next === 'IN_PROGRESS' && !prev.started_at) f.started_at = now.toISOString();
+  if (next === 'COMPLETED' && !DONE.includes(prev.status)) {
+    f.completed_at = now.toISOString();
+    f.completed_date = now.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' });
+  }
+  if (DONE.includes(prev.status) && !DONE.includes(next)) {
+    f.completed_at = null;
+    f.completed_date = null;
+    if (next !== 'CANCELLED') f.reopened = true;
+  }
+  if (prev.status === 'INVOICED' && next !== 'INVOICED') f.nf = null; // desfaturar libera a NF
+  return f;
+};
+
 // GET all orders com paginação
 router.get('/', async (req, res) => {
   try {
@@ -117,10 +139,19 @@ router.put('/:id', checkPage('orders'), async (req, res) => {
       }
     });
 
+    let derived = {};
+    if (allowedFields.status !== undefined) {
+      if (!STATUSES.includes(allowedFields.status)) return res.status(400).json({ error: 'Status inválido' });
+      const { data: prev } = await supabase.from('orders').select('status, started_at').eq('id', id).single();
+      if (!prev) return res.status(404).json({ error: 'OS não encontrada' });
+      derived = transitionFields(prev, allowedFields.status);
+    }
+
     const { data, error } = await supabase
       .from('orders')
       .update({
         ...allowedFields,
+        ...derived,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -166,3 +197,4 @@ router.delete('/:id', checkPage('orders'), async (req, res) => {
 });
 
 module.exports = router;
+module.exports.transitionFields = transitionFields;

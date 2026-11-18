@@ -3,6 +3,7 @@ import { Icon } from '../../components/Icon.jsx';
 import { Modal } from '../../components/Modal.jsx';
 import { Toast } from '../../components/Toast.jsx';
 import { api } from '../../api/client.js';
+import { fmtMin, techMetrics } from './metrics.js';
 import { useEffect, useState } from 'react';
 
 const TechniciansPage = () => {
@@ -11,22 +12,47 @@ const TechniciansPage = () => {
   const [newModal, setNewModal] = useState(false);
   const [toast, setToast] = useState(null);
   const [form, setForm] = useState({ name: '', phone: '', email: '', specs: '', status: 'ACTIVE' });
+  const [editingId, setEditingId] = useState(null);
+  const [orders, setOrders] = useState([]);
 
   useEffect(() => {
     loadTechnicians();
+    api.getAllOrders().then((r) => {
+      if (r.success) setOrders(r.data?.data || r.data || []);
+    });
   }, []);
+  const metricsOf = (id) => techMetrics(orders, id);
   const loadTechnicians = async () => {
     const r = await api.getAllTechnicians();
     if (r.success) setTechnicians(r.data?.data || r.data || []);
     else setTechnicians([]);
   };
 
-  const create = async () => {
+  const openEdit = (t) => {
+    setForm({
+      name: t.name || '',
+      phone: t.phone || '',
+      email: t.email || '',
+      specs: (t.specializations || []).join(', '),
+      status: t.status,
+    });
+    setEditingId(t.id);
+    setSelected(null);
+    setNewModal(true);
+  };
+
+  const closeForm = () => {
+    setNewModal(false);
+    setEditingId(null);
+    setForm({ name: '', phone: '', email: '', specs: '', status: 'ACTIVE' });
+  };
+
+  const save = async () => {
     if (!form.name || !form.phone) {
       setToast('Nome e telefone são obrigatórios');
       return;
     }
-    const result = await api.createTechnician({
+    const payload = {
       name: form.name,
       phone: form.phone,
       email: form.email || null,
@@ -37,12 +63,12 @@ const TechniciansPage = () => {
             .filter(Boolean)
         : [],
       status: form.status,
-    });
+    };
+    const result = editingId ? await api.updateTechnician(editingId, payload) : await api.createTechnician(payload);
     if (result.success) {
-      setTechnicians((p) => [result.data, ...p]);
-      setNewModal(false);
-      setForm({ name: '', phone: '', email: '', specs: '', status: 'ACTIVE' });
-      setToast(`Técnico ${form.name} cadastrado!`);
+      setTechnicians((p) => (editingId ? p.map((x) => (x.id === editingId ? result.data : x)) : [result.data, ...p]));
+      setToast(editingId ? `Técnico ${form.name} atualizado!` : `Técnico ${form.name} cadastrado!`);
+      closeForm();
     } else {
       setToast(`Erro: ${result.error}`);
     }
@@ -144,21 +170,18 @@ const TechniciansPage = () => {
             {t.status === 'ACTIVE' && (
               <div className="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-gray-100">
                 <div className="text-center">
-                  <p className="text-xl font-bold text-gray-800">{t.orders || 0}</p>
+                  <p className="text-xl font-bold text-gray-800">{metricsOf(t.id).monthCount}</p>
                   <p className="text-xs text-gray-500">OS / mês</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xl font-bold text-gray-800">
-                    {t.avg_time || t.avgMin || '—'}
-                    <span className="text-sm font-normal text-gray-500">min</span>
-                  </p>
+                  <p className="text-xl font-bold text-gray-800">{fmtMin(metricsOf(t.id).avgMin)}</p>
                   <p className="text-xs text-gray-500">Tempo médio</p>
                 </div>
                 <div className="text-center">
                   <p
-                    className={`text-xl font-bold ${(t.rework_percentage || t.rework || 0) > 5 ? 'text-red-600' : 'text-green-600'}`}
+                    className={`text-xl font-bold ${metricsOf(t.id).rework > 5 ? 'text-red-600' : 'text-green-600'}`}
                   >
-                    {t.rework_percentage || t.rework || 0}%
+                    {metricsOf(t.id).rework}%
                   </p>
                   <p className="text-xs text-gray-500">Retrabalho</p>
                 </div>
@@ -211,27 +234,30 @@ const TechniciansPage = () => {
             {sel.status === 'ACTIVE' && (
               <div className="bg-gray-50 rounded-xl p-4 grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <p className="text-2xl font-bold text-gray-800">{sel.orders || 0}</p>
+                  <p className="text-2xl font-bold text-gray-800">{metricsOf(sel.id).monthCount}</p>
                   <p className="text-xs text-gray-500 mt-0.5">OS este mês</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {sel.avg_time || sel.avgMin || '—'}
-                    <span className="text-sm font-normal text-gray-500">min</span>
-                  </p>
+                  <p className="text-2xl font-bold text-gray-800">{fmtMin(metricsOf(sel.id).avgMin)}</p>
                   <p className="text-xs text-gray-500 mt-0.5">Tempo médio</p>
                 </div>
                 <div>
                   <p
-                    className={`text-2xl font-bold ${(sel.rework_percentage || sel.rework || 0) > 5 ? 'text-red-600' : 'text-green-600'}`}
+                    className={`text-2xl font-bold ${metricsOf(sel.id).rework > 5 ? 'text-red-600' : 'text-green-600'}`}
                   >
-                    {sel.rework_percentage || sel.rework || 0}%
+                    {metricsOf(sel.id).rework}%
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">Retrabalho</p>
                 </div>
               </div>
             )}
             <div className="flex gap-2 pt-2 border-t border-gray-100">
+              <button
+                onClick={() => openEdit(sel)}
+                className="px-4 py-2.5 border border-blue-200 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-50"
+              >
+                Editar
+              </button>
               <button
                 onClick={() => toggleStatus(sel.id)}
                 className={`flex-1 py-2.5 border rounded-lg text-sm font-medium ${sel.status === 'ACTIVE' ? 'border-amber-300 text-amber-700 hover:bg-amber-50' : 'border-green-300 text-green-700 hover:bg-green-50'}`}
@@ -256,7 +282,7 @@ const TechniciansPage = () => {
       </Modal>
 
       {/* Novo Técnico Modal */}
-      <Modal open={newModal} onClose={() => setNewModal(false)} title="Novo Técnico" size="md">
+      <Modal open={newModal} onClose={closeForm} title={editingId ? 'Editar Técnico' : 'Novo Técnico'} size="md">
         <div className="space-y-4">
           {[
             { label: 'Nome Completo *', key: 'name', placeholder: 'Ex: André Ferreira' },
@@ -276,16 +302,16 @@ const TechniciansPage = () => {
           ))}
           <div className="flex gap-2 pt-2">
             <button
-              onClick={() => setNewModal(false)}
+              onClick={closeForm}
               className="flex-1 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50"
             >
               Cancelar
             </button>
             <button
-              onClick={create}
+              onClick={save}
               className="flex-1 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
             >
-              Cadastrar Técnico
+              {editingId ? 'Salvar Alterações' : 'Cadastrar Técnico'}
             </button>
           </div>
         </div>
